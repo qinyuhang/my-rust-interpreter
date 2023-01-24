@@ -124,6 +124,8 @@ impl Lexer {
     }
     pub fn read_identifier(&self) -> String {
         let position = self.position.get();
+        self.read_char();
+        // 先读一个，后续的可以判断做
         while is_letter(*self.ch.borrow()) {
             self.read_char();
         }

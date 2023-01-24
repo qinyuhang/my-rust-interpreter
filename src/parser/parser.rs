@@ -97,6 +97,11 @@ impl Parser {
             });
         });
 
+        let pd = pc.clone();
+        pc.register_prefix(TRUE, Rc::new(move || pd.parse_boolean()));
+        let pd = pc.clone();
+        pc.register_prefix(FALSE, Rc::new(move || pd.parse_boolean()));
+
         pc.next_token();
         pc.next_token();
         pc
@@ -221,11 +226,7 @@ impl Parser {
             && (precedence as isize) < (self.peek_precedence() as isize)
         {
             let pktp = self.peek_token.borrow().token_type.to_string();
-            if let Some(infix) = self
-                .infix_parse_fns
-                .borrow()
-                .get(&*pktp)
-            {
+            if let Some(infix) = self.infix_parse_fns.borrow().get(&*pktp) {
                 self.next_token();
                 left = infix(left.unwrap());
             }
@@ -277,6 +278,12 @@ impl Parser {
             right: self.parse_expression(precedence),
         };
         Some(Rc::new(expression))
+    }
+    pub fn parse_boolean(&self) -> Option<Rc<dyn Expression>> {
+        Some(Rc::new(BooleanLiteral {
+            token: Rc::new(RefCell::new((*self.cur_token.borrow()).clone())),
+            value: self.cur_token_is(TRUE),
+        }))
     }
     pub fn expect_peek(&self, token: TokenType) -> bool {
         let r = self.peek_token_is(token);

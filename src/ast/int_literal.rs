@@ -72,7 +72,10 @@ impl TryFrom<Box<&dyn Expression>> for IntegerLiteral {
         if x.is::<Self>() {
             // println!("x is IntegerLiteral {:?}", x);
             let x = x.downcast_ref::<Self>().unwrap();
-            return Ok(IntegerLiteral { token: x.token.clone(), value: x.value });
+            return Ok(IntegerLiteral {
+                token: x.token.clone(),
+                value: x.value,
+            });
         }
         // FIXME: PrefixExpression 可以转换成 IntegerLiteral 吗？
         // if x.is::<PrefixExpression>() {
@@ -90,21 +93,36 @@ impl std::fmt::Display for IntegerLiteral {
 }
 
 mod test {
-    
+
     #[allow(unused)]
     use {
-        std::{rc::Rc, cell::RefCell},
-        crate::{ast::IntegerLiteral, token::{Token, INT}}
+        crate::{
+            ast::IntegerLiteral,
+            token::{Token, INT},
+        },
+        std::{cell::RefCell, rc::Rc},
     };
 
     #[test]
     fn test_int_literal_print() {
-        let s = IntegerLiteral { token: Rc::new(RefCell::new(
-            Token {
+        let s = IntegerLiteral {
+            token: Rc::new(RefCell::new(Token {
                 literal: "5".into(),
-                token_type: INT
-            }
-        )) , value: 5 };
+                token_type: INT,
+            })),
+            value: 5,
+        };
         assert_eq!(format!("{s}"), "5");
     }
 }
+
+use std::ops::{Add, Mul};
+pub(crate) fn test_literal_expression<N>(exp: Box<&dyn Expression>, expected: N) -> bool
+where
+    N: Add<Output = N> + Mul<Output = N> + Default + Copy,
+{
+    true
+    // return test_integer_literal(exp, expected);
+}
+
+// pub(crate) fn 

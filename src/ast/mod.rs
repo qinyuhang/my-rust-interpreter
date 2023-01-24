@@ -10,6 +10,7 @@ pub mod expression_statement;
 pub mod int_literal;
 pub mod prefix_expression;
 pub mod infix_expression;
+pub mod bool_literal;
 
 pub use identifier::*;
 pub use let_statement::*;
@@ -19,6 +20,7 @@ pub use expression_statement::*;
 pub use int_literal::*;
 pub use prefix_expression::*;
 pub use infix_expression::*;
+pub use bool_literal::*;
 
 pub trait Node: Debug + Display {
     fn token_literal(&self) -> String;

@@ -1,4 +1,5 @@
 use crate::lexer::*;
+use crate::parser::Parser;
 use crate::token::*;
 use std::io;
 
@@ -12,6 +13,11 @@ pub fn start() {
         println!("{PROMPT}");
         stdin.read_line(&mut input).unwrap();
         let lex = Lexer::new(input.clone());
+        let p = Parser::new(lex.clone());
+        let pr = p.parse_program();
+        assert!(pr.is_some());
+        let pr = pr.unwrap();
+        println!("{}", &pr);
         loop {
             #[allow(unused_mut)]
             let mut tok = lex.next_token();

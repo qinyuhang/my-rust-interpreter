@@ -156,6 +156,13 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
                 ex = Some(Rc::new(val.clone()))
             }
         }
+        if v_any.is::<BooleanLiteral>() {
+            did_match = true;
+            if let Some(val) = value.as_any().downcast_ref::<BooleanLiteral>() {
+                token = val.token.clone();
+                ex = Some(Rc::new(val.clone()));
+            }
+        }
 
         if did_match {
             assert_ne!(token.borrow().token_type, EOF);
@@ -205,6 +212,11 @@ impl std::fmt::Display for ExpressionStatement {
         if v_any.is::<InfixExpression>() {
             sub_class = v_any
                 .downcast_ref::<InfixExpression>()
+                .map_or_else(|| "".into(), |v| v.to_string());
+        }
+        if v_any.is::<BooleanLiteral>() {
+            sub_class = v_any
+                .downcast_ref::<BooleanLiteral>()
                 .map_or_else(|| "".into(), |v| v.to_string());
         }
 
