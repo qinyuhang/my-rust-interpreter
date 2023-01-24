@@ -101,6 +101,11 @@ impl Parser {
         pc.register_prefix(TRUE, Rc::new(move || pd.parse_boolean()));
         let pd = pc.clone();
         pc.register_prefix(FALSE, Rc::new(move || pd.parse_boolean()));
+        let pd = pc.clone();
+        pc.register_prefix(LPAREN, Rc::new(move || pd.parse_group_expression()));
+
+        let pd = pc.clone();
+        pc.register_prefix(IF, Rc::new(move || pd.parse_if_expression()));
 
         pc.next_token();
         pc.next_token();
@@ -284,6 +289,68 @@ impl Parser {
             token: Rc::new(RefCell::new((*self.cur_token.borrow()).clone())),
             value: self.cur_token_is(TRUE),
         }))
+    }
+    pub fn parse_group_expression(&self) -> Option<Rc<dyn Expression>> {
+        self.next_token();
+
+        let exp = self.parse_expression(ExpressionConst::LOWEST);
+        self.expect_peek(RPAREN).then(|| exp.unwrap())
+    }
+    pub fn parse_if_expression(&self) -> Option<Rc<dyn Expression>> {
+        let token = Rc::new(RefCell::new(((*self.cur_token.borrow()).clone())));
+
+        if !self.expect_peek(LPAREN) {
+            return None;
+        }
+        self.next_token();
+        let condition = self.parse_expression(ExpressionConst::LOWEST);
+        if condition.is_none() {
+            return None;
+        }
+        if !self.expect_peek(RPAREN) {
+            return None;
+        }
+
+        if !self.expect_peek(LBRACE) {
+            return None;
+        }
+
+        let consequence = self.parse_block_statement();
+        let mut alternative = None;
+
+        if self.peek_token_is(ELSE) {
+            self.next_token();
+            self.expect_peek(LBRACE).then(|| {
+                alternative = self.parse_block_statement();
+            });
+        }
+
+        let expression = IfExpression {
+            token,
+            condition: condition.unwrap(),
+            consequence,
+            alternative,
+        };
+        Some(Rc::new(expression))
+    }
+    pub fn parse_block_statement(&self) -> Option<Rc<dyn Statement>> {
+        let mut statement = vec![];
+        let token = Rc::new(RefCell::new((*self.cur_token.borrow()).clone()));
+
+        self.next_token();
+
+        while !self.cur_token_is(RBRACE) && !self.cur_token_is(EOF) {
+            let stm = self.parse_statement();
+            stm.map(|val| statement.push(val));
+            self.next_token();
+        }
+        
+        Some(Rc::new(
+            BlockStatement {
+                token,
+                statement: Rc::new(RefCell::new(statement)),
+            }
+        ))
     }
     pub fn expect_peek(&self, token: TokenType) -> bool {
         let r = self.peek_token_is(token);

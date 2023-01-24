@@ -385,6 +385,11 @@ return 500;
                 "3 + 4 * 5 == 3 * 1 + 4 * 5",
                 "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
             ),
+            ("1 + (2 + 3) + 4", "((1 + (2 + 3)) + 4)"),
+            ("(5 + 5) * 2", "((5 + 5) * 2)"),
+            ("2 / (5 + 5)", "(2 / (5 + 5))"),
+            ("-(5 + 5)", "(-(5 + 5))"),
+            ("!(true == true)", "(!(true == true))"),
         ];
 
         #[allow(unused)]
@@ -437,5 +442,62 @@ return;
         pr.statement.iter().for_each(|st| {
             println!("st: {:?}", st);
         });
+    }
+
+    #[test]
+    fn test_if_expression() {
+        let input = r#"if (x < y) { x }"#;
+        let l = Lexer::new(input);
+        let p = Parser::new(l);
+        let pr = p.parse_program();
+        test_parser_errors(&p, None);
+
+        assert!(pr.is_some());
+        let pr = pr.unwrap();
+
+        assert_eq!(pr.statement.len(), input.lines().count());
+
+        let stm = ExpressionStatement::try_from(Box::new(&*pr.statement[0].clone()));
+
+        assert!(stm.is_ok());
+
+        let stm = stm.unwrap();
+
+        println!("\n\nwtf: {:?}\n\n", stm);
+
+        let il = IfExpression::try_from(Box::new(&*stm.expression.unwrap()));
+
+        assert!(il.is_ok());
+
+        let il = il.unwrap();
+    }
+    
+    #[test]
+    fn test_if_else_expression() {
+        let input = r#"if (x < y) { x } else { y }"#;
+        let l = Lexer::new(input);
+        let p = Parser::new(l);
+        let pr = p.parse_program();
+        test_parser_errors(&p, None);
+
+        assert!(pr.is_some());
+        let pr = pr.unwrap();
+
+        assert_eq!(pr.statement.len(), input.lines().count());
+
+        let stm = ExpressionStatement::try_from(Box::new(&*pr.statement[0].clone()));
+
+        assert!(stm.is_ok());
+
+        let stm = stm.unwrap();
+
+        // println!("\n\nwtf: {:?}\n\n", stm);
+
+        let il = IfExpression::try_from(Box::new(&*stm.expression.unwrap()));
+
+        assert!(il.is_ok());
+
+        let il = il.unwrap();
+
     }
 }

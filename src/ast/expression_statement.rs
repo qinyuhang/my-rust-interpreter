@@ -163,7 +163,13 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
                 ex = Some(Rc::new(val.clone()));
             }
         }
-
+        if v_any.is::<IfExpression>() {
+            did_match = true;
+            if let Some(val) = value.as_any().downcast_ref::<IfExpression>() {
+                token = val.token.clone();
+                ex = Some(Rc::new(val.clone()))
+            }
+        }
         if did_match {
             assert_ne!(token.borrow().token_type, EOF);
             Ok(ExpressionStatement {
