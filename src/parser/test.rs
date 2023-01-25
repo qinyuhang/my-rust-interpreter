@@ -116,19 +116,19 @@ return 500;
         let p = Parser::new(lex);
         fn the_fn() -> Option<Rc<dyn Expression>> {
             Some(Rc::new(ExpressionStatement {
-                token: Rc::new(RefCell::new(Token {
+                token: Token {
                     literal: EOF.into(),
                     token_type: EOF,
-                })),
+                },
                 expression: None,
             }))
         }
         fn the_fn1() -> Option<Rc<dyn Expression>> {
             Some(Rc::new(ExpressionStatement {
-                token: Rc::new(RefCell::new(Token {
+                token: Token {
                     literal: EOF.into(),
                     token_type: EOF,
-                })),
+                },
                 expression: None,
             }))
         }
@@ -190,8 +190,8 @@ return 500;
 
         assert_eq!(il.value, 5);
         assert_eq!(il.token_literal(), "5");
-        assert_eq!(il.token.borrow().literal, "5");
-        assert_eq!(il.token.borrow().token_type, INT);
+        assert_eq!(il.token.literal, "5");
+        assert_eq!(il.token.token_type, INT);
     }
 
     #[test]
@@ -499,5 +499,25 @@ return;
 
         let il = il.unwrap();
 
+    }
+
+    #[test]
+    fn test_function_literal() {
+        let input = r#"fn (x, y) { return x + y; }"#;
+// fn() { return x + y; }
+// let mf = fn(x, y) { return x + y; }
+// fn() { return fn(x, y) { return x > y; } }
+// mf(x, y, fn(x, y) { return x > y });"#;
+        let l = Lexer::new(input);
+        let p = Parser::new(l);
+        let pr = p.parse_program();
+        test_parser_errors(&p, None);
+
+        assert!(pr.is_some());
+        let pr = pr.unwrap();
+
+        assert_eq!(pr.statement.len(), input.lines().count());
+        println!("pr: {:?}", pr);
+        println!("pr: {}", pr);
     }
 }

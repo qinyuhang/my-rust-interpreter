@@ -7,13 +7,13 @@ use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct LetStatement {
-    pub token: Rc<RefCell<Token>>,
+    pub token: Token,
     pub name: Box<Identifier>,
     pub value: Box<dyn Expression>,
 }
 impl Node for LetStatement {
     fn token_literal(&self) -> String {
-        self.token.borrow().literal.clone()
+        self.token.literal.clone()
     }
     fn as_any(&self) -> &dyn Any {
         self

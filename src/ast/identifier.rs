@@ -5,14 +5,14 @@ use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub struct Identifier {
-    pub token: Rc<RefCell<Token>>,
+    pub token: Token,
 
     pub value: String,
 }
 
 impl Node for Identifier {
     fn token_literal(&self) -> String {
-        self.token.borrow().literal.clone()
+        self.token.literal.clone()
     }
     fn as_any(&self) -> &dyn Any {
         self
@@ -29,10 +29,10 @@ impl TryFrom<Box<&dyn Expression>> for Identifier {
 
     fn try_from(value: Box<&dyn Expression>) -> Result<Self, Self::Error> {
         if let Some(value) = value.as_any().downcast_ref::<ExpressionStatement>() {
-            if value.token.borrow().token_type == IDENT {
+            if value.token.token_type == IDENT {
                 return Ok(Identifier {
-                    token: Rc::new(RefCell::new((*value.token.borrow()).clone())),
-                    value: value.token.borrow().literal.clone(),
+                    token: value.token.clone(),
+                    value: value.token.literal.clone(),
                 });
             }
         }
@@ -44,10 +44,10 @@ impl TryFrom<Box<&ExpressionStatement>> for Identifier {
     type Error = String;
 
     fn try_from(value: Box<&ExpressionStatement>) -> Result<Self, Self::Error> {
-        if value.token.borrow().token_type == IDENT {
+        if value.token.token_type == IDENT {
             return Ok(Identifier {
-                token: Rc::new(RefCell::new((*value.token.borrow()).clone())),
-                value: value.token.borrow().literal.clone(),
+                token: value.token.clone(),
+                value: value.token.literal.clone(),
             });
         }
         Err(format!("error cast object {:?}", value))

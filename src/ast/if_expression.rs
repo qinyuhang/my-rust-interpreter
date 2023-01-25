@@ -5,17 +5,17 @@ use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub struct IfExpression {
-    pub token: Rc<RefCell<Token>>,
+    pub token: Token,
     pub condition: Rc<dyn Expression>,
 
     // FIXME: BlockStatement
-    pub consequence: Option<Rc<dyn Statement>>,
+    pub consequence: Option<Rc<dyn Statement /* BlockStatement */>>,
     // FIXME: BlockStatement
-    pub alternative: Option<Rc<dyn Statement>>,
+    pub alternative: Option<Rc<dyn Statement /* BlockStatement */>>,
 }
 impl Node for IfExpression {
     fn token_literal(&self) -> String {
-        self.token.borrow().literal.to_string()
+        self.token.literal.to_string()
     }
 
     fn as_any(&self) -> &dyn std::any::Any {

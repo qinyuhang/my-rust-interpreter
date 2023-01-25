@@ -6,14 +6,14 @@ use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub struct PrefixExpression {
-    pub token: Rc<RefCell<Token>>,
+    pub token: Token,
     pub operator: String,
     pub right: Option<Rc<dyn Expression>>,
 }
 
 impl Node for PrefixExpression {
     fn token_literal(&self) -> String {
-        self.token.borrow().literal.clone()
+        self.token.literal.clone()
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -64,16 +64,16 @@ mod test {
     #[test]
     fn test_prefix_expression_to_string() {
         let s = PrefixExpression {
-            token: Rc::new(RefCell::new(Token {
+            token: Token {
                 literal: "".into(),
                 token_type: "",
-            })),
+            },
             operator: "-".into(),
             right: Some(Rc::new(IntegerLiteral {
-                token: Rc::new(RefCell::new(Token {
+                token: Token {
                     literal: "".into(),
                     token_type: "",
-                })),
+                },
                 value: 5,
             })),
         };

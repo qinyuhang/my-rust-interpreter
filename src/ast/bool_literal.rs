@@ -6,13 +6,13 @@ use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub struct BooleanLiteral {
-    pub token: Rc<RefCell<Token>>,
+    pub token: Token,
     pub value: bool,
 }
 
 impl Node for BooleanLiteral {
     fn token_literal(&self) -> String {
-        self.token.borrow().literal.clone()
+        self.token.literal.clone()
     }
     fn as_any(&self) -> &dyn Any {
         self
@@ -41,7 +41,7 @@ impl TryFrom<Box<&dyn Expression>> for BooleanLiteral {
 }
 impl std::fmt::Display for BooleanLiteral {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.token.borrow().literal.clone())
+        write!(f, "{}", self.token.literal.clone())
     }
 }
 
@@ -55,10 +55,10 @@ mod test {
     #[test]
     fn test_bool_literal() {
         let s = BooleanLiteral {
-            token: Rc::new(RefCell::new(Token {
+            token: Token {
                 token_type: TRUE,
                 literal: "true".into(),
-            })),
+            },
             value: true,
         };
         assert_eq!(format!("{}", s), "true");

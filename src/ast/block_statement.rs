@@ -5,8 +5,9 @@ use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub struct BlockStatement {
-    pub token: Rc<RefCell<Token>>,
-    pub statement: Rc<RefCell<Vec<Rc<dyn Statement>>>>,
+    pub token: Token,
+    // FIXME: change Rc RefCell
+    pub statement: Vec<Rc<dyn Statement>>,
 }
 
 impl Node for BlockStatement {
@@ -15,7 +16,7 @@ impl Node for BlockStatement {
     }
 
     fn as_any(&self) -> &dyn Any {
-        todo!()
+        self
     }
 }
 
@@ -29,9 +30,8 @@ impl std::fmt::Display for BlockStatement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "{}",
+            "{{ {} }}",
             self.statement
-                .borrow()
                 .iter()
                 .fold("".into(), |acc, x| format!("{}{}", acc, x))
         )
@@ -42,8 +42,8 @@ impl TryFrom<Box<&dyn Expression>> for BlockStatement {
     type Error = String;
 
     fn try_from(value: Box<&dyn Expression>) -> Result<Self, Self::Error> {
-        if let Some(value) = value.as_any().downcast_ref::<BlockStatement>() {
-            
+        if let Some(val) = value.as_any().downcast_ref::<BlockStatement>() {
+            return Ok(val.clone());
         }
         Err(format!("error cast object {:?}", value))
     }

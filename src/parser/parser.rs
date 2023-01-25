@@ -87,6 +87,11 @@ impl Parser {
         let pd = pc.clone();
         pc.register_prefix(MINUS, Rc::new(move || pd.parse_prefix_expression()));
         // println!("{:?}", &p.parse_identifier);
+        let pd = pc.clone();
+        pc.register_prefix(FUNCTION, Rc::new(move || pd.parse_function_literal()));
+        
+        // let pd = pc.clone();
+        // pc.register_prefix(IF, Rc::new(move || pd.parse_block_statement()));
 
         PRECEDENCES.with(|ps| {
             // println!("before register infix_parse: {:?}", ps);
@@ -145,7 +150,7 @@ impl Parser {
         }
     }
     pub fn parse_let_statement(&self) -> Option<Rc<dyn Statement>> {
-        let cur_token = Rc::new(RefCell::new((*self.cur_token.borrow()).clone()));
+        let cur_token = (*self.cur_token.borrow()).clone();
 
         // println!("\nParser::parse_let_statement {:?} {:?}\n", self.cur_token, self.peek_token);
 
@@ -154,7 +159,7 @@ impl Parser {
         }
         let ct = (*self.cur_token.borrow()).clone();
         let name = Identifier {
-            token: Rc::new(RefCell::new(ct.clone())),
+            token: ct.clone(),
             value: ct.literal.clone(),
         };
         // println!("\nParser::parse_let_statement2 {:?} {:?} {:?}\n", cur_token, self.peek_token, name);
@@ -187,7 +192,7 @@ impl Parser {
     }
 
     pub fn parse_return_statement(&self) -> Option<Rc<dyn Statement>> {
-        let cur_token = Rc::new(RefCell::new((*self.cur_token.borrow()).clone()));
+        let cur_token = (*self.cur_token.borrow()).clone();
         let mut expression = None;
 
         self.next_token();
@@ -203,8 +208,8 @@ impl Parser {
     }
 
     fn parse_expression_statement(&self) -> Option<Rc<dyn Statement>> {
-        let token = Rc::new(RefCell::new((*self.cur_token.borrow()).clone()));
-        if token.borrow().literal == ";" {
+        let token = (*self.cur_token.borrow()).clone();
+        if token.literal == ";" {
             println!("parse_expression_statement")
         }
         let stm = ExpressionStatement {
@@ -241,7 +246,7 @@ impl Parser {
     }
     // fixme: return Option is better?
     pub fn parse_identifier(&self) -> Option<Rc<dyn Expression>> {
-        let token = Rc::new(RefCell::new((*self.cur_token.borrow()).clone()));
+        let token = (*self.cur_token.borrow()).clone();
         let value = self.cur_token.borrow().literal.to_string();
         Some(Rc::new(Identifier { token, value }))
     }
@@ -257,7 +262,7 @@ impl Parser {
     }
 
     pub fn parse_prefix_expression(&self) -> Option<Rc<dyn Expression>> {
-        let token = Rc::new(RefCell::new((*self.cur_token.borrow()).clone()));
+        let token = (*self.cur_token.borrow()).clone();
         let operator = self.cur_token.borrow().literal.clone();
         let mut ex = PrefixExpression {
             token,
@@ -270,7 +275,7 @@ impl Parser {
         Some(Rc::new(ex))
     }
     pub fn parse_infix_expression(&self, left: Rc<dyn Expression>) -> Option<Rc<dyn Expression>> {
-        let token = Rc::new(RefCell::new((*self.cur_token.borrow()).clone()));
+        let token = (*self.cur_token.borrow()).clone();
         let operator = self.cur_token.borrow().literal.clone().into();
 
         let precedence = self.cur_precedence();
@@ -286,7 +291,7 @@ impl Parser {
     }
     pub fn parse_boolean(&self) -> Option<Rc<dyn Expression>> {
         Some(Rc::new(BooleanLiteral {
-            token: Rc::new(RefCell::new((*self.cur_token.borrow()).clone())),
+            token: (*self.cur_token.borrow()).clone(),
             value: self.cur_token_is(TRUE),
         }))
     }
@@ -297,7 +302,7 @@ impl Parser {
         self.expect_peek(RPAREN).then(|| exp.unwrap())
     }
     pub fn parse_if_expression(&self) -> Option<Rc<dyn Expression>> {
-        let token = Rc::new(RefCell::new(((*self.cur_token.borrow()).clone())));
+        let token = (*self.cur_token.borrow()).clone();
 
         if !self.expect_peek(LPAREN) {
             return None;
@@ -335,7 +340,7 @@ impl Parser {
     }
     pub fn parse_block_statement(&self) -> Option<Rc<dyn Statement>> {
         let mut statement = vec![];
-        let token = Rc::new(RefCell::new((*self.cur_token.borrow()).clone()));
+        let token = (*self.cur_token.borrow()).clone();
 
         self.next_token();
 
@@ -344,13 +349,75 @@ impl Parser {
             stm.map(|val| statement.push(val));
             self.next_token();
         }
-        
-        Some(Rc::new(
-            BlockStatement {
-                token,
-                statement: Rc::new(RefCell::new(statement)),
-            }
-        ))
+
+        // 这段代码，在书里面没有。我debug之后发现报错没有解析 } 的函数，因此认为这里应该要把这个token消费掉
+        // if self.cur_token_is(RBRACE) {
+        //     self.next_token();
+        // }
+
+        Some(Rc::new(BlockStatement {
+            token,
+            statement,
+        }))
+    }
+    pub fn parse_function_literal(&self) -> Option<Rc<dyn Expression>> {
+        let token = (*self.cur_token.borrow()).clone();
+        if !self.expect_peek(LPAREN) {
+            return None;
+        }
+
+        let parameters = self.parse_function_parameters();
+
+        if !self.expect_peek(LBRACE) {
+            return None;
+        }
+
+        let body = self.parse_block_statement();
+
+        let lit = FunctionLiteral {
+            token,
+            parameters,
+            body,
+        };
+        Some(Rc::new(lit))
+    }
+    pub fn parse_function_parameters(&self) -> Option<Vec<Identifier>> {
+        let mut identifiers = vec![];
+
+        if self.peek_token_is(RPAREN) {
+            self.next_token();
+            return Some(identifiers);
+        }
+
+        self.next_token();
+
+        let ident = Identifier {
+            token: (*self.cur_token.borrow()).clone(),
+            value: self.cur_token.borrow().literal.clone(),
+        };
+
+        identifiers.push(ident);
+
+        // let token = Rc::new(RefCell::new((*self.cur_token.borrow()).clone()));
+
+        // let value = self.cur_token.borrow().literal.clone();
+        // let ident =
+
+        while self.peek_token_is(COMMA) {
+            self.next_token();
+            self.next_token();
+            let ident = Identifier {
+                token: (*self.cur_token.borrow()).clone(),
+                value: self.cur_token.borrow().literal.clone(),
+            };
+            identifiers.push(ident);
+        }
+
+        if !self.expect_peek(RPAREN) {
+            return None;
+        }
+
+        Some(identifiers)
     }
     pub fn expect_peek(&self, token: TokenType) -> bool {
         let r = self.peek_token_is(token);

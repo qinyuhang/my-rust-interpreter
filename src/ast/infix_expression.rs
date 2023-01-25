@@ -6,7 +6,7 @@ use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub struct InfixExpression {
-    pub token: Rc<RefCell<Token>>,
+    pub token: Token,
     pub operator: String,
     pub left: Option<Rc<dyn Expression>>,
     pub right: Option<Rc<dyn Expression>>,
@@ -14,7 +14,7 @@ pub struct InfixExpression {
 
 impl Node for InfixExpression {
     fn token_literal(&self) -> String {
-        self.token.borrow().literal.clone()
+        self.token.literal.clone()
     }
 
     fn as_any(&self) -> &dyn Any {

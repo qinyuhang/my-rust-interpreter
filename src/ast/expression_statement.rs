@@ -1,17 +1,16 @@
 use crate::ast::*;
 use crate::token::{Token, EOF};
 
-use std::cell::RefCell;
 use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub struct ExpressionStatement {
-    pub token: Rc<RefCell<Token>>,
+    pub token: Token,
     pub expression: Option<Rc<dyn Expression>>,
 }
 impl Node for ExpressionStatement {
     fn token_literal(&self) -> String {
-        self.token.borrow().literal.clone()
+        self.token.literal.clone()
     }
     fn as_any(&self) -> &dyn Any {
         self
@@ -63,10 +62,10 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
 
         let mut ex = None;
         let mut did_match = false;
-        let mut token: Rc<RefCell<Token>> = Rc::new(RefCell::new(Token {
+        let mut token: Token = Token {
             token_type: EOF,
             literal: "".into(),
-        }));
+        };
 
         let v_any = value.as_any();
 
@@ -76,7 +75,7 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
             // 这里除非知道所有的 dyn Expression 可以转换的对象，挨个都试一下？
             if let Some(v) = value.as_any().downcast_ref::<Self>() {
                 if v.expression.is_some() {
-                    println!("wtf wtf: {:?}", v.expression);
+                    // println!("wtf wtf: {:?}", v.expression);
                     if let Some(ref x) = v.expression {
                         ex = ExpressionStatement::try_from(Box::new(x.as_ref()))
                             .map(|x| Rc::new(x) as Rc<dyn Expression>)
@@ -170,8 +169,16 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
                 ex = Some(Rc::new(val.clone()))
             }
         }
+        if v_any.is::<FunctionLiteral>() {
+            did_match = true;
+            if let Some(val) = value.as_any().downcast_ref::<FunctionLiteral>() {
+                // FIXME: 以后都去掉 Rc<RefCell<
+                token = val.token.clone();
+                ex = Some(Rc::new(val.clone()));
+            }
+        }
         if did_match {
-            assert_ne!(token.borrow().token_type, EOF);
+            assert_ne!(token.token_type, EOF);
             Ok(ExpressionStatement {
                 token: token,
                 expression: ex,
@@ -184,49 +191,10 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
 
 impl std::fmt::Display for ExpressionStatement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        // println!("BBQ ExpressionStatement:Display {:?}", self.expression);
-        let mut sub_class = "".to_string();
         if self.expression.is_none() {
             return write!(f, "");
         }
-        let v_any = (self.expression.as_ref().unwrap()).as_any();
-        if v_any.is::<ExpressionStatement>() {
-            sub_class = v_any
-                .downcast_ref::<ExpressionStatement>()
-                .map_or_else(|| "".into(), |v| v.to_string());
-        }
-        if v_any.is::<Identifier>() {
-            sub_class = v_any
-                .downcast_ref::<Identifier>()
-                .map_or_else(|| "".into(), |v| v.to_string());
-        }
-        if v_any.is::<LetStatement>() {
-            sub_class = v_any
-                .downcast_ref::<LetStatement>()
-                .map_or_else(|| "".into(), |v| v.to_string());
-        }
-        if v_any.is::<IntegerLiteral>() {
-            sub_class = v_any
-                .downcast_ref::<IntegerLiteral>()
-                .map_or_else(|| "".into(), |v| v.to_string());
-        }
-        if v_any.is::<PrefixExpression>() {
-            sub_class = v_any
-                .downcast_ref::<PrefixExpression>()
-                .map_or_else(|| "".into(), |v| v.to_string());
-        }
-        if v_any.is::<InfixExpression>() {
-            sub_class = v_any
-                .downcast_ref::<InfixExpression>()
-                .map_or_else(|| "".into(), |v| v.to_string());
-        }
-        if v_any.is::<BooleanLiteral>() {
-            sub_class = v_any
-                .downcast_ref::<BooleanLiteral>()
-                .map_or_else(|| "".into(), |v| v.to_string());
-        }
-
-        write!(f, "{}", sub_class)
+        write!(f, "{}", self.expression.as_ref().unwrap())
     }
 }
 
@@ -240,10 +208,10 @@ mod test {
     #[test]
     fn test_to_string() {
         let e = ExpressionStatement {
-            token: Rc::new(RefCell::new(Token {
+            token: Token {
                 token_type: EOF,
                 literal: ";".into(),
-            })),
+            },
             expression: None,
         };
         println!("{}", e);

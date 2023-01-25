@@ -4,9 +4,8 @@ mod test {
         crate::ast::let_statement::LetStatement,
         crate::ast::program::Program,
         crate::lexer::*,
-        crate::*,
-    
         crate::token::*,
+        crate::*,
         crate::{
             ast::*,
             token::{Token, INT},
@@ -20,7 +19,6 @@ mod test {
         let input = r#"let a = 10;"#;
         #[allow(unused)]
         let lex = Lexer::new(input);
-        
 
         // let p = Program { statement: vec![] };
         // println!("{:?}", p.token_literal());
@@ -39,32 +37,31 @@ mod test {
     #[test]
     fn test_prefix_expression() {
         let pe = PrefixExpression {
-            token: Rc::new(RefCell::new(Token {
+            token: Token {
                 token_type: INT,
                 literal: "1".into(),
-            })),
+            },
             operator: "-".into(),
             right: Some(Rc::new(IntegerLiteral {
-                token: Rc::new(RefCell::new(Token {
+                token: Token {
                     token_type: INT,
                     literal: "1".into(),
-                })),
-                value: 1
-            }))
+                },
+                value: 1,
+            })),
         };
         assert_eq!(format!("{}", pe), "(-1)");
     }
-
 
     #[test]
     fn test_new_int_literal() {
         #[allow(unused)]
         let i = IntegerLiteral {
             value: 5,
-            token: Rc::new(RefCell::new(Token {
+            token: Token {
                 token_type: INT,
                 literal: "5".to_string(),
-            })),
+            },
         };
     }
 

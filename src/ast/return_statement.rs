@@ -6,12 +6,12 @@ use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub struct ReturnStatement {
-    pub token: Rc<RefCell<Token>>,
+    pub token: Token,
     pub return_value: Option<Rc<dyn Expression>>,
 }
 impl Node for ReturnStatement {
     fn token_literal(&self) -> String {
-        self.token.borrow().literal.clone()
+        self.token.literal.clone()
     }
     fn as_any(&self) -> &dyn Any {
         self

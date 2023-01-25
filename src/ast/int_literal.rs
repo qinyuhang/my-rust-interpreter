@@ -1,5 +1,5 @@
-use std::cell::RefCell;
-use std::rc::Rc;
+// use std::cell::RefCell;
+// use std::rc::Rc;
 
 use crate::ast::{Expression, Node, *};
 /// 定义了整数字面量
@@ -8,13 +8,13 @@ use crate::token::*;
 
 #[derive(Debug, Clone)]
 pub struct IntegerLiteral {
-    pub token: Rc<RefCell<Token>>,
+    pub token: Token,
     pub value: i64,
 }
 
 impl Node for IntegerLiteral {
     fn token_literal(&self) -> String {
-        self.token.borrow().literal.clone()
+        self.token.literal.clone()
     }
     fn as_any(&self) -> &dyn Any {
         self
@@ -33,10 +33,10 @@ impl TryFrom<String> for IntegerLiteral {
     fn try_from(value: String) -> Result<Self, Self::Error> {
         if let Ok(v) = value.clone().parse::<i64>() {
             return Ok(IntegerLiteral {
-                token: Rc::new(RefCell::new(Token {
+                token: Token {
                     token_type: INT,
                     literal: value,
-                })),
+                },
                 value: v,
             });
         }
@@ -49,9 +49,9 @@ impl TryFrom<Box<&ExpressionStatement>> for IntegerLiteral {
 
     fn try_from(value: Box<&ExpressionStatement>) -> Result<Self, Self::Error> {
         println!("the try from: {:?}", value);
-        if value.token.borrow().token_type == INT {
+        if value.token.token_type == INT {
             return Ok(IntegerLiteral {
-                token: Rc::new(RefCell::new((*value.token.borrow()).clone())),
+                token: value.token.clone(),
                 // 这里过不去是因为 expression_statement 的 try_from 还没完成，expression_statement.expression是 None
                 value: value
                     .expression
@@ -100,16 +100,16 @@ mod test {
             ast::IntegerLiteral,
             token::{Token, INT},
         },
-        std::{cell::RefCell, rc::Rc},
+        // std::{cell::RefCell, rc::Rc},
     };
 
     #[test]
     fn test_int_literal_print() {
         let s = IntegerLiteral {
-            token: Rc::new(RefCell::new(Token {
+            token: Token {
                 literal: "5".into(),
                 token_type: INT,
-            })),
+            },
             value: 5,
         };
         assert_eq!(format!("{s}"), "5");
