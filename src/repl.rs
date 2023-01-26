@@ -1,9 +1,23 @@
 use crate::lexer::*;
-use crate::parser::Parser;
-use crate::token::*;
+use crate::parser::*;
 use std::io;
 
 pub const PROMPT: &'static str = ">> ";
+pub const SYMBOL: &'static str = r#"
+ xxxxxxxxxxxx
+  xx       xxx
+  xx        xxx
+  xx        xxx
+  xx       xxx
+  xxxxxxxxxxx
+  xxxx
+  xxxxxx
+  xx   xxx
+  xx    xxxx
+  xx      xxxx
+  xx        xxxx
+  xx          xxxx
+xxxxxx       xxxxxxx"#;
 
 pub fn start() {
     // readline in
@@ -16,17 +30,23 @@ pub fn start() {
         let p = Parser::new(lex.clone());
         let pr = p.parse_program();
         assert!(pr.is_some());
-        let pr = pr.unwrap();
-        println!("{}", &pr);
-        loop {
-            #[allow(unused_mut)]
-            let mut tok = lex.next_token();
-            println!("{:?}", tok);
-            if tok.token_type == EOF {
-                break;
-            }
+        if p.errors().borrow().len() != 0 {
+            println!("{}\n", SYMBOL);
+            print_parser_errors(p.errors().borrow().as_ref());
+            continue;
         }
-        println!("{input}");
+        let pr = pr.unwrap();
+        println!("{}", SYMBOL);
+        println!("\n\nParsed Program:\n{}", &pr);
+        // loop {
+        //     #[allow(unused_mut)]
+        //     let mut tok = lex.next_token();
+        //     println!("tok: {:?}", tok);
+        //     if tok.token_type == EOF {
+        //         break;
+        //     }
+        // }
+        // println!("{input}");
         input.clear();
         // print!("\r{PROMPT}");
     }
@@ -49,4 +69,10 @@ pub fn start() {
     //         tok = lex.next_token();
     //     }
     // }
+}
+
+pub fn print_parser_errors(errors: &Vec<String>) {
+    errors.iter().for_each(|err| {
+        println!("\t{}", err);
+    });
 }

@@ -192,7 +192,10 @@ impl Parser {
         self.next_token();
         expression = self.parse_expression(ExpressionConst::LOWEST);
 
-        while !self.cur_token_is(SEMICOLON) {
+        // while !self.cur_token_is(SEMICOLON) {
+        //     self.next_token();
+        // }
+        if !self.cur_token_is(SEMICOLON) {
             self.next_token();
         }
 

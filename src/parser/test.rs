@@ -477,7 +477,7 @@ return;
         let il = IfExpression::try_from(Box::new(&*stm.expression.unwrap()));
 
         assert!(il.is_ok());
-
+        #[allow(unused_variables)]
         let il = il.unwrap();
     }
 
@@ -505,7 +505,7 @@ return;
         let il = IfExpression::try_from(Box::new(&*stm.expression.unwrap()));
 
         assert!(il.is_ok());
-
+        #[allow(unused_variables)]
         let il = il.unwrap();
     }
 
