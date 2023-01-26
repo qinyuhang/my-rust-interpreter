@@ -117,10 +117,12 @@ mod test {
 }
 
 use std::ops::{Add, Mul};
+#[allow(dead_code)]
 pub(crate) fn test_literal_expression<N>(exp: Box<&dyn Expression>, expected: N) -> bool
 where
-    N: Add<Output = N> + Mul<Output = N> + Default + Copy,
+    N: Add<Output = N> + Mul<Output = N> + Default + Copy + Display,
 {
+    println!("{}{}", exp, expected);
     true
     // return test_integer_literal(exp, expected);
 }

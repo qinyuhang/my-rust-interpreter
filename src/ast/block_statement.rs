@@ -1,11 +1,10 @@
 use crate::ast::*;
 use crate::token::*;
-use std::cell::RefCell;
 use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub struct BlockStatement {
-    pub token: Token,
+    pub token: Token, // { token
     // FIXME: change Rc RefCell
     pub statement: Vec<Rc<dyn Statement>>,
 }

@@ -14,6 +14,7 @@ pub mod bool_literal;
 pub mod if_expression;
 pub mod block_statement;
 pub mod function_literal;
+pub mod call_expression;
 
 pub use identifier::*;
 pub use let_statement::*;
@@ -27,6 +28,7 @@ pub use bool_literal::*;
 pub use if_expression::*;
 pub use block_statement::*;
 pub use function_literal::*;
+pub use call_expression::*;
 
 pub trait Node: Debug + Display {
     fn token_literal(&self) -> String;

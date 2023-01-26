@@ -12,7 +12,6 @@ use std::rc::Rc;
 /// 后续用来解析表达式的时候会用到
 /// 比如 5 + 5 * 2，应该先运算 5 * 2
 /// 或者 5 * 2 + abc(1) 应该先运算函数再运算乘法最后运算加法
-#[allow(unused)]
 #[derive(Clone, Copy, Debug)]
 pub enum ExpressionConst {
     LOWEST = 1,  // what is this?
@@ -23,8 +22,22 @@ pub enum ExpressionConst {
     PREFIX,      // -X or !X￼
     CALL,        // function
 }
+impl From<isize> for ExpressionConst {
+    fn from(value: isize) -> Self {
+        match value {
+            2 => ExpressionConst::LOWEST,      // what is this?
+            3 => ExpressionConst::EQUALS,      // =
+            4 => ExpressionConst::LESSGREATER, // > or <
+            5 => ExpressionConst::SUM,         // +￼
+            6 => ExpressionConst::PRODUCT,     // "*￼
+            7 => ExpressionConst::PREFIX,      // -X or !X￼
+            8 => ExpressionConst::CALL,        // function
+            _ => ExpressionConst::LOWEST,
+        }
+    }
+}
 
-/// 把代码中的符号与优先级关联起来了
+// 把代码中的符号与优先级关联起来了
 thread_local! {
     #[allow(unused)]
     pub static PRECEDENCES: HashMap<TokenType, ExpressionConst> = HashMap::from([
@@ -36,6 +49,7 @@ thread_local! {
         (MINUS, ExpressionConst::SUM),
         (SLASH, ExpressionConst::PRODUCT),
         (ASTERISK, ExpressionConst::PRODUCT),
+        (LPAREN, ExpressionConst::CALL),
     ]);
 }
 
@@ -89,28 +103,33 @@ impl Parser {
         // println!("{:?}", &p.parse_identifier);
         let pd = pc.clone();
         pc.register_prefix(FUNCTION, Rc::new(move || pd.parse_function_literal()));
-        
-        // let pd = pc.clone();
-        // pc.register_prefix(IF, Rc::new(move || pd.parse_block_statement()));
-
-        PRECEDENCES.with(|ps| {
-            // println!("before register infix_parse: {:?}", ps);
-            ps.iter().for_each(|(&token, ec)| {
-                let pd = pc.clone();
-                // println!("register infix parser for {:?}", token);
-                pc.register_infix(token, Rc::new(move |left| pd.parse_infix_expression(left)));
-            });
-        });
-
         let pd = pc.clone();
         pc.register_prefix(TRUE, Rc::new(move || pd.parse_boolean()));
         let pd = pc.clone();
         pc.register_prefix(FALSE, Rc::new(move || pd.parse_boolean()));
         let pd = pc.clone();
-        pc.register_prefix(LPAREN, Rc::new(move || pd.parse_group_expression()));
-
+        pc.register_prefix(LPAREN, Rc::new(move || pd.parse_grouped_expression()));
         let pd = pc.clone();
         pc.register_prefix(IF, Rc::new(move || pd.parse_if_expression()));
+
+        let pd = pc.clone();
+        pc.register_infix(LPAREN, Rc::new(move |val| pd.parse_call_expression(val)));
+
+        // let pd = pc.clone();
+        // pc.register_prefix(IF, Rc::new(move || pd.parse_block_statement()));
+
+        PRECEDENCES.with(|ps| {
+            // println!("before register infix_parse: {:?}", ps);
+            #[allow(unused_variables)]
+            ps.iter().for_each(|(&token, ec)| {
+                if token == LPAREN {
+                    return;
+                }
+                let pd = pc.clone();
+                // println!("register infix parser for {:?}", token);
+                pc.register_infix(token, Rc::new(move |left| pd.parse_infix_expression(left)));
+            });
+        });
 
         pc.next_token();
         pc.next_token();
@@ -167,6 +186,7 @@ impl Parser {
             return None;
         }
         // FIXME: 这里是想给 parse 后面的 expression 的
+        #[allow(unused_assignments)]
         let mut expression = None;
 
         self.next_token();
@@ -193,6 +213,7 @@ impl Parser {
 
     pub fn parse_return_statement(&self) -> Option<Rc<dyn Statement>> {
         let cur_token = (*self.cur_token.borrow()).clone();
+        #[allow(unused_assignments)]
         let mut expression = None;
 
         self.next_token();
@@ -223,14 +244,14 @@ impl Parser {
     }
     fn parse_expression(&self, precedence: ExpressionConst) -> Option<Rc<dyn Expression>> {
         let tp = self.cur_token.borrow().token_type.to_string();
-        if self.prefix_parse_fns.borrow().get(&*tp).is_none() {
+        let pfs = self.prefix_parse_fns.borrow();
+        let pf = pfs.get(&*tp);
+        if pf.is_none() {
             self.no_prefix_parse_fn_error();
             return None;
         }
-        let mut left = None;
-        if let Some(pf) = self.prefix_parse_fns.borrow().get(&*tp) {
-            left = pf();
-        }
+        let pf = pf.unwrap();
+        let mut left = pf();
         println!("before parse_infix: {:?}", left);
         while !self.peek_token_is(SEMICOLON)
             && (precedence as isize) < (self.peek_precedence() as isize)
@@ -239,8 +260,11 @@ impl Parser {
             if let Some(infix) = self.infix_parse_fns.borrow().get(&*pktp) {
                 self.next_token();
                 left = infix(left.unwrap());
+            } else {
+                return left;
             }
         }
+        println!("after parse_infix: {:?}", left);
         return left;
         // None
     }
@@ -281,12 +305,21 @@ impl Parser {
         let precedence = self.cur_precedence();
         self.next_token();
 
+        #[allow(unused_mut)]
+        let mut right = self.parse_expression(precedence);
+        let left = Some(left);
+
+        // if operator == "+" {
+        //     right = self.parse_expression(ExpressionConst::from((precedence as isize) - 1))
+        // }
+
         let expression = InfixExpression {
             token,
             operator,
-            left: Some(left),
-            right: self.parse_expression(precedence),
+            left,
+            right,
         };
+        println!("parse_infix_expression result: {:?}", expression);
         Some(Rc::new(expression))
     }
     pub fn parse_boolean(&self) -> Option<Rc<dyn Expression>> {
@@ -295,7 +328,7 @@ impl Parser {
             value: self.cur_token_is(TRUE),
         }))
     }
-    pub fn parse_group_expression(&self) -> Option<Rc<dyn Expression>> {
+    pub fn parse_grouped_expression(&self) -> Option<Rc<dyn Expression>> {
         self.next_token();
 
         let exp = self.parse_expression(ExpressionConst::LOWEST);
@@ -355,10 +388,7 @@ impl Parser {
         //     self.next_token();
         // }
 
-        Some(Rc::new(BlockStatement {
-            token,
-            statement,
-        }))
+        Some(Rc::new(BlockStatement { token, statement }))
     }
     pub fn parse_function_literal(&self) -> Option<Rc<dyn Expression>> {
         let token = (*self.cur_token.borrow()).clone();
@@ -406,6 +436,7 @@ impl Parser {
         while self.peek_token_is(COMMA) {
             self.next_token();
             self.next_token();
+            // fixme fn as p
             let ident = Identifier {
                 token: (*self.cur_token.borrow()).clone(),
                 value: self.cur_token.borrow().literal.clone(),
@@ -418,6 +449,42 @@ impl Parser {
         }
 
         Some(identifiers)
+    }
+    pub fn parse_call_expression(&self, f: Rc<dyn Expression>) -> Option<Rc<dyn Expression>> {
+        println!("\n\nparse_call_expression\n\n{:?}", "args");
+
+        let token = (*self.cur_token.borrow()).clone();
+        let args = self.parse_call_arguments();
+
+        Some(Rc::new(CallExpression {
+            token,
+            arguments: args,
+            function: Some(f.clone()),
+        }))
+    }
+    pub fn parse_call_arguments(&self) -> Option<Vec<Rc<dyn Expression>>> {
+        let mut args = vec![];
+
+        if self.peek_token_is(RPAREN) {
+            self.next_token();
+            return Some(args);
+        }
+
+        self.next_token();
+
+        args.push(self.parse_expression(ExpressionConst::LOWEST).unwrap());
+
+        while self.peek_token_is(COMMA) {
+            self.next_token();
+            self.next_token();
+            args.push(self.parse_expression(ExpressionConst::LOWEST).unwrap());
+        }
+
+        if !self.expect_peek(RPAREN) {
+            return None;
+        }
+
+        Some(args)
     }
     pub fn expect_peek(&self, token: TokenType) -> bool {
         let r = self.peek_token_is(token);
@@ -444,11 +511,11 @@ impl Parser {
         let msg = format!("expect next token to be {}, got {} instead", t, msg);
         self.errors.borrow_mut().push(msg);
     }
-    pub fn register_prefix(&self, token: TokenType, the_fn: Rc<PrefixParseFn>) {
-        self.prefix_parse_fns.borrow_mut().insert(token, the_fn);
+    pub fn register_prefix(&self, token: TokenType, f: Rc<PrefixParseFn>) {
+        self.prefix_parse_fns.borrow_mut().insert(token, f);
     }
-    pub fn register_infix(&self, token: TokenType, the_fn: Rc<InfixParseFn>) {
-        self.infix_parse_fns.borrow_mut().insert(token, the_fn);
+    pub fn register_infix(&self, token: TokenType, f: Rc<InfixParseFn>) {
+        self.infix_parse_fns.borrow_mut().insert(token, f);
     }
     pub fn no_prefix_parse_fn_error(&self) {
         self.errors.borrow_mut().push(format!(

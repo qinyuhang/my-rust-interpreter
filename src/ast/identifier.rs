@@ -1,7 +1,5 @@
 use crate::ast::{Node, *};
 use crate::token::*;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub struct Identifier {
@@ -59,6 +57,7 @@ impl std::fmt::Display for Identifier {
     }
 }
 
+#[allow(unused)]
 pub(crate) fn test_identifier_expression(exp: Box<&dyn Statement>, value: String) -> bool {
     let stm = ExpressionStatement::try_from(exp);
 

@@ -47,6 +47,7 @@ impl std::fmt::Display for FunctionLiteral {
 }
 
 mod test {
+    #[allow(unused)]
     use {crate::ast::*, crate::token::*, std::cell::RefCell, std::rc::Rc};
 
     #[test]

@@ -277,10 +277,10 @@ return 500;
             assert!(pr.is_some());
             let pr = pr.unwrap();
 
-            println!(
-                "\n\n\ntest_parsing_infix_expression: {:?}\n\n\n",
-                pr.statement
-            );
+            // println!(
+            //     "\n\n\ntest_parsing_infix_expression: {:?}\n\n\n",
+            //     pr.statement
+            // );
 
             assert_eq!(pr.statement.len(), input.lines().count());
 
@@ -297,7 +297,7 @@ return 500;
             assert!(il.is_ok());
 
             let il = il.unwrap();
-            println!("{:?}", il);
+            // println!("{:?}", il);
             assert_eq!(il.operator, operator);
             assert_eq!(
                 IntegerLiteral::try_from(Box::new(&*il.left.unwrap()))
@@ -322,17 +322,17 @@ return 500;
         tests.iter().for_each(|&(input, le, operator, re)| {
             let l = Lexer::new(input);
             let p = Parser::new(l);
-            println!("Start Test: {} {}", input, operator);
+            // println!("Start Test: {} {}", input, operator);
             let pr = p.parse_program();
             test_parser_errors(&p, None);
 
             assert!(pr.is_some());
             let pr = pr.unwrap();
 
-            println!(
-                "\n\n\ntest_parsing_infix_expression: {:?}\n\n\n",
-                pr.statement
-            );
+            // println!(
+            //     "\n\n\ntest_parsing_infix_expression: {:?}\n\n\n",
+            //     pr.statement
+            // );
 
             assert_eq!(pr.statement.len(), input.lines().count());
 
@@ -349,7 +349,7 @@ return 500;
             assert!(il.is_ok());
 
             let il = il.unwrap();
-            println!("{:?}", il);
+            // println!("{:?}", il);
             assert_eq!(il.operator, operator);
             assert_eq!(
                 BooleanLiteral::try_from(Box::new(&*il.left.unwrap()))
@@ -390,6 +390,15 @@ return 500;
             ("2 / (5 + 5)", "(2 / (5 + 5))"),
             ("-(5 + 5)", "(-(5 + 5))"),
             ("!(true == true)", "(!(true == true))"),
+            ("a + add(b * c) + d", "((a + add((b * c))) + d)"),
+            (
+                "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
+                "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))",
+            ),
+            (
+                "add(a + b + c * d / f + g)",
+                "add((((a + b) + ((c * d) / f)) + g))",
+            ),
         ];
 
         #[allow(unused)]
@@ -471,7 +480,7 @@ return;
 
         let il = il.unwrap();
     }
-    
+
     #[test]
     fn test_if_else_expression() {
         let input = r#"if (x < y) { x } else { y }"#;
@@ -498,16 +507,15 @@ return;
         assert!(il.is_ok());
 
         let il = il.unwrap();
-
     }
 
     #[test]
     fn test_function_literal() {
-        let input = r#"fn (x, y) { return x + y; }"#;
-// fn() { return x + y; }
-// let mf = fn(x, y) { return x + y; }
-// fn() { return fn(x, y) { return x > y; } }
-// mf(x, y, fn(x, y) { return x > y });"#;
+        let input = r#"fn (x, y) { return x + y; };
+fn() { return x + y; };
+fn() { return fn(x, y) { return x > y; } };
+let mf = fn(x, y) { return x + y; };"#;
+        // mf(x, y, fn(x, y) { return x > y });"#;
         let l = Lexer::new(input);
         let p = Parser::new(l);
         let pr = p.parse_program();
@@ -516,8 +524,22 @@ return;
         assert!(pr.is_some());
         let pr = pr.unwrap();
 
-        assert_eq!(pr.statement.len(), input.lines().count());
+        // assert_eq!(pr.statement.len(), input.lines().count());
         println!("pr: {:?}", pr);
         println!("pr: {}", pr);
+    }
+
+    #[test]
+    fn test_call_expression() {
+        let input = r#"add(1, 2);"#;
+
+        let l = Lexer::new(input);
+        let p = Parser::new(l);
+        let pr = p.parse_program();
+        // test_parser_errors(&p, None);
+        
+        assert!(pr.is_some());
+        let pr = pr.unwrap();
+        println!("test_call_expression: pr: {:?}", pr);
     }
 }

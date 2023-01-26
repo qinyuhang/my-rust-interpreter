@@ -1,7 +1,6 @@
 use crate::ast::*;
 use crate::token::Token;
 
-use std::cell::RefCell;
 use std::rc::Rc;
 
 #[derive(Debug, Clone)]
