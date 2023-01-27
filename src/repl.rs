@@ -39,6 +39,8 @@ pub fn start() {
         let pr = pr.unwrap();
         println!("{}", SYMBOL);
         println!("\n\nParsed Program:\n{}", &pr);
+        println!("\nResult:\n\n{:?}", eval(&pr));
+        // eval(&pr);
         // loop {
         //     #[allow(unused_mut)]
         //     let mut tok = lex.next_token();

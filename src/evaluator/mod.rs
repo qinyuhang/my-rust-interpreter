@@ -25,6 +25,11 @@ pub fn eval(node: &dyn Node) -> Option<Rc<dyn Object>> {
             return Some(Rc::new(Integer { value: n.value }));
         }
     }
+    if n.is::<BooleanLiteral>() {
+        if let Some(n) = n.downcast_ref::<BooleanLiteral>() {
+            return Some(Rc::new(Boolean { value: n.value }));
+        }
+    }
     None
 }
 
@@ -55,6 +60,16 @@ mod test {
         });
     }
 
+    #[test]
+    fn test_boolean_expression() {
+        let tests = vec![("true", true), ("false", false)];
+
+        tests.iter().for_each(|&(input, expected)| {
+            let evaluated = test_eval(input);
+            assert!(test_boolean_object(evaluated, expected));
+        });
+    }
+
     fn test_eval(input: &str) -> Option<Rc<dyn Object>> {
         let l = Lexer::new(input);
         let p = Parser::new(l);
@@ -67,6 +82,14 @@ mod test {
     fn test_integer_object(obj: Option<Rc<dyn Object>>, expected: i64) -> bool {
         println!("test_integer_object {:?}", obj);
         let i = Integer::try_from(obj.unwrap());
+        assert!(i.is_ok());
+        let i = i.unwrap();
+        assert_eq!(i.value, expected);
+        true
+    }
+
+    fn test_boolean_object(obj: Option<Rc<dyn Object>>, expected: bool) -> bool {
+        let i = Boolean::try_from(obj.unwrap());
         assert!(i.is_ok());
         let i = i.unwrap();
         assert_eq!(i.value, expected);

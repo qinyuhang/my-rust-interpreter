@@ -24,3 +24,17 @@ impl std::fmt::Display for Boolean {
         write!(f, "{}", self.value)
     }
 }
+
+impl TryFrom<Rc<dyn Object>> for Boolean {
+    type Error = String;
+
+    fn try_from(value: Rc<dyn Object>) -> Result<Self, Self::Error> {
+        let val = value.as_any();
+        if val.is::<Boolean>() {
+            if let Some(v) = val.downcast_ref::<Boolean>() {
+                return Ok((*v).clone());
+            }
+        }
+        Err("Str".into())
+    }
+}
