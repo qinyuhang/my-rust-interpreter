@@ -1,5 +1,6 @@
 use crate::lexer::*;
 use crate::parser::*;
+use crate::evaluator::*;
 use std::io;
 
 pub const PROMPT: &'static str = ">> ";

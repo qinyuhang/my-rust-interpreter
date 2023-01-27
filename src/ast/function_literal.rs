@@ -23,6 +23,9 @@ impl Expression for FunctionLiteral {
     fn expression_node(&self) {
         todo!()
     }
+    fn upcast(&self) -> &dyn Node {
+        self
+    }
 }
 
 impl std::fmt::Display for FunctionLiteral {

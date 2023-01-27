@@ -19,11 +19,18 @@ impl Statement for LetStatement {
     fn statement_node(&self) {
         todo!()
     }
+    fn upcast(&self) -> &dyn Node {
+        self
+    }
 }
 impl Expression for LetStatement {
     fn expression_node(&self) {
         todo!()
     }
+    fn upcast(&self) -> &dyn Node {
+        self
+    }
+
 }
 impl TryFrom<Box<&dyn Statement>> for LetStatement {
     type Error = String;

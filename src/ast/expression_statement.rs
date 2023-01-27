@@ -20,10 +20,16 @@ impl Statement for ExpressionStatement {
     fn statement_node(&self) {
         todo!()
     }
+    fn upcast(&self) -> &dyn Node {
+        self
+    }
 }
 impl Expression for ExpressionStatement {
     fn expression_node(&self) {
         todo!()
+    }
+    fn upcast(&self) -> &dyn Node {
+        self
     }
 }
 impl TryFrom<Box<&dyn Statement>> for ExpressionStatement {

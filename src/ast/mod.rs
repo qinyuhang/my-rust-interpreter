@@ -37,9 +37,11 @@ pub trait Node: Debug + Display {
 
 pub trait Statement: Node {
     fn statement_node(&self);
+    fn upcast(&self) -> &dyn Node;
 }
 
 pub trait Expression: Node {
     // node: Node;
     fn expression_node(&self);
+    fn upcast(&self) -> &dyn Node;
 }

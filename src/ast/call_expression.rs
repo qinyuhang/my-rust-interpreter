@@ -19,6 +19,9 @@ impl Expression for CallExpression {
     fn expression_node(&self) {
         todo!()
     }
+    fn upcast(&self) -> &dyn Node {
+        self
+    }
 }
 impl std::fmt::Display for CallExpression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

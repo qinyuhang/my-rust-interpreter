@@ -24,6 +24,9 @@ impl Expression for PrefixExpression {
     fn expression_node(&self) {
         todo!()
     }
+    fn upcast(&self) -> &dyn Node {
+        self
+    }
 }
 
 impl TryFrom<Box<&dyn Expression>> for PrefixExpression {

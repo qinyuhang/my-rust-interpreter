@@ -20,6 +20,9 @@ impl Statement for ReturnStatement {
     fn statement_node(&self) {
         todo!()
     }
+    fn upcast(&self) -> &dyn Node {
+        self
+    }
 }
 impl TryFrom<Box<&dyn Statement>> for ReturnStatement {
     type Error = String;

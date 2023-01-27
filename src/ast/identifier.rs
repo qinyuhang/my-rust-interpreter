@@ -20,6 +20,9 @@ impl Expression for Identifier {
     fn expression_node(&self) {
         todo!()
     }
+    fn upcast(&self) -> &dyn Node {
+        self
+    }
 }
 
 impl TryFrom<Box<&dyn Expression>> for Identifier {

@@ -25,6 +25,9 @@ impl Expression for IntegerLiteral {
     fn expression_node(&self) {
         todo!()
     }
+    fn upcast(&self) -> &dyn Node {
+        self
+    }
 }
 
 impl TryFrom<String> for IntegerLiteral {
