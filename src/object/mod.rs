@@ -1,9 +1,11 @@
 use std::{any::Any, fmt::Debug};
 pub mod boolean;
 pub mod integer;
+pub mod null;
 
 pub use boolean::*;
 pub use integer::*;
+pub use null::*;
 
 pub type ObjectType = &'static str;
 

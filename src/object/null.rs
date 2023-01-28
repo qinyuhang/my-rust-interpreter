@@ -11,7 +11,7 @@ impl Object for Null {
     fn inspect(&self) -> String {
         "null".to_string()
     }
-    
+
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -19,6 +19,6 @@ impl Object for Null {
 
 impl std::fmt::Display for Null {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.value)
+        write!(f, "{}", "null")
     }
 }
