@@ -37,6 +37,7 @@ pub fn start() {
         if p.errors().borrow().len() != 0 {
             println!("{}\n", SYMBOL);
             print_parser_errors(p.errors().borrow().as_ref());
+            input.clear();
             continue;
         }
         let pr = pr.unwrap();

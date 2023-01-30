@@ -8,7 +8,7 @@ mod evaluator;
 mod object;
 
 fn main() {
-    let cargo_file = include_str!("../Cargo.toml");
-    println!("Hello, world! {}", cargo_file);
+    // let cargo_file = include_str!("../Cargo.toml");
+    // println!("Hello, world! {}", cargo_file);
     repl::start();
 }
