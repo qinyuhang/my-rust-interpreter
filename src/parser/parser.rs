@@ -255,7 +255,7 @@ impl Parser {
         }
         let pf = pf.unwrap();
         let mut left = pf();
-        println!("before parse_infix: {:?}", left);
+        // println!("before parse_infix: {:?}", left);
         while !self.peek_token_is(SEMICOLON)
             && (precedence as isize) < (self.peek_precedence() as isize)
         {
@@ -267,7 +267,7 @@ impl Parser {
                 return left;
             }
         }
-        println!("after parse_infix: {:?}", left);
+        // println!("after parse_infix: {:?}", left);
         return left;
         // None
     }
@@ -322,7 +322,7 @@ impl Parser {
             left,
             right,
         };
-        println!("parse_infix_expression result: {:?}", expression);
+        // println!("parse_infix_expression result: {:?}", expression);
         Some(Rc::new(expression))
     }
     pub fn parse_boolean(&self) -> Option<Rc<dyn Expression>> {

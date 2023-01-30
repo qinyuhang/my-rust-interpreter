@@ -2,6 +2,7 @@ use crate::lexer::*;
 use crate::parser::*;
 use crate::evaluator::*;
 use std::io;
+use std::io::Write;
 
 pub const PROMPT: &'static str = ">> ";
 pub const SYMBOL: &'static str = r#"
@@ -26,7 +27,8 @@ pub fn start() {
     let stdin = io::stdin();
     let mut input = String::new();
     loop {
-        println!("{PROMPT}");
+        print!("{PROMPT}");
+        std::io::stdout().flush().unwrap();
         stdin.read_line(&mut input).unwrap();
         let lex = Lexer::new(input.clone());
         let p = Parser::new(lex.clone());
@@ -38,8 +40,8 @@ pub fn start() {
             continue;
         }
         let pr = pr.unwrap();
-        // println!("\n\nParsed Program:\n{}", &pr);
-        println!("Result:\n{}", eval(&pr).as_ref().unwrap());
+        println!("{}", &pr);
+        println!("{}", eval(&pr).as_ref().unwrap());
         // eval(&pr);
         // loop {
         //     #[allow(unused_mut)]
