@@ -21,6 +21,7 @@ pub const SYMBOL: &'static str = r#"
 xxxxxx       xxxxxxx"#;
 
 pub fn start() {
+    println!("{}", SYMBOL);
     // readline in
     let stdin = io::stdin();
     let mut input = String::new();
@@ -37,9 +38,8 @@ pub fn start() {
             continue;
         }
         let pr = pr.unwrap();
-        println!("{}", SYMBOL);
-        println!("\n\nParsed Program:\n{}", &pr);
-        println!("\nResult:\n\n{:?}", eval(&pr));
+        // println!("\n\nParsed Program:\n{}", &pr);
+        println!("Result:\n{}", eval(&pr).as_ref().unwrap());
         // eval(&pr);
         // loop {
         //     #[allow(unused_mut)]

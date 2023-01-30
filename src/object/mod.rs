@@ -9,7 +9,7 @@ pub use null::*;
 
 pub type ObjectType = &'static str;
 
-pub trait Object: Debug {
+pub trait Object: Debug + std::fmt::Display {
     fn object_type(&self) -> ObjectType;
     fn inspect(&self) -> String;
     fn as_any(&self) -> &dyn Any;
