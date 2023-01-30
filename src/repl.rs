@@ -3,6 +3,12 @@ use crate::parser::*;
 use crate::evaluator::*;
 use std::io;
 use std::io::Write;
+use std::rc::Rc;
+use std::cell::RefCell;
+
+thread_local! {
+    static History: Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(vec![]))
+}
 
 pub const PROMPT: &'static str = ">> ";
 pub const SYMBOL: &'static str = r#"
@@ -30,6 +36,13 @@ pub fn start() {
         print!("{PROMPT}");
         std::io::stdout().flush().unwrap();
         stdin.read_line(&mut input).unwrap();
+        // println!("read key: {:?}", input);
+        if input == "" {
+            continue;
+        }
+        History.with(|history| {
+            history.borrow_mut().push(input.clone());
+        });
         let lex = Lexer::new(input.clone());
         let p = Parser::new(lex.clone());
         let pr = p.parse_program();
