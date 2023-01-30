@@ -78,7 +78,20 @@ pub fn eval_infix_expression(
                 "!=" => Some(Rc::new(Boolean { value: l.value != r.value })),
                 _ => None,
             }
-        }
+        },
+        (Some(l), Some(r))
+            if (left.as_ref().unwrap().as_any()).is::<Boolean>()
+                && (right.as_ref().unwrap().as_any()).is::<Boolean>() =>
+        {
+            let l = l.as_any().downcast_ref::<Boolean>().unwrap();
+            let r = r.as_any().downcast_ref::<Boolean>().unwrap();
+            // Some(Rc::new(Integer { value: val }))
+            match operator {
+                "==" => Some(Rc::new(Boolean { value: l.value == r.value })),
+                "!=" => Some(Rc::new(Boolean { value: l.value != r.value })),
+                _ => None,
+            }
+        },
         _ => None,
     }
 }
