@@ -30,7 +30,18 @@ mod test {
 
     #[test]
     fn test_boolean_expression() {
-        let tests = vec![("true", true), ("false", false)];
+        let tests = vec![
+            ("true", true),
+            ("false", false),
+            ("1 < 2", true),
+            ("1 > 2", false),
+            ("1 < 1", false),
+            ("1 > 1", false),
+            ("1 == 1", true),
+            ("1 != 1", false),
+            ("1 == 2", false),
+            ("1 != 2", true),
+        ];
 
         tests.iter().for_each(|&(input, expected)| {
             let evaluated = test_eval(input);

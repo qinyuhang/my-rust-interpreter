@@ -66,16 +66,18 @@ pub fn eval_infix_expression(
         {
             let l = l.as_any().downcast_ref::<Integer>().unwrap();
             let r = r.as_any().downcast_ref::<Integer>().unwrap();
-            if let Some(val) = match operator {
-                "+" => Some(l.value + r.value),
-                "-" => Some(l.value - r.value),
-                "*" => Some(l.value * r.value),
-                "/" => Some(l.value / r.value),
+            // Some(Rc::new(Integer { value: val }))
+            match operator {
+                "+" => Some(Rc::new(Integer { value: l.value + r.value })),
+                "-" => Some(Rc::new(Integer { value: l.value - r.value })),
+                "*" => Some(Rc::new(Integer { value: l.value * r.value })),
+                "/" => Some(Rc::new(Integer { value: l.value / r.value })),
+                "<" => Some(Rc::new(Boolean { value: l.value < r.value })),
+                ">" => Some(Rc::new(Boolean { value: l.value > r.value })),
+                "==" => Some(Rc::new(Boolean { value: l.value == r.value })),
+                "!=" => Some(Rc::new(Boolean { value: l.value != r.value })),
                 _ => None,
-            } {
-                return Some(Rc::new(Integer { value: val }));
             }
-            None
         }
         _ => None,
     }
