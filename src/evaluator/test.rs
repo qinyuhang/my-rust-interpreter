@@ -75,6 +75,7 @@ mod test {
         });
     }
 
+    #[allow(unused)]
     fn test_eval(input: &str) -> Option<Rc<dyn Object>> {
         let l = Lexer::new(input);
         let p = Parser::new(l);
@@ -84,6 +85,7 @@ mod test {
         return eval(&pr);
     }
 
+    #[allow(unused)]
     fn test_integer_object(obj: Option<Rc<dyn Object>>, expected: i64) -> bool {
         println!("test_integer_object {:?}", obj);
         let i = Integer::try_from(obj.unwrap());
@@ -93,6 +95,7 @@ mod test {
         true
     }
 
+    #[allow(unused)]
     fn test_boolean_object(obj: Option<Rc<dyn Object>>, expected: bool) -> bool {
         let i = Boolean::try_from(obj.unwrap());
         assert!(i.is_ok());

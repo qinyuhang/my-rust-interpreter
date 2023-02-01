@@ -1,11 +1,4 @@
-mod ast;
-mod lexer;
-mod parser;
-mod repl;
-mod token;
-mod utils;
-mod evaluator;
-mod object;
+pub use my_rust_interpreter::repl;
 
 fn main() {
     // let cargo_file = include_str!("../Cargo.toml");

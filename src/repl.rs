@@ -7,7 +7,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 
 thread_local! {
-    static History: Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(vec![]))
+    static HISTORY: Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(vec![]))
 }
 
 pub const PROMPT: &'static str = ">> ";
@@ -40,7 +40,7 @@ pub fn start() {
         if input == "" {
             continue;
         }
-        History.with(|history| {
+        HISTORY.with(|history| {
             history.borrow_mut().push(input.clone());
         });
         let lex = Lexer::new(input.clone());
