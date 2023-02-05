@@ -395,6 +395,18 @@ impl Parser {
     }
     pub fn parse_function_literal(&self) -> Option<Rc<dyn Expression>> {
         let token = (*self.cur_token.borrow()).clone();
+        
+        // function name
+        let mut name = None;
+
+        if self.peek_token_is(IDENT) {
+            self.next_token();
+            name = Some(Identifier {
+                token: (*self.cur_token.borrow()).clone(),
+                value: self.cur_token.borrow().literal.clone(),
+            });
+            // println!("function name: {}", name.as_ref().unwrap());
+        }
         if !self.expect_peek(LPAREN) {
             return None;
         }
@@ -409,6 +421,7 @@ impl Parser {
 
         let lit = FunctionLiteral {
             token,
+            name,
             parameters,
             body,
         };

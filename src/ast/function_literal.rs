@@ -7,6 +7,7 @@ pub struct FunctionLiteral {
     pub token: Token,
     pub parameters: Option<Vec<Identifier>>,
     pub body: Option<Rc<dyn Statement>>,
+    pub name: Option<Identifier>,
     // pub body: Option<BlockStatement>,
 }
 
@@ -34,13 +35,14 @@ impl std::fmt::Display for FunctionLiteral {
             f,
             "{}",
             format!(
-                "{}({}) {}",
+                "{} {}({}) {}",
                 self.token_literal(),
+                format!("{}", self.name.as_ref().map_or("".into(), |val| val.to_string() + " ")),
                 (*self.parameters.as_ref().map_or_else(|| vec![], |v| v.to_vec()))
                     .iter()
                     .map(|v| v.to_string())
                     .collect::<Vec<String>>()
-                    .join(","),
+                    .join(", "),
                 self.body
                     .as_ref()
                     .map_or_else(|| "".into(), |v| v.to_string())
@@ -51,10 +53,16 @@ impl std::fmt::Display for FunctionLiteral {
 
 mod test {
     #[allow(unused)]
-    use {crate::ast::*, crate::token::*, std::cell::RefCell, std::rc::Rc};
+    use {crate::ast::*, crate::token::*, crate::lexer::Lexer, crate::parser::Parser, std::cell::RefCell, std::rc::Rc};
 
     #[test]
     fn test_function_literal_to_string() {
+        let input = r#"fn z (x, y, z) {  }"#;
+        let l = Lexer::new(input);
+        let p = Parser::new(l);
+        let pr = p.parse_program();
+        println!("{}", pr.as_ref().unwrap().to_string());
+        assert_eq!(pr.as_ref().unwrap().to_string(), input);
         // let fl = FunctionLiteral {
         //     token: Rc::new(RefCell::new(Token {
         //         token_type: FUNCTION,
