@@ -76,6 +76,37 @@ mod test {
     }
 
     #[allow(unused)]
+    #[test]
+    fn test_if_else_expressions() {
+        let tests = vec![
+            ("if (true) { 10 }", Some(10)),
+            ("if (false) { 10 }", None),
+            ("if (1) { 10 }", Some(10)),
+            ("if (1 < 2) { 10 }", Some(10)),
+            ("if (1 > 2) { 10 }", None),
+            ("if (1 > 2) { 10 } else { 20 }", Some(20)),
+            ("if (1 < 2) { 10 } else { 20 }", Some(10)),
+        ];
+
+        tests.iter().for_each(|&(input, value)| {
+            let evaluated = test_eval(input);
+            assert!(evaluated.is_some());
+
+            if let Some(int_val) = value {
+                test_integer_object(evaluated, int_val);
+            } else {
+                test_null_object(&evaluated);
+            }
+        })
+    }
+
+    fn test_null_object(obj: &Option<Rc<dyn Object>>) {
+        assert!(obj.is_some());
+        println!("test null object: {}", obj.as_ref().unwrap());
+        let x = obj.as_ref().unwrap().as_any();
+        assert!(x.downcast_ref::<Null>().is_some());
+    }
+
     fn test_eval(input: &str) -> Option<Rc<dyn Object>> {
         let l = Lexer::new(input);
         let p = Parser::new(l);

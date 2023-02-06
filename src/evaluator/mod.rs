@@ -12,6 +12,7 @@ pub fn eval(node: &dyn Node) -> Option<Rc<dyn Object>> {
     // Program
     // ExpressionStatement
     // IntegerLiteral
+    println!("eval: {}", node);
     if n.is::<Program>() {
         if let Some(n) = n.downcast_ref::<Program>() {
             return eval_statements(n.statement.clone());
@@ -32,7 +33,14 @@ pub fn eval(node: &dyn Node) -> Option<Rc<dyn Object>> {
             return Some(Rc::new(Boolean { value: n.value }));
         }
     }
-    // null if ident
+    if n.is::<IfExpression>() {
+        if let Some(n) = n.downcast_ref::<IfExpression>() {
+            println!("IfExpression {:?}", n);
+            return eval_if_expression(n);
+            // return Some(Rc::new(If));
+        }
+    }
+    // null is ident
     // if n.is::<>() {
     //     if let Some(n) = n.downcast_ref::<Null>() {
     //         return Some(Rc::new(Null {}));
@@ -51,7 +59,37 @@ pub fn eval(node: &dyn Node) -> Option<Rc<dyn Object>> {
             return eval_infix_expression(&n.operator, left, right);
         }
     }
+    if n.is::<BlockStatement>() {
+        println!("eval block Statement");
+        if let Some(n) = n.downcast_ref::<BlockStatement>() {
+            return eval_statements(n.statement.clone());
+        }
+    }
     None
+}
+
+pub fn eval_if_expression(ex: &IfExpression) -> Option<Rc<dyn Object>> {
+    if is_truthy(eval(ex.condition.upcast())) {
+        return eval(ex.consequence.as_ref().unwrap().upcast())
+    } else if ex.alternative.is_some() {
+        return eval(ex.alternative.as_ref().unwrap().upcast());
+    } else {
+        return Some(Rc::new(Null {}))
+    }
+}
+
+pub fn is_truthy(obj: Option<Rc<dyn Object>>) -> bool {
+    println!("is_truthy: {:?}", obj);
+    obj.map_or(false, |val| {
+        let v_a = val.as_any();
+        if v_a.is::<Null>() {
+            return false;
+        }
+        if v_a.is::<Boolean>() {
+            return v_a.downcast_ref::<Boolean>().unwrap().value;
+        }
+        true
+    })
 }
 
 pub fn eval_infix_expression(
@@ -68,17 +106,33 @@ pub fn eval_infix_expression(
             let r = r.as_any().downcast_ref::<Integer>().unwrap();
             // Some(Rc::new(Integer { value: val }))
             match operator {
-                "+" => Some(Rc::new(Integer { value: l.value + r.value })),
-                "-" => Some(Rc::new(Integer { value: l.value - r.value })),
-                "*" => Some(Rc::new(Integer { value: l.value * r.value })),
-                "/" => Some(Rc::new(Integer { value: l.value / r.value })),
-                "<" => Some(Rc::new(Boolean { value: l.value < r.value })),
-                ">" => Some(Rc::new(Boolean { value: l.value > r.value })),
-                "==" => Some(Rc::new(Boolean { value: l.value == r.value })),
-                "!=" => Some(Rc::new(Boolean { value: l.value != r.value })),
+                "+" => Some(Rc::new(Integer {
+                    value: l.value + r.value,
+                })),
+                "-" => Some(Rc::new(Integer {
+                    value: l.value - r.value,
+                })),
+                "*" => Some(Rc::new(Integer {
+                    value: l.value * r.value,
+                })),
+                "/" => Some(Rc::new(Integer {
+                    value: l.value / r.value,
+                })),
+                "<" => Some(Rc::new(Boolean {
+                    value: l.value < r.value,
+                })),
+                ">" => Some(Rc::new(Boolean {
+                    value: l.value > r.value,
+                })),
+                "==" => Some(Rc::new(Boolean {
+                    value: l.value == r.value,
+                })),
+                "!=" => Some(Rc::new(Boolean {
+                    value: l.value != r.value,
+                })),
                 _ => None,
             }
-        },
+        }
         (Some(l), Some(r))
             if (left.as_ref().unwrap().as_any()).is::<Boolean>()
                 && (right.as_ref().unwrap().as_any()).is::<Boolean>() =>
@@ -87,11 +141,15 @@ pub fn eval_infix_expression(
             let r = r.as_any().downcast_ref::<Boolean>().unwrap();
             // Some(Rc::new(Integer { value: val }))
             match operator {
-                "==" => Some(Rc::new(Boolean { value: l.value == r.value })),
-                "!=" => Some(Rc::new(Boolean { value: l.value != r.value })),
+                "==" => Some(Rc::new(Boolean {
+                    value: l.value == r.value,
+                })),
+                "!=" => Some(Rc::new(Boolean {
+                    value: l.value != r.value,
+                })),
                 _ => None,
             }
-        },
+        }
         _ => None,
     }
 }
