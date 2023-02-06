@@ -114,7 +114,9 @@ mod test {
             let evaluated = test_eval(input);
             assert!(evaluated.is_some());
 
-            println!("{}", evaluated.unwrap());
+            assert_eq!(Integer::try_from(evaluated.unwrap()).unwrap().value, value);
+
+            // println!("{}", evaluated.unwrap());
         });
     }
 
