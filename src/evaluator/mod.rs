@@ -6,6 +6,12 @@ pub use std::rc::Rc;
 
 mod test;
 
+thread_local! {
+    pub static NULLOBJ: Rc<dyn Object> = Rc::new(Null {});
+    pub static TRUEOBJ: Rc<dyn Object> = Rc::new(Boolean { value: true });
+    pub static FALSEOBJ:Rc<dyn Object> = Rc::new(Boolean { value: false });
+}
+
 pub fn eval(node: &dyn Node) -> Option<Rc<dyn Object>> {
     let n = node.as_any();
     // println!("eval: {:?}", node);
@@ -30,7 +36,11 @@ pub fn eval(node: &dyn Node) -> Option<Rc<dyn Object>> {
     }
     if n.is::<BooleanLiteral>() {
         if let Some(n) = n.downcast_ref::<BooleanLiteral>() {
-            return Some(Rc::new(Boolean { value: n.value }));
+            return Some(if n.value {
+                TRUEOBJ.with(|val| val.clone())
+            } else {
+                FALSEOBJ.with(|val| val.clone())
+            });
         }
     }
     if n.is::<IfExpression>() {
@@ -43,7 +53,7 @@ pub fn eval(node: &dyn Node) -> Option<Rc<dyn Object>> {
     // null is ident
     // if n.is::<>() {
     //     if let Some(n) = n.downcast_ref::<Null>() {
-    //         return Some(Rc::new(Null {}));
+    //         return Some(NULLOBJ.with(|val| val.clone()));
     //     }
     // }
     if n.is::<PrefixExpression>() {
@@ -70,11 +80,11 @@ pub fn eval(node: &dyn Node) -> Option<Rc<dyn Object>> {
 
 pub fn eval_if_expression(ex: &IfExpression) -> Option<Rc<dyn Object>> {
     if is_truthy(eval(ex.condition.upcast())) {
-        return eval(ex.consequence.as_ref().unwrap().upcast())
+        return eval(ex.consequence.as_ref().unwrap().upcast());
     } else if ex.alternative.is_some() {
         return eval(ex.alternative.as_ref().unwrap().upcast());
     } else {
-        return Some(Rc::new(Null {}))
+        return Some(NULLOBJ.with(|val| val.clone()));
     }
 }
 
@@ -118,18 +128,26 @@ pub fn eval_infix_expression(
                 "/" => Some(Rc::new(Integer {
                     value: l.value / r.value,
                 })),
-                "<" => Some(Rc::new(Boolean {
-                    value: l.value < r.value,
-                })),
-                ">" => Some(Rc::new(Boolean {
-                    value: l.value > r.value,
-                })),
-                "==" => Some(Rc::new(Boolean {
-                    value: l.value == r.value,
-                })),
-                "!=" => Some(Rc::new(Boolean {
-                    value: l.value != r.value,
-                })),
+                "<" => Some(if l.value < r.value {
+                    TRUEOBJ.with(|val| val.clone())
+                } else {
+                    FALSEOBJ.with(|val| val.clone())
+                }),
+                ">" => Some(if l.value > r.value {
+                    TRUEOBJ.with(|val| val.clone())
+                } else {
+                    FALSEOBJ.with(|val| val.clone())
+                }),
+                "==" => Some(if l.value == r.value {
+                    TRUEOBJ.with(|val| val.clone())
+                } else {
+                    FALSEOBJ.with(|val| val.clone())
+                }),
+                "!=" => Some(if l.value != r.value {
+                    TRUEOBJ.with(|val| val.clone())
+                } else {
+                    FALSEOBJ.with(|val| val.clone())
+                }),
                 _ => None,
             }
         }
@@ -141,12 +159,16 @@ pub fn eval_infix_expression(
             let r = r.as_any().downcast_ref::<Boolean>().unwrap();
             // Some(Rc::new(Integer { value: val }))
             match operator {
-                "==" => Some(Rc::new(Boolean {
-                    value: l.value == r.value,
-                })),
-                "!=" => Some(Rc::new(Boolean {
-                    value: l.value != r.value,
-                })),
+                "==" => Some(if l.value == r.value {
+                    TRUEOBJ.with(|val| val.clone())
+                } else {
+                    FALSEOBJ.with(|val| val.clone())
+                }),
+                "!=" => Some(if l.value != r.value {
+                    TRUEOBJ.with(|val| val.clone())
+                } else {
+                    FALSEOBJ.with(|val| val.clone())
+                }),
                 _ => None,
             }
         }
@@ -161,7 +183,7 @@ pub fn eval_prefix_expression(
     match operator {
         "!" => eval_bang_operator_expression(right),
         "-" => eval_minus_prefix_operator_expression(right),
-        _ => Some(Rc::new(Null {})),
+        _ => Some(NULLOBJ.with(|val| val.clone())),
     }
 }
 
@@ -170,15 +192,19 @@ pub fn eval_bang_operator_expression(right: Option<Rc<dyn Object>>) -> Option<Rc
         let v_any = right.as_any();
         if v_any.is::<Boolean>() {
             if let Some(v) = v_any.downcast_ref::<Boolean>() {
-                return Some(Rc::new(Boolean { value: !v.value }));
+                return Some(if !v.value {
+                    TRUEOBJ.with(|val| val.clone())
+                } else {
+                    FALSEOBJ.with(|val| val.clone())
+                });
             }
         }
         if v_any.is::<Null>() {
-            return Some(Rc::new(Boolean { value: true }));
+            return Some(TRUEOBJ.with(|val| val.clone()));
         }
-        return Some(Rc::new(Boolean { value: false }));
+        return Some(FALSEOBJ.with(|val| val.clone()));
     }
-    Some(Rc::new(Boolean { value: false }))
+    Some(FALSEOBJ.with(|val| val.clone()))
 }
 
 pub fn eval_minus_prefix_operator_expression(
@@ -191,7 +217,7 @@ pub fn eval_minus_prefix_operator_expression(
             }));
         }
     }
-    Some(Rc::new(Null {}))
+    Some(NULLOBJ.with(|val| val.clone()))
 }
 
 pub fn eval_statements(stmts: Vec<Rc<dyn Statement>>) -> Option<Rc<dyn Object>> {

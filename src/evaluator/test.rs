@@ -75,7 +75,6 @@ mod test {
         });
     }
 
-    #[allow(unused)]
     #[test]
     fn test_if_else_expressions() {
         let tests = vec![
@@ -100,6 +99,7 @@ mod test {
         })
     }
 
+    #[allow(unused)]
     fn test_null_object(obj: &Option<Rc<dyn Object>>) {
         assert!(obj.is_some());
         println!("test null object: {}", obj.as_ref().unwrap());
@@ -107,6 +107,7 @@ mod test {
         assert!(x.downcast_ref::<Null>().is_some());
     }
 
+    #[allow(unused)]
     fn test_eval(input: &str) -> Option<Rc<dyn Object>> {
         let l = Lexer::new(input);
         let p = Parser::new(l);
