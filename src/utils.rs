@@ -12,3 +12,11 @@ pub fn is_valid_variable_prefix(ch: char) -> bool {
 pub fn is_digits(ch: char) -> bool {
     '0' <= ch && ch <= '9'
 }
+
+pub fn is_hex(ch: char) -> bool {
+    '0' <= ch && ch <= '9' || 'a' <= ch && ch <= 'f' || 'A' <= ch && ch <= 'F'
+}
+
+pub fn is_not_decimal_symbol(ch: char) -> bool {
+    ch == 'x' || ch == 'X' || ch == 'o' || ch == 'O' || ch == 'b' || ch == 'B'
+}

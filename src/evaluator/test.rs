@@ -99,6 +99,25 @@ mod test {
         })
     }
 
+    #[test]
+    fn test_hex_binary_string() {
+        let tests = vec![
+            ("0x01", 1),
+            ("0xf", 15),
+            ("0b1", 1),
+            ("0x1_000", 0x1_000),
+            ("0x1_000_000", 0x1_000_000),
+            ("0x1_000_", 0x1_000_),
+        ];
+
+        tests.iter().for_each(|&(input, value)| {
+            let evaluated = test_eval(input);
+            assert!(evaluated.is_some());
+
+            println!("{}", evaluated.unwrap());
+        });
+    }
+
     #[allow(unused)]
     fn test_null_object(obj: &Option<Rc<dyn Object>>) {
         assert!(obj.is_some());

@@ -111,8 +111,8 @@ impl Lexer {
             self.input_chars[self.read_position.get()]
         };
         // if *self.ch.borrow() != '\0' {
-            self.position.set(self.read_position.get());
-            self.read_position.set(self.read_position.get() + 1);
+        self.position.set(self.read_position.get());
+        self.read_position.set(self.read_position.get() + 1);
         // }
     }
     pub fn peek_char(&self) -> String {
@@ -136,12 +136,19 @@ impl Lexer {
     }
     pub fn read_number(&self) -> String {
         let position = self.position.get();
-        while is_digits(*self.ch.borrow()) {
+        let is_read_hex = *self.ch.borrow() == '0' && (self.peek_char() == "x" || self.peek_char() == "X");
+        while is_digits(*self.ch.borrow())
+            || is_not_decimal_symbol(*self.ch.borrow())
+            || (is_read_hex && is_hex(*self.ch.borrow()))
+            || (*self.ch.borrow()) == '_'
+        {
             self.read_char();
         }
         self.input_chars[position..self.position.get()]
             .iter()
             .map(|c| c.clone().to_string())
+            // 不知道这里去掉之后是否合适？
+            .filter(|val| val != "_")
             .collect::<String>()
     }
     pub fn skip_white_space(&self) {
@@ -154,4 +161,3 @@ impl Lexer {
         }
     }
 }
-

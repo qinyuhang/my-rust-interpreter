@@ -542,4 +542,19 @@ let mf = fn(x, y) { return x + y; };"#;
         let pr = pr.unwrap();
         println!("test_call_expression: pr: {:?}", pr);
     }
+
+    #[test]
+    fn test_hex_binary_string() {
+        let input = "0x01; 0b10";
+        let l = Lexer::new(input);
+
+        let p = Parser::new(l);
+
+        let pr = p.parse_program();
+
+        assert!(pr.is_some());
+
+        let pr = pr.unwrap();
+        println!("test_hex_binary_string: pr: {:?}", pr);
+    }
 }

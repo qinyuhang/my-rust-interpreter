@@ -284,6 +284,21 @@ if ( 5 < 10 ) {
         assert_eq!(count, 6);
     }
 
+    #[test]
+    fn test_hex_binary_string() {
+        let input = "0x01; 0b1";
+        let lex = Lexer::new(input);
+
+        let mut tk = lex.next_token();
+        let mut count = 0;
+        while tk.token_type != token::EOF {
+            count += 1;
+            println!("{:?}", tk);
+            tk = lex.next_token();
+        }
+        assert_eq!(count, 3);
+    }
+
 //     #[test]
 //     fn test_unicode() {
 //         let input = r#"let abcd = 1;

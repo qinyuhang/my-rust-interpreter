@@ -34,7 +34,22 @@ impl TryFrom<String> for IntegerLiteral {
     type Error = String;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
-        if let Ok(v) = value.clone().parse::<i64>() {
+        let mut radix = 10;
+        let mut v = value.clone();
+        if value.starts_with("0x") || value.starts_with("0X") {
+            radix = 16;
+            v = value.replace("0x", "").replace("0X", "");
+        }
+        if value.starts_with("0b") || value.starts_with("0B") {
+            radix = 2;
+            v = value.replace("0b", "").replace("0B", "");
+        }
+        if value.starts_with("0o") || value.starts_with("0O") {
+            radix = 8;
+            v = value.replace("0o", "").replace("0O", "");
+        }
+
+        if let Ok(v) = i64::from_str_radix(&v, radix) {
             return Ok(IntegerLiteral {
                 token: Token {
                     token_type: INT,
