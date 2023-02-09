@@ -2,38 +2,14 @@ use std::rc::Rc;
 use crate::ast::*;
 use crate::token::*;
 
-#[derive(Debug, Clone)]
+#[ast_node(Statement)]
 pub struct LetStatement {
     pub token: Token,
     pub name: Box<Identifier>,
     // FIXME: make it clone make it Option<Rc<dyn Expression>>;
     pub value: Option<Rc<dyn Expression>>,
 }
-impl Node for LetStatement {
-    fn token_literal(&self) -> String {
-        self.token.literal.clone()
-    }
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-impl Statement for LetStatement {
-    fn statement_node(&self) {
-        todo!()
-    }
-    fn upcast(&self) -> &dyn Node {
-        self
-    }
-}
-impl Expression for LetStatement {
-    fn expression_node(&self) {
-        todo!()
-    }
-    fn upcast(&self) -> &dyn Node {
-        self
-    }
 
-}
 impl TryFrom<Box<&dyn Statement>> for LetStatement {
     type Error = String;
     fn try_from(value: Box<&dyn Statement>) -> Result<Self, Self::Error> {
