@@ -61,6 +61,30 @@ impl Lexer {
                     token::BANG
                 }
             }
+            '^' => {
+                if self.peek_char() == "^" {
+                    self.read_char();
+                    token::POW
+                } else {
+                    token::BITXOR
+                }
+            },
+            '|' => {
+                if self.peek_char() == "|" {
+                    self.read_char();
+                    token::LOGICOR
+                } else {
+                    token::BITOR
+                }
+            },
+            '&' => {
+                if self.peek_char() == "&" {
+                    self.read_char();
+                    token::LOGICAND
+                } else {
+                    token::BITAND
+                }
+            }
             '/' => token::SLASH,
             '*' => token::ASTERISK,
             '<' => token::LT,
@@ -71,6 +95,9 @@ impl Lexer {
         let ch = match token_type {
             token::NOT_EQ => "!=".into(),
             token::EQ => "==".into(),
+            token::POW => "^^".into(),
+            token::LOGICOR => "||".into(),
+            token::LOGICAND => "&&".into(),
             token::IDENT => {
                 if is_letter(*self.ch.borrow()) {
                     should_read_one_more = false;

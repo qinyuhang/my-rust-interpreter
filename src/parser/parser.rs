@@ -5,14 +5,13 @@ use crate::token::*;
 
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::fmt::Display;
 use std::rc::Rc;
 
 /// 运算符的优先级
 /// 后续用来解析表达式的时候会用到
 /// 比如 5 + 5 * 2，应该先运算 5 * 2
 /// 或者 5 * 2 + abc(1) 应该先运算函数再运算乘法最后运算加法
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Ord, PartialOrd)]
 pub enum ExpressionConst {
     LOWEST = 1,  // what is this?
     EQUALS,      // =
@@ -20,18 +19,24 @@ pub enum ExpressionConst {
     SUM,         // +￼
     PRODUCT,     // "*￼
     PREFIX,      // -X or !X￼
+    BITOP,       // ^ or | or &
+    LOGICOP,     // && or ||
+    POW,         // ^^
     CALL,        // function
 }
 impl From<isize> for ExpressionConst {
     fn from(value: isize) -> Self {
         match value {
-            2 => ExpressionConst::LOWEST,      // what is this?
-            3 => ExpressionConst::EQUALS,      // =
-            4 => ExpressionConst::LESSGREATER, // > or <
-            5 => ExpressionConst::SUM,         // +￼
-            6 => ExpressionConst::PRODUCT,     // "*￼
-            7 => ExpressionConst::PREFIX,      // -X or !X￼
-            8 => ExpressionConst::CALL,        // function
+            1 => ExpressionConst::LOWEST,      // what is this?
+            2 => ExpressionConst::EQUALS,      // =
+            3 => ExpressionConst::LESSGREATER, // > or <
+            4 => ExpressionConst::SUM,         // +￼
+            5 => ExpressionConst::PRODUCT,     // "*￼
+            6 => ExpressionConst::PREFIX,      // -X or !X￼
+            7 => ExpressionConst::BITOP,       // ^ or | or &
+            8 => ExpressionConst::LOGICOP,     // && or ||
+            9 => ExpressionConst::POW,         // ^^
+            10 => ExpressionConst::CALL,       // function
             _ => ExpressionConst::LOWEST,
         }
     }
@@ -48,6 +53,16 @@ thread_local! {
         (PLUS, ExpressionConst::SUM),
         (MINUS, ExpressionConst::SUM),
         (SLASH, ExpressionConst::PRODUCT),
+        
+        (BITAND, ExpressionConst::BITOP),
+        (BITOR, ExpressionConst::BITOP),
+        (BITXOR, ExpressionConst::BITOP),
+
+        (LOGICAND, ExpressionConst::LOGICOP),
+        (LOGICOR, ExpressionConst::LOGICOP),
+        
+        (POW, ExpressionConst::POW),
+        
         (ASTERISK, ExpressionConst::PRODUCT),
         (LPAREN, ExpressionConst::CALL),
     ]);
@@ -64,7 +79,7 @@ pub struct Parser {
     infix_parse_fns: Rc<RefCell<HashMap<TokenType, Rc<InfixParseFn>>>>,
 }
 
-impl Display for Parser {
+impl std::fmt::Display for Parser {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&format!(
             r#"Parser: {{
@@ -100,6 +115,14 @@ impl Parser {
         pc.register_prefix(BANG, Rc::new(move || pd.parse_prefix_expression()));
         let pd = pc.clone();
         pc.register_prefix(MINUS, Rc::new(move || pd.parse_prefix_expression()));
+        
+        let pd = pc.clone();
+        pc.register_prefix(BITAND, Rc::new(move || pd.parse_prefix_expression()));
+        let pd = pc.clone();
+        pc.register_prefix(BITOR, Rc::new(move || pd.parse_prefix_expression()));
+        let pd = pc.clone();
+        pc.register_prefix(POW, Rc::new(move || pd.parse_prefix_expression()));
+
         // println!("{:?}", &p.parse_identifier);
         let pd = pc.clone();
         pc.register_prefix(FUNCTION, Rc::new(move || pd.parse_function_literal()));
@@ -150,7 +173,7 @@ impl Parser {
             let stmt = self.parse_statement();
             if stmt.is_some() {
                 let stmt = stmt.unwrap();
-                // println!("get push: {:?}", stmt);
+                println!("get push: {:?}", stmt);
                 stm.push(stmt);
             }
             self.next_token();
@@ -205,7 +228,7 @@ impl Parser {
         Some(Rc::new(LetStatement {
             token: cur_token.clone(),
             name: Box::new(name),
-            
+
             // FIXME: make it clone
             value: Some(Rc::new(ExpressionStatement {
                 token: cur_token,
@@ -249,6 +272,7 @@ impl Parser {
     }
     fn parse_expression(&self, precedence: ExpressionConst) -> Option<Rc<dyn Expression>> {
         let tp = self.cur_token.borrow().token_type.to_string();
+        println!("parse_expression {}", &self.cur_token.borrow());
         let pfs = self.prefix_parse_fns.borrow();
         let pf = pfs.get(&*tp);
         if pf.is_none() {
@@ -259,7 +283,7 @@ impl Parser {
         let mut left = pf();
         // println!("before parse_infix: {:?}", left);
         while !self.peek_token_is(SEMICOLON)
-            && (precedence as isize) < (self.peek_precedence() as isize)
+            && precedence < self.peek_precedence()
         {
             let pktp = self.peek_token.borrow().token_type.to_string();
             if let Some(infix) = self.infix_parse_fns.borrow().get(&*pktp) {
@@ -313,10 +337,6 @@ impl Parser {
         #[allow(unused_mut)]
         let mut right = self.parse_expression(precedence);
         let left = Some(left);
-
-        // if operator == "+" {
-        //     right = self.parse_expression(ExpressionConst::from((precedence as isize) - 1))
-        // }
 
         let expression = InfixExpression {
             token,
@@ -397,7 +417,7 @@ impl Parser {
     }
     pub fn parse_function_literal(&self) -> Option<Rc<dyn Expression>> {
         let token = (*self.cur_token.borrow()).clone();
-        
+
         // function name
         let mut name = None;
 

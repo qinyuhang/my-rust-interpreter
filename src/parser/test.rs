@@ -265,6 +265,11 @@ return 500;
             ("5 < 5", 5, "<", 5),
             ("5 == 5", 5, "==", 5),
             ("5 != 5", 5, "!=", 5),
+            ("5 ^ 5", 5, "^", 5),
+            ("5 | 5", 5, "|", 5),
+            ("5 ^^ 5", 5, "^^", 5),
+            ("5 && 5", 5, "&&", 5),
+            ("5 || 5", 5, "||", 5),
         ];
 
         tests.iter().for_each(|&(input, le, operator, re)| {
@@ -537,7 +542,7 @@ let mf = fn(x, y) { return x + y; };"#;
         let p = Parser::new(l);
         let pr = p.parse_program();
         // test_parser_errors(&p, None);
-        
+
         assert!(pr.is_some());
         let pr = pr.unwrap();
         println!("test_call_expression: pr: {:?}", pr);

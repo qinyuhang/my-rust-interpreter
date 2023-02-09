@@ -6,6 +6,16 @@ pub struct Token {
     pub token_type: TokenType,
     pub literal: String,
 }
+impl std::fmt::Display for Token {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "<Token {} {}>",
+            self.token_type,
+            &self.literal,
+        )
+    }
+}
 impl Default for Token {
     fn default() -> Self {
         Token {
@@ -27,6 +37,12 @@ pub const MINUS: TokenType = "-";
 pub const BANG: TokenType = "!";
 pub const ASTERISK: TokenType = "*";
 pub const SLASH: TokenType = "/";
+pub const BITAND: TokenType = "&";
+pub const BITXOR: TokenType = "^";
+pub const BITOR: TokenType = "|";
+pub const POW: TokenType = "^^";
+pub const LOGICOR: TokenType = "||";
+pub const LOGICAND: TokenType = "&&";
 
 pub const LT: TokenType = "<";
 pub const GT: TokenType = ">";
