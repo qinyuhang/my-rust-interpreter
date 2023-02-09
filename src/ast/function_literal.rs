@@ -2,31 +2,13 @@ use crate::ast::*;
 use crate::token::*;
 use std::rc::Rc;
 
-#[derive(Debug, Clone)]
+#[ast_node(Expression)]
 pub struct FunctionLiteral {
     pub token: Token,
     pub parameters: Option<Vec<Identifier>>,
     pub body: Option<Rc<dyn Statement>>,
     pub name: Option<Identifier>,
     // pub body: Option<BlockStatement>,
-}
-
-impl Node for FunctionLiteral {
-    fn token_literal(&self) -> String {
-        self.token.literal.to_string()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-impl Expression for FunctionLiteral {
-    fn expression_node(&self) {
-        todo!()
-    }
-    fn upcast(&self) -> &dyn Node {
-        self
-    }
 }
 
 impl std::fmt::Display for FunctionLiteral {

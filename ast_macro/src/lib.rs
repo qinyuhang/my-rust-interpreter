@@ -1,0 +1,101 @@
+use quote::quote;
+use syn;
+
+/// add derive(Debug, Clone) to struct
+/// impl as_any for struct
+///
+/// this macro is inspired by swc project
+#[proc_macro_attribute]
+pub fn ast_node(
+    args: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+
+    assert!(!args.is_empty());
+
+    let args_clone = args.clone();
+    // let extend_type = syn::parse_macro_input!(args_clone);
+    let ipt = syn::parse_macro_input!(input as syn::DeriveInput);
+    let name = &ipt.ident;
+
+    let add_impl = match args_clone.to_string().as_str()
+    {
+        "Node" => {
+            // println!("start decorate for Node");
+            quote! {
+                impl Node for #name {
+                    fn token_literal(&self) -> String {
+                        self.token.literal.clone()
+                    }
+                    fn as_any(&self) -> &dyn Any {
+                        self
+                    }
+                }
+            }
+        }
+        "Expression" => {
+            // println!("start decorate for Expression");
+            quote! {
+                impl Node for #name {
+                    fn token_literal(&self) -> String {
+                        self.token.literal.clone()
+                    }
+                    fn as_any(&self) -> &dyn Any {
+                        self
+                    }
+                }
+                impl Expression for #name {
+                    fn expression_node(&self) {
+                        todo!()
+                    }
+                    fn upcast(&self) -> &dyn Node {
+                        self
+                    }
+                }
+            }
+        }
+        "Statement" => {
+            // println!("start decorate for Statement");
+            quote! {
+                impl Node for #name {
+                    fn token_literal(&self) -> String {
+                        self.token.literal.clone()
+                    }
+                    fn as_any(&self) -> &dyn Any {
+                        self
+                    }
+                }
+                impl Expression for #name {
+                    fn expression_node(&self) {
+                        todo!()
+                    }
+                    fn upcast(&self) -> &dyn Node {
+                        self
+                    }
+                }
+                impl Statement for #name {
+                    fn statement_node(&self) {
+                        todo!()
+                    }
+                    fn upcast(&self) -> &dyn Node {
+                        self
+                    }
+                }
+            }
+        }
+        _ => {
+            // println!("start decorate for {} {}", args_clone, syn::parse::<syn::DeriveInput>(args_clone.clone()).is_ok() );
+            quote! {}
+        }
+    };
+    // println!("add impl: {}", add_impl);
+    let s = quote! {
+        #[derive(Debug, Clone)]
+        #ipt
+        #add_impl
+    };
+    // println!("ast_node {} {}", args, name);
+    // println!("after decorater ast_node {} {}", &s, &add_impl);
+
+    proc_macro::TokenStream::from(s)
+}

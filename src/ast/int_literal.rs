@@ -6,28 +6,10 @@ use crate::ast::{Expression, Node, *};
 ///
 use crate::token::*;
 
-#[derive(Debug, Clone)]
+#[ast_node(Expression)]
 pub struct IntegerLiteral {
     pub token: Token,
     pub value: i64,
-}
-
-impl Node for IntegerLiteral {
-    fn token_literal(&self) -> String {
-        self.token.literal.clone()
-    }
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
-impl Expression for IntegerLiteral {
-    fn expression_node(&self) {
-        todo!()
-    }
-    fn upcast(&self) -> &dyn Node {
-        self
-    }
 }
 
 impl TryFrom<String> for IntegerLiteral {

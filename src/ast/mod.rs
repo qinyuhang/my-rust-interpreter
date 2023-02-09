@@ -1,4 +1,5 @@
 use std::{any::Any, fmt::{Display, Debug}};
+pub use ast_macro::{ast_node};
 
 mod test;
 

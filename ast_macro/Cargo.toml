@@ -1,12 +1,13 @@
 [package]
-name = "my-rust-interpreter"
+name = "ast_macro"
 version = "0.1.0"
 edition = "2021"
+
+[lib]
+proc-macro = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-"ast_macro" = { path = "./ast_macro" }
-
-[workspace]
-members = ["ast_macro"]
+syn = {version="1.0.57",features=["full","fold"]}
+quote = "1.0.8"

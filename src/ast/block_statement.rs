@@ -2,30 +2,11 @@ use crate::ast::*;
 use crate::token::*;
 use std::rc::Rc;
 
-#[derive(Debug, Clone)]
+#[ast_node(Statement)]
 pub struct BlockStatement {
     pub token: Token, // { token
     // FIXME: change Rc RefCell
     pub statement: Vec<Rc<dyn Statement>>,
-}
-
-impl Node for BlockStatement {
-    fn token_literal(&self) -> String {
-        todo!()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
-impl Statement for BlockStatement {
-    fn statement_node(&self) {
-        todo!()
-    }
-    fn upcast(&self) -> &dyn Node {
-        self
-    }
 }
 
 impl std::fmt::Display for BlockStatement {

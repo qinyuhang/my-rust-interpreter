@@ -1,28 +1,11 @@
 use crate::ast::{Node, *};
 use crate::token::*;
 
-#[derive(Debug, Clone)]
+#[ast_node(Expression)]
 pub struct Identifier {
     pub token: Token,
 
     pub value: String,
-}
-
-impl Node for Identifier {
-    fn token_literal(&self) -> String {
-        self.token.literal.clone()
-    }
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-impl Expression for Identifier {
-    fn expression_node(&self) {
-        todo!()
-    }
-    fn upcast(&self) -> &dyn Node {
-        self
-    }
 }
 
 impl TryFrom<Box<&dyn Expression>> for Identifier {

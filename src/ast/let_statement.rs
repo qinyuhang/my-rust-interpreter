@@ -1,11 +1,13 @@
+use std::rc::Rc;
 use crate::ast::*;
 use crate::token::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LetStatement {
     pub token: Token,
     pub name: Box<Identifier>,
-    pub value: Box<dyn Expression>,
+    // FIXME: make it clone make it Option<Rc<dyn Expression>>;
+    pub value: Option<Rc<dyn Expression>>,
 }
 impl Node for LetStatement {
     fn token_literal(&self) -> String {
@@ -39,14 +41,7 @@ impl TryFrom<Box<&dyn Statement>> for LetStatement {
             return Ok(LetStatement {
                 token: v.token.clone(),
                 name: v.name.clone(),
-                value: Box::new(ExpressionStatement {
-                    token: ExpressionStatement::try_from(Box::new(v.value.as_ref()))
-                        .unwrap()
-                        .token
-                        .clone(),
-                    // FIXME: not None
-                    expression: None,
-                }),
+                value: Some(v.value.as_ref().unwrap().clone()),
             });
         }
         Err(format!("error cast object {:?}", value))
@@ -63,7 +58,7 @@ impl TryFrom<Box<&dyn Expression>> for LetStatement {
                 return Ok(LetStatement {
                     token: x.token.clone(),
                     name: x.name.clone(),
-                    value: Box::new(LetStatement::try_from(Box::new(x.value.as_ref())).unwrap()),//x.value.clone(),
+                    value: Some(Rc::new(LetStatement::try_from(Box::new(&*x.value.as_ref().unwrap().clone())).unwrap())),//x.value.clone(),
                 });
             } else {
                 return Err(format!(""));
@@ -76,6 +71,6 @@ impl std::fmt::Display for LetStatement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // FIXME:
         // write!(f, "{} {} = {};", self.token_literal(), self.name, self.value.unwrap_or(""))
-        write!(f, "{} {} = {};", self.token_literal(), self.name, self.value)
+        write!(f, "{} {} = {};", self.token_literal(), self.name, self.value.as_ref().unwrap())
     }
 }

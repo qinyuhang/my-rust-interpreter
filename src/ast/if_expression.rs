@@ -2,7 +2,7 @@ use crate::ast::*;
 use crate::token::*;
 use std::rc::Rc;
 
-#[derive(Debug, Clone)]
+#[ast_node(Expression)]
 pub struct IfExpression {
     pub token: Token,
     pub condition: Rc<dyn Expression>,
@@ -11,23 +11,6 @@ pub struct IfExpression {
     pub consequence: Option<Rc<dyn Statement /* BlockStatement */>>,
     // FIXME: BlockStatement
     pub alternative: Option<Rc<dyn Statement /* BlockStatement */>>,
-}
-impl Node for IfExpression {
-    fn token_literal(&self) -> String {
-        self.token.literal.to_string()
-    }
-
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
-}
-impl Expression for IfExpression {
-    fn expression_node(&self) {
-        todo!()
-    }
-    fn upcast(&self) -> &dyn Node {
-        self
-    }
 }
 
 impl std::fmt::Display for IfExpression {

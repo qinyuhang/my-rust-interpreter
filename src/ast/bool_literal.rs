@@ -2,28 +2,12 @@ use crate::ast::*;
 use crate::token::*;
 use std::any::Any;
 
-#[derive(Debug, Clone)]
+#[ast_node(Expression)]
 pub struct BooleanLiteral {
     pub token: Token,
     pub value: bool,
 }
 
-impl Node for BooleanLiteral {
-    fn token_literal(&self) -> String {
-        self.token.literal.clone()
-    }
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-impl Expression for BooleanLiteral {
-    fn expression_node(&self) {
-        todo!()
-    }
-    fn upcast(&self) -> &dyn Node {
-        self
-    }
-}
 impl TryFrom<Box<&dyn Expression>> for BooleanLiteral {
     type Error = String;
 

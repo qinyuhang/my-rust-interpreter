@@ -3,30 +3,11 @@ use crate::token::*;
 
 use std::rc::Rc;
 
-#[derive(Debug, Clone)]
+#[ast_node(Expression)]
 pub struct PrefixExpression {
     pub token: Token,
     pub operator: String,
     pub right: Option<Rc<dyn Expression>>,
-}
-
-impl Node for PrefixExpression {
-    fn token_literal(&self) -> String {
-        self.token.literal.clone()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
-impl Expression for PrefixExpression {
-    fn expression_node(&self) {
-        todo!()
-    }
-    fn upcast(&self) -> &dyn Node {
-        self
-    }
 }
 
 impl TryFrom<Box<&dyn Expression>> for PrefixExpression {

@@ -205,11 +205,13 @@ impl Parser {
         Some(Rc::new(LetStatement {
             token: cur_token.clone(),
             name: Box::new(name),
-            value: Box::new(ExpressionStatement {
+            
+            // FIXME: make it clone
+            value: Some(Rc::new(ExpressionStatement {
                 token: cur_token,
                 // FIXME: LetStatement expression
                 expression, // self.parse_expression(ExpressionConst::LOWEST), //None,
-            }),
+            })),
             // value: Box::new(*self.parse_expression_statement().unwrap())
         }))
     }

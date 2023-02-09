@@ -3,31 +3,12 @@ use crate::token::Token;
 
 use std::rc::Rc;
 
-#[derive(Debug, Clone)]
+#[ast_node(Expression)]
 pub struct InfixExpression {
     pub token: Token,
     pub operator: String,
     pub left: Option<Rc<dyn Expression>>,
     pub right: Option<Rc<dyn Expression>>,
-}
-
-impl Node for InfixExpression {
-    fn token_literal(&self) -> String {
-        self.token.literal.clone()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
-impl Expression for InfixExpression {
-    fn expression_node(&self) {
-        todo!()
-    }
-    fn upcast(&self) -> &dyn Node {
-        self
-    }
 }
 
 impl TryFrom<Box<&dyn Expression>> for InfixExpression {

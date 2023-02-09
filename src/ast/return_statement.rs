@@ -3,27 +3,12 @@ use crate::token::Token;
 
 use std::rc::Rc;
 
-#[derive(Debug, Clone)]
+#[ast_node(Statement)]
 pub struct ReturnStatement {
     pub token: Token,
     pub return_value: Option<Rc<dyn Expression>>,
 }
-impl Node for ReturnStatement {
-    fn token_literal(&self) -> String {
-        self.token.literal.clone()
-    }
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-impl Statement for ReturnStatement {
-    fn statement_node(&self) {
-        todo!()
-    }
-    fn upcast(&self) -> &dyn Node {
-        self
-    }
-}
+
 impl TryFrom<Box<&dyn Statement>> for ReturnStatement {
     type Error = String;
     fn try_from(value: Box<&dyn Statement>) -> Result<Self, Self::Error> {

@@ -3,35 +3,12 @@ use crate::token::{Token, EOF};
 
 use std::rc::Rc;
 
-#[derive(Debug, Clone)]
+#[ast_node(Statement)]
 pub struct ExpressionStatement {
     pub token: Token,
     pub expression: Option<Rc<dyn Expression>>,
 }
-impl Node for ExpressionStatement {
-    fn token_literal(&self) -> String {
-        self.token.literal.clone()
-    }
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-impl Statement for ExpressionStatement {
-    fn statement_node(&self) {
-        todo!()
-    }
-    fn upcast(&self) -> &dyn Node {
-        self
-    }
-}
-impl Expression for ExpressionStatement {
-    fn expression_node(&self) {
-        todo!()
-    }
-    fn upcast(&self) -> &dyn Node {
-        self
-    }
-}
+
 impl TryFrom<Box<&dyn Statement>> for ExpressionStatement {
     type Error = String;
     fn try_from(value: Box<&dyn Statement>) -> Result<Self, Self::Error> {
@@ -114,14 +91,14 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
                     token: v.token.clone(),
                     name: v.name.clone(),
                     // FIXME: change this
-                    value: Box::new(
-                        ExpressionStatement::try_from(Box::new(v.value.as_ref())).unwrap(),
-                    ),
+                    value: Some(Rc::new(
+                        ExpressionStatement::try_from(Box::new(&**v.value.as_ref().unwrap())).unwrap(),
+                    )),
                 }));
-                println!(
-                    "wwwww: {:?}",
-                    Box::new(ExpressionStatement::try_from(Box::new(v.value.as_ref())).unwrap())
-                );
+                // println!(
+                //     "wwwww: {:?}",
+                //     Box::new(ExpressionStatement::try_from(Box::new(v.value.as_ref())).unwrap())
+                // );
                 // ex = Some(Rc::new(IntegerLiteral { token: v.token.clone() ,value: v.value }));
                 // return Ok(IntegerLiteral { token: v.token ,value: v.value});
             }
