@@ -75,6 +75,15 @@ pub fn eval(node: &dyn Node) -> Option<Rc<dyn Object>> {
             return eval_statements(n.statement.clone());
         }
     }
+    if n.is::<ReturnStatement>() {
+        if let Some(n) = n.downcast_ref::<ReturnStatement>() {
+            if n.return_value.is_some() {
+                if let Some(value) = eval(n.return_value.as_ref().unwrap().upcast()) {
+                    return Some(Rc::new(ReturnValue { value }));
+                }
+            }
+        }
+    }
     None
 }
 
@@ -222,11 +231,22 @@ pub fn eval_minus_prefix_operator_expression(
 
 pub fn eval_statements(stmts: Vec<Rc<dyn Statement>>) -> Option<Rc<dyn Object>> {
     let mut result = None;
-    stmts.iter().for_each(|st| {
+    for st in stmts.iter() {
         // converter Statement to Node
         // rust not support convert sub-trait-object to parent-trait-object
         // so here using a upcast function to convert Statement/Expression to Node trait
         result = eval(st.upcast());
-    });
+        // if
+        if result.as_ref().unwrap().as_any().is::<ReturnValue>() {
+            return Some(result
+                .as_ref()
+                .unwrap()
+                .as_any()
+                .downcast_ref::<ReturnValue>()
+                .unwrap()
+                .value
+                .clone());
+        }
+    }
     result
 }
