@@ -237,15 +237,15 @@ pub fn eval_statements(stmts: Vec<Rc<dyn Statement>>) -> Option<Rc<dyn Object>> 
         // so here using a upcast function to convert Statement/Expression to Node trait
         result = eval(st.upcast());
         // if
-        if result.as_ref().unwrap().as_any().is::<ReturnValue>() {
-            return Some(result
-                .as_ref()
-                .unwrap()
-                .as_any()
-                .downcast_ref::<ReturnValue>()
-                .unwrap()
-                .value
-                .clone());
+        if let Some(result) = result.as_ref(){
+            if result.as_any().is::<ReturnValue>() {
+                return Some(result
+                    .as_any()
+                    .downcast_ref::<ReturnValue>()
+                    .unwrap()
+                    .value
+                    .clone());
+            }
         }
     }
     result

@@ -55,7 +55,9 @@ pub fn start() {
         }
         let pr = pr.unwrap();
         println!("{}", &pr);
-        println!("{}", eval(&pr).as_ref().unwrap());
+        if let Some(r) = eval(&pr).as_ref() {
+            println!("{}", r);
+        }
         // eval(&pr);
         // loop {
         //     #[allow(unused_mut)]
