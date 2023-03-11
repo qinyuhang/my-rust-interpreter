@@ -120,6 +120,29 @@ mod test {
         });
     }
 
+    #[test]
+    fn test_return_statements() {
+        let tests = vec![
+            ("return 10;", 10),
+            ("return 10; 9;", 10),
+            ("return 5 * 2; 9;", 10),
+            ("9; return 2 * 5; 9;", 10),
+            (
+                r#"if (10 > 1) { 
+                       if (10 > 1) {  return 10;  }
+                       return 1; 
+                   }"#,
+                10,
+            ),
+        ];
+
+        tests.iter().for_each(|&(input, expected)| {
+            let evaluated = test_eval(input);
+            assert!(evaluated.is_some());
+            test_integer_object(evaluated, expected);
+        });
+    }
+
     #[allow(unused)]
     fn test_null_object(obj: &Option<Rc<dyn Object>>) {
         assert!(obj.is_some());
