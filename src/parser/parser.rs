@@ -16,9 +16,9 @@ pub enum ExpressionConst {
     LOWEST = 1,  // what is this?
     EQUALS,      // =
     LESSGREATER, // > or <
-    SUM,         // +￼
-    PRODUCT,     // "*￼
-    PREFIX,      // -X or !X￼
+    SUM,         // +
+    PRODUCT,     // "*
+    PREFIX,      // -X or !X
     BITOP,       // ^ or | or &
     LOGICOP,     // && or ||
     POW,         // ^^
@@ -30,9 +30,9 @@ impl From<isize> for ExpressionConst {
             1 => ExpressionConst::LOWEST,      // what is this?
             2 => ExpressionConst::EQUALS,      // =
             3 => ExpressionConst::LESSGREATER, // > or <
-            4 => ExpressionConst::SUM,         // +￼
-            5 => ExpressionConst::PRODUCT,     // "*￼
-            6 => ExpressionConst::PREFIX,      // -X or !X￼
+            4 => ExpressionConst::SUM,         // +
+            5 => ExpressionConst::PRODUCT,     // "*
+            6 => ExpressionConst::PREFIX,      // -X or !X
             7 => ExpressionConst::BITOP,       // ^ or | or &
             8 => ExpressionConst::LOGICOP,     // && or ||
             9 => ExpressionConst::POW,         // ^^
@@ -53,16 +53,16 @@ thread_local! {
         (PLUS, ExpressionConst::SUM),
         (MINUS, ExpressionConst::SUM),
         (SLASH, ExpressionConst::PRODUCT),
-        
+
         (BITAND, ExpressionConst::BITOP),
         (BITOR, ExpressionConst::BITOP),
         (BITXOR, ExpressionConst::BITOP),
 
         (LOGICAND, ExpressionConst::LOGICOP),
         (LOGICOR, ExpressionConst::LOGICOP),
-        
+
         (POW, ExpressionConst::POW),
-        
+
         (ASTERISK, ExpressionConst::PRODUCT),
         (LPAREN, ExpressionConst::CALL),
     ]);
@@ -115,7 +115,7 @@ impl Parser {
         pc.register_prefix(BANG, Rc::new(move || pd.parse_prefix_expression()));
         let pd = pc.clone();
         pc.register_prefix(MINUS, Rc::new(move || pd.parse_prefix_expression()));
-        
+
         let pd = pc.clone();
         pc.register_prefix(BITAND, Rc::new(move || pd.parse_prefix_expression()));
         let pd = pc.clone();
@@ -282,9 +282,7 @@ impl Parser {
         let pf = pf.unwrap();
         let mut left = pf();
         // println!("before parse_infix: {:?}", left);
-        while !self.peek_token_is(SEMICOLON)
-            && precedence < self.peek_precedence()
-        {
+        while !self.peek_token_is(SEMICOLON) && precedence < self.peek_precedence() {
             let pktp = self.peek_token.borrow().token_type.to_string();
             if let Some(infix) = self.infix_parse_fns.borrow().get(&*pktp) {
                 self.next_token();

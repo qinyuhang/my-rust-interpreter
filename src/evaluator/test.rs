@@ -127,6 +127,13 @@ mod test {
             ("return 10; 9;", 10),
             ("return 5 * 2; 9;", 10),
             ("9; return 2 * 5; 9;", 10),
+            (
+                r#"if (10 > 1) { 
+                       if (10 > 1) {  return 10;  }
+                       return 1; 
+                   }"#,
+                10,
+            ),
         ];
 
         tests.iter().for_each(|&(input, expected)| {

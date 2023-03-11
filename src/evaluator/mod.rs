@@ -21,7 +21,7 @@ pub fn eval(node: &dyn Node) -> Option<Rc<dyn Object>> {
     println!("eval: {}", node);
     if n.is::<Program>() {
         if let Some(n) = n.downcast_ref::<Program>() {
-            return eval_statements(n.statement.clone());
+            return eval_program(n.statement.clone());
         }
     }
     if n.is::<ExpressionStatement>() {
@@ -72,7 +72,7 @@ pub fn eval(node: &dyn Node) -> Option<Rc<dyn Object>> {
     if n.is::<BlockStatement>() {
         println!("eval block Statement");
         if let Some(n) = n.downcast_ref::<BlockStatement>() {
-            return eval_statements(n.statement.clone());
+            return eval_block_statement(n.clone());
         }
     }
     if n.is::<ReturnStatement>() {
@@ -229,7 +229,7 @@ pub fn eval_minus_prefix_operator_expression(
     Some(NULLOBJ.with(|val| val.clone()))
 }
 
-pub fn eval_statements(stmts: Vec<Rc<dyn Statement>>) -> Option<Rc<dyn Object>> {
+pub fn eval_program(stmts: Vec<Rc<dyn Statement>>) -> Option<Rc<dyn Object>> {
     let mut result = None;
     for st in stmts.iter() {
         // converter Statement to Node
@@ -237,15 +237,28 @@ pub fn eval_statements(stmts: Vec<Rc<dyn Statement>>) -> Option<Rc<dyn Object>> 
         // so here using a upcast function to convert Statement/Expression to Node trait
         result = eval(st.upcast());
         // if
-        if let Some(result) = result.as_ref(){
+        if let Some(result) = result.as_ref() {
             if result.as_any().is::<ReturnValue>() {
-                return Some(result
-                    .as_any()
-                    .downcast_ref::<ReturnValue>()
-                    .unwrap()
-                    .value
-                    .clone());
+                return Some(
+                    result
+                        .as_any()
+                        .downcast_ref::<ReturnValue>()
+                        .unwrap()
+                        .value
+                        .clone(),
+                );
             }
+        }
+    }
+    result
+}
+
+pub fn eval_block_statement(blk: BlockStatement) -> Option<Rc<dyn Object>> {
+    let mut result = None;
+    for st in blk.statement.iter() {
+        result = eval(st.upcast());
+        if result.is_some() && result.as_ref().unwrap().object_type() == RETURN_VALUE_OBJECT {
+            return result;
         }
     }
     result
