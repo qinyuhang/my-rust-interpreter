@@ -1,6 +1,6 @@
-use std::rc::Rc;
 use crate::ast::*;
 use crate::token::*;
+use std::rc::Rc;
 
 #[ast_node(Statement)]
 pub struct LetStatement {
@@ -34,7 +34,10 @@ impl TryFrom<Box<&dyn Expression>> for LetStatement {
                 return Ok(LetStatement {
                     token: x.token.clone(),
                     name: x.name.clone(),
-                    value: Some(Rc::new(LetStatement::try_from(Box::new(&*x.value.as_ref().unwrap().clone())).unwrap())),//x.value.clone(),
+                    value: Some(Rc::new(
+                        LetStatement::try_from(Box::new(&*x.value.as_ref().unwrap().clone()))
+                            .unwrap(),
+                    )), //x.value.clone(),
                 });
             } else {
                 return Err(format!(""));
@@ -47,6 +50,12 @@ impl std::fmt::Display for LetStatement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // FIXME:
         // write!(f, "{} {} = {};", self.token_literal(), self.name, self.value.unwrap_or(""))
-        write!(f, "{} {} = {};", self.token_literal(), self.name, self.value.as_ref().unwrap())
+        write!(
+            f,
+            "{} {} = {};",
+            self.token_literal(),
+            self.name,
+            self.value.as_ref().unwrap()
+        )
     }
 }

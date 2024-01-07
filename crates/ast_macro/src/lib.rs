@@ -1,3 +1,4 @@
+use proc_macro::TokenStream;
 use quote::quote;
 use syn;
 
@@ -10,7 +11,6 @@ pub fn ast_node(
     args: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-
     assert!(!args.is_empty());
 
     let args_clone = args.clone();
@@ -18,8 +18,7 @@ pub fn ast_node(
     let ipt = syn::parse_macro_input!(input as syn::DeriveInput);
     let name = &ipt.ident;
 
-    let add_impl = match args_clone.to_string().as_str()
-    {
+    let add_impl = match args_clone.to_string().as_str() {
         "Node" => {
             // println!("start decorate for Node");
             quote! {
@@ -98,4 +97,30 @@ pub fn ast_node(
     // println!("after decorater ast_node {} {}", &s, &add_impl);
 
     proc_macro::TokenStream::from(s)
+}
+
+/// add derive(Debug, Clone) to struct
+#[proc_macro_attribute]
+pub fn object(args: TokenStream, input: TokenStream) -> TokenStream {
+    let ipt = syn::parse_macro_input!(input as syn::DeriveInput);
+    let name = &ipt.ident;
+
+    let s = quote! {
+        #[derive(Debug, Clone)]
+        #ipt
+        impl Object for #name {
+            fn object_type(&self) -> ObjectType {
+                BOOLEAN_OBJECT
+            }
+
+            default fn inspect(&self) -> String {
+                "Object Default Implement".into()
+            }
+
+            fn as_any(&self) -> &dyn Any {
+                self
+            }
+        }
+    };
+    TokenStream::from(s)
 }

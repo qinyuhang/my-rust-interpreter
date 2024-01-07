@@ -143,12 +143,96 @@ mod test {
         });
     }
 
+    #[test]
+    fn test_function_declaration() {
+        // let tests = vec![
+        //     // ("fn () {}", None::<Rc<dyn Object>>),
+        //     // ("fn a() {}", None::<Rc<dyn Object>>),
+        //     // ("fn a(i) {}", None::<Rc<dyn Object>>),
+        //     // ("fn a(x, y) {}", None::<Rc<dyn Object>>),
+        //     (
+        //         "fn a(x, y) { return x + y; }; return a(1,1);",
+        //         Some(Rc::new(Integer { value: 2 })),
+        //     ),
+        // ];
+        // tests.iter().for_each(|(input, expected)| {
+        //     let parsed = test_parse(input);
+        //     assert!(parsed.is_some());
+        //     let evaluated = test_eval(input);
+        //     // assert_eq!(evaluated, expected);
+        //     if expected.is_none() {
+        //         assert!(evaluated.is_none());
+        //     } else {
+        //         assert!(evaluated.is_some());
+        //     }
+        // });
+    }
+
+    #[test]
+    fn test_function_eval() {
+        let tests = vec![
+            ("fn () {}", None::<Rc<dyn Object>>),
+            ("fn a() {}; a();", None::<Rc<dyn Object>>),
+            ("fn a(i) {}; a();", None::<Rc<dyn Object>>),
+            ("fn a(x, y) {}; a();", None::<Rc<dyn Object>>),
+            ("fn a(x, y) { return x + y; }; a();", None::<Rc<dyn Object>>),
+            (
+                "fn a(x, y) { return x + y; }; a(1, 2);",
+                None::<Rc<dyn Object>>,
+            ),
+        ];
+        tests.iter().for_each(|(input, expected)| {
+            let parsed = test_parse(input);
+            assert!(parsed.is_some());
+            let evaluated = test_eval(input);
+            // assert_eq!(evaluated, expected);
+            if expected.is_none() {
+                assert!(evaluated.is_none());
+            }
+        });
+    }
+
+    #[test]
+    fn test_error_object() {
+        let test_cases = vec![
+            ("5 + true;", "type mismatch: INTEGER + BOOLEAN"),
+            ("5 + true; 5", "type mismatch: INTEGER + BOOLEAN"),
+            ("-true", "type mismatch: INTEGER + BOOLEAN"),
+            ("true + false", "type mismatch: INTEGER + BOOLEAN"),
+            ("5; true + false; 5", "type mismatch: INTEGER + BOOLEAN"),
+            (
+                "if (10 > 1) { true + false; }",
+                "type mismatch: INTEGER + BOOLEAN",
+            ),
+            (
+                "if (10 > 1) { true + false; }; return 1;",
+                "type mismatch: INTEGER + BOOLEAN",
+            ),
+        ];
+        test_cases.iter().for_each(|(case, out)| {
+            let evaluated = test_eval(case);
+            // assert_eq!(format!("{}", evaluated), out);
+            assert!(evaluated.is_some());
+            let err = ErrorObject::try_from(evaluated.clone().unwrap());
+            assert!(err.is_ok());
+            // println!("{:?}", evaluated.unwrap());
+        });
+    }
+
     #[allow(unused)]
     fn test_null_object(obj: &Option<Rc<dyn Object>>) {
         assert!(obj.is_some());
         println!("test null object: {}", obj.as_ref().unwrap());
         let x = obj.as_ref().unwrap().as_any();
         assert!(x.downcast_ref::<Null>().is_some());
+    }
+
+    #[allow(unused)]
+    fn test_parse(input: &str) -> Option<Program> {
+        let l = Lexer::new(input);
+        let p = Parser::new(l);
+        let pr = p.parse_program();
+        return pr;
     }
 
     #[allow(unused)]

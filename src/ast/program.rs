@@ -22,14 +22,13 @@ impl Node for Program {
 
 impl std::fmt::Display for Program {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let x = self.statement.iter().fold("".to_string(), |acc, b| {
-           format!("{acc}{b}")
-        });
+        let x = self
+            .statement
+            .iter()
+            .fold("".to_string(), |acc, b| format!("{acc}{b}"));
         // println!("\n\nProgram::Display: {}\n\n", &x);
         write!(f, "{}", format!("{x}"))
     }
 }
 
-mod test {
-    
-}
+mod test {}

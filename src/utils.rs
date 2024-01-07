@@ -5,7 +5,7 @@ pub fn is_letter(ch: char) -> bool {
 
 #[allow(unused)]
 pub fn is_valid_variable_prefix(ch: char) -> bool {
-    // 不等于 0-9, 
+    // 不等于 0-9,
     true
 }
 

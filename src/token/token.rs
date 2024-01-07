@@ -8,12 +8,7 @@ pub struct Token {
 }
 impl std::fmt::Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "<Token {} {}>",
-            self.token_type,
-            &self.literal,
-        )
+        write!(f, "<Token {} {}>", self.token_type, &self.literal,)
     }
 }
 impl Default for Token {

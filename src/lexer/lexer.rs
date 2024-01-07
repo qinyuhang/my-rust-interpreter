@@ -68,7 +68,7 @@ impl Lexer {
                 } else {
                     token::BITXOR
                 }
-            },
+            }
             '|' => {
                 if self.peek_char() == "|" {
                     self.read_char();
@@ -76,7 +76,7 @@ impl Lexer {
                 } else {
                     token::BITOR
                 }
-            },
+            }
             '&' => {
                 if self.peek_char() == "&" {
                     self.read_char();
@@ -163,7 +163,8 @@ impl Lexer {
     }
     pub fn read_number(&self) -> String {
         let position = self.position.get();
-        let is_read_hex = *self.ch.borrow() == '0' && (self.peek_char() == "x" || self.peek_char() == "X");
+        let is_read_hex =
+            *self.ch.borrow() == '0' && (self.peek_char() == "x" || self.peek_char() == "X");
         while is_digits(*self.ch.borrow())
             || is_not_decimal_symbol(*self.ch.borrow())
             || (is_read_hex && is_hex(*self.ch.borrow()))

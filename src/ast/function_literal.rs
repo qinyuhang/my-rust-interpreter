@@ -19,12 +19,20 @@ impl std::fmt::Display for FunctionLiteral {
             format!(
                 "{} {}({}) {}",
                 self.token_literal(),
-                format!("{}", self.name.as_ref().map_or("".into(), |val| val.to_string() + " ")),
-                (*self.parameters.as_ref().map_or_else(|| vec![], |v| v.to_vec()))
-                    .iter()
-                    .map(|v| v.to_string())
-                    .collect::<Vec<String>>()
-                    .join(", "),
+                format!(
+                    "{}",
+                    self.name
+                        .as_ref()
+                        .map_or("".into(), |val| val.to_string() + " ")
+                ),
+                (*self
+                    .parameters
+                    .as_ref()
+                    .map_or_else(|| vec![], |v| v.to_vec()))
+                .iter()
+                .map(|v| v.to_string())
+                .collect::<Vec<String>>()
+                .join(", "),
                 self.body
                     .as_ref()
                     .map_or_else(|| "".into(), |v| v.to_string())
@@ -35,7 +43,10 @@ impl std::fmt::Display for FunctionLiteral {
 
 mod test {
     #[allow(unused)]
-    use {crate::ast::*, crate::token::*, crate::lexer::Lexer, crate::parser::Parser, std::cell::RefCell, std::rc::Rc};
+    use {
+        crate::ast::*, crate::lexer::Lexer, crate::parser::Parser, crate::token::*,
+        std::cell::RefCell, std::rc::Rc,
+    };
 
     #[test]
     fn test_function_literal_to_string() {

@@ -1,10 +1,10 @@
+use crate::evaluator::*;
 use crate::lexer::*;
 use crate::parser::*;
-use crate::evaluator::*;
+use std::cell::RefCell;
 use std::io;
 use std::io::Write;
 use std::rc::Rc;
-use std::cell::RefCell;
 
 thread_local! {
     static HISTORY: Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(vec![]))
@@ -24,8 +24,8 @@ pub const SYMBOL: &'static str = r#"
   xx    xxxx
   xx      xxxx
   xx        xxxx
-  xx          xxxx
-xxxxxx       xxxxxxx"#;
+  xx          xxxx  #
+######       ########"#;
 
 pub fn start() {
     println!("{}", SYMBOL);

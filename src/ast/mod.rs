@@ -1,35 +1,38 @@
-use std::{any::Any, fmt::{Display, Debug}};
-pub use ast_macro::{ast_node};
+pub use ast_macro::ast_node;
+use std::{
+    any::Any,
+    fmt::{Debug, Display},
+};
 
 mod test;
 
+pub mod block_statement;
+pub mod bool_literal;
+pub mod call_expression;
+pub mod expression_statement;
+pub mod function_literal;
 pub mod identifier;
+pub mod if_expression;
+pub mod infix_expression;
+pub mod int_literal;
 pub mod let_statement;
+pub mod prefix_expression;
 pub mod program;
 pub mod return_statement;
-pub mod expression_statement;
-pub mod int_literal;
-pub mod prefix_expression;
-pub mod infix_expression;
-pub mod bool_literal;
-pub mod if_expression;
-pub mod block_statement;
-pub mod function_literal;
-pub mod call_expression;
 
+pub use block_statement::*;
+pub use bool_literal::*;
+pub use call_expression::*;
+pub use expression_statement::*;
+pub use function_literal::*;
 pub use identifier::*;
+pub use if_expression::*;
+pub use infix_expression::*;
+pub use int_literal::*;
 pub use let_statement::*;
+pub use prefix_expression::*;
 pub use program::*;
 pub use return_statement::*;
-pub use expression_statement::*;
-pub use int_literal::*;
-pub use prefix_expression::*;
-pub use infix_expression::*;
-pub use bool_literal::*;
-pub use if_expression::*;
-pub use block_statement::*;
-pub use function_literal::*;
-pub use call_expression::*;
 
 pub trait Node: Debug + Display {
     fn token_literal(&self) -> String;
