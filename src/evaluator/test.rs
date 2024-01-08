@@ -197,25 +197,26 @@ mod test {
         let test_cases = vec![
             ("5 + true;", "type mismatch: INTEGER + BOOLEAN"),
             ("5 + true; 5", "type mismatch: INTEGER + BOOLEAN"),
-            ("-true", "type mismatch: INTEGER + BOOLEAN"),
-            ("true + false", "type mismatch: INTEGER + BOOLEAN"),
-            ("5; true + false; 5", "type mismatch: INTEGER + BOOLEAN"),
+            ("-true", "unknown operator: -BOOLEAN"),
+            ("true + false", "unknown operator: BOOLEAN + BOOLEAN"),
+            ("5; true + false; 5", "unknown operator: BOOLEAN + BOOLEAN"),
             (
                 "if (10 > 1) { true + false; }",
-                "type mismatch: INTEGER + BOOLEAN",
+                "unknown operator: BOOLEAN + BOOLEAN",
             ),
             (
                 "if (10 > 1) { true + false; }; return 1;",
-                "type mismatch: INTEGER + BOOLEAN",
+                "unknown operator: BOOLEAN + BOOLEAN",
             ),
         ];
-        test_cases.iter().for_each(|(case, out)| {
+        test_cases.iter().for_each(|&(case, out)| {
             let evaluated = test_eval(case);
             // assert_eq!(format!("{}", evaluated), out);
             assert!(evaluated.is_some());
             let err = ErrorObject::try_from(evaluated.clone().unwrap());
             assert!(err.is_ok());
-            // println!("{:?}", evaluated.unwrap());
+            // println!("{:?}", err.unwrap());
+            assert_eq!(err.unwrap().message, out);
         });
     }
 

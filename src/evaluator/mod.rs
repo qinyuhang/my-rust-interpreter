@@ -186,12 +186,12 @@ pub fn eval_infix_expression(
                     FALSEOBJ.with(|val| val.clone())
                 }),
                 _ => Some(Rc::new(ErrorObject {
-                    message: "e".into(),
+                    message: format!("unknown operator: {} {} {}", l.object_type(), operator, r.object_type())
                 })),
             }
         }
         (Some(a), Some(b)) => Some(Rc::new(ErrorObject {
-            message: format!("{:?} {} {:?}", a, operator, b),
+            message: format!("type mismatch: {} {} {}", a.object_type(), operator, b.object_type()),
         })),
         _ => Some(Rc::new(ErrorObject {
             message: format!("{:?} {} {:?}", left.as_ref(), operator, right.as_ref()),
@@ -239,8 +239,9 @@ pub fn eval_minus_prefix_operator_expression(
                 value: -Integer::try_from(right).unwrap().value,
             }));
         }
+        return Some(Rc::new(ErrorObject { message: format!("unknown operator: -{}", right.object_type()) }))
     }
-    Some(Rc::new(ErrorObject { message: "".into() }))
+    Some(Rc::new(ErrorObject { message: "unknown operator: -".into() }))
 }
 
 pub fn eval_program(stmts: Vec<Rc<dyn Statement>>) -> Option<Rc<dyn Object>> {
