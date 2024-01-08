@@ -184,7 +184,7 @@ impl Parser {
         Some(program)
     }
     pub fn parse_statement(&self) -> Option<Rc<dyn Statement>> {
-        let cur_type = self.cur_token.borrow().token_type.clone();
+        let cur_type = self.cur_token.borrow().token_type;
         match cur_type {
             LET => self.parse_let_statement(),
             RETURN => self.parse_return_statement(),
@@ -532,11 +532,11 @@ impl Parser {
         r
     }
     pub fn cur_token_is(&self, token: TokenType) -> bool {
-        let t = self.cur_token.borrow().token_type.clone();
+        let t = self.cur_token.borrow().token_type;
         t == token
     }
     pub fn peek_token_is(&self, token: TokenType) -> bool {
-        let t = self.peek_token.borrow().token_type.clone();
+        let t = self.peek_token.borrow().token_type;
         t == token
     }
     pub fn errors(&self) -> Rc<RefCell<Vec<String>>> {
@@ -562,7 +562,7 @@ impl Parser {
     pub fn peek_precedence(&self) -> ExpressionConst {
         let mut r = ExpressionConst::LOWEST;
         PRECEDENCES.with(|val| {
-            let tp = self.peek_token.borrow().token_type.clone();
+            let tp = self.peek_token.borrow().token_type;
             if let Some(rs) = val.get(tp) {
                 r = *rs;
             }
@@ -572,7 +572,7 @@ impl Parser {
     pub fn cur_precedence(&self) -> ExpressionConst {
         let mut r = ExpressionConst::LOWEST;
         PRECEDENCES.with(|val| {
-            let tp = self.cur_token.borrow().token_type.clone();
+            let tp = self.cur_token.borrow().token_type;
             if let Some(rs) = val.get(tp) {
                 r = *rs;
             }
