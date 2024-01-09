@@ -227,7 +227,7 @@ impl Parser {
 
         Some(Rc::new(LetStatement {
             token: cur_token.clone(),
-            name: Box::new(name),
+            name: Rc::new(name),
 
             // FIXME: make it clone
             value: Some(Rc::new(ExpressionStatement {

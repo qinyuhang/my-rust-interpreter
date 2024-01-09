@@ -7,7 +7,7 @@ use std::rc::Rc;
 #[derive(Debug)]
 pub struct Context {
     pub parent: Option<Rc<Context>>,
-    pub scope: RefCell<HashMap<Identifier, Rc<dyn Object>>>,
+    pub scope: RefCell<HashMap<Rc<Identifier>, Rc<dyn Object>>>,
 }
 
 impl Context {
@@ -23,10 +23,10 @@ impl Context {
             parent: None,
         }
     }
-    pub fn set(&self, name: Identifier, val: Rc<dyn Object>) {
+    pub fn set(&self, name: Rc<Identifier>, val: Rc<dyn Object>) {
         self.scope.borrow_mut().insert(name, val);
     }
-    pub fn get(&self, name: &Identifier) -> Option<Rc<dyn Object>> {
+    pub fn get(&self, name: &Rc<Identifier>) -> Option<Rc<dyn Object>> {
         if let Some(current) = self.scope.borrow().get(name).cloned() {
             return Some(current);
         }
@@ -52,14 +52,14 @@ mod test {
         assert_eq!(context.scope.borrow().len(), 0);
     }
 
-    fn genId(name: &str) -> Identifier {
-        Identifier {
+    fn genId(name: &str) -> Rc<Identifier> {
+        Rc::new(Identifier {
             token: Token {
                 token_type: IDENT,
                 literal: name.to_string(),
             },
             value: name.to_string(),
-        }
+        })
     }
 
     #[test]

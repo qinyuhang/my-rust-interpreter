@@ -55,7 +55,7 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
     if n.is::<Identifier>() {
         if let Some(n) = n.downcast_ref::<Identifier>() {
             // println!("W====================== {}", n.token);
-            if let Some(val) = context.get(n) {
+            if let Some(val) = context.get(&Rc::new(n.clone())) {
                 return Some(val);
             }
             return Some(Rc::new(ErrorObject {
@@ -75,7 +75,7 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
                     if r.as_any().is::<ErrorObject>() {
                         return result;
                     }
-                    context.set(*n.name.clone(), r.clone());
+                    context.set(n.name.clone(), r.clone());
                 }
 
                 // if r is error, return
@@ -158,7 +158,7 @@ pub fn extend_function_context(func: &FunctionObject, args: Vec<Option<Rc<dyn Ob
         pr.iter().zip(args.iter()).for_each(|(id, ob)| {
             match ob {
                 Some(ob) => {
-                    context.set(id.clone(), ob.clone())
+                    context.set(Rc::new(id.clone()), ob.clone())
                 }
                 _ => {}
             }
