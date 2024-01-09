@@ -145,50 +145,71 @@ mod test {
 
     #[test]
     fn test_function_declaration() {
-        // let tests = vec![
-        //     // ("fn () {}", None::<Rc<dyn Object>>),
-        //     // ("fn a() {}", None::<Rc<dyn Object>>),
-        //     // ("fn a(i) {}", None::<Rc<dyn Object>>),
-        //     // ("fn a(x, y) {}", None::<Rc<dyn Object>>),
-        //     (
-        //         "fn a(x, y) { return x + y; }; return a(1,1);",
-        //         Some(Rc::new(Integer { value: 2 })),
-        //     ),
-        // ];
-        // tests.iter().for_each(|(input, expected)| {
-        //     let parsed = test_parse(input);
-        //     assert!(parsed.is_some());
-        //     let evaluated = test_eval(input);
-        //     // assert_eq!(evaluated, expected);
-        //     if expected.is_none() {
-        //         assert!(evaluated.is_none());
-        //     } else {
-        //         assert!(evaluated.is_some());
-        //     }
-        // });
+        let tests = vec![
+            ("let b = 5; let a = fn() { b }; a();", 5),
+            ("let b = 5; let a = fn() { b }; let b = 10; a();", 10),
+            ("fn () { 1; }();", 1),
+            // ("fn a() {}", None::<Rc<dyn Object>>),
+            // ("fn a(i) {}", None::<Rc<dyn Object>>),
+            // ("fn a(x, y) {}", None::<Rc<dyn Object>>),
+            ("let add = fn (x, y) { x + y; }; add (1, 1);", 2),
+            (
+                "let add = fn (x, y) { x + y; }; add(1, 1);",
+                2,
+            ),
+            (
+                "let a = fn a(x, y) { return x + y; }; a(1,1);",
+                2,
+            ),
+            // (
+            //     "let a = fn a(x, y) { return x + y; }; return a(1,1);",
+            //     2,
+            // ),
+            ("fn (x) { x; }(5)", 5),
+            (r#"
+            let add = fn(a, b) { a + b; };
+            let sub = fn(a, b) { a - b; };
+            let applyFunc = fn(a, b, func) { func(a, b) };
+            applyFunc(2, 2, add);
+            "#, 4),
+        ];
+        tests.iter().for_each(|&(input, expected)| {
+            let parsed = test_parse(input);
+            assert!(parsed.is_some());
+            let evaluated = test_eval(input);
+            test_integer_object(evaluated, expected);
+            // assert_eq!(evaluated, expected);
+            // if expected.is_none() {
+            //     assert!(evaluated.is_none());
+            // } else {
+            //     assert!(evaluated.is_some());
+            // }
+        });
     }
 
     #[test]
     fn test_function_eval() {
         let tests = vec![
-            ("fn () {}", None::<Rc<dyn Object>>),
-            ("fn a() {}; a();", None::<Rc<dyn Object>>),
-            ("fn a(i) {}; a();", None::<Rc<dyn Object>>),
-            ("fn a(x, y) {}; a();", None::<Rc<dyn Object>>),
-            ("fn a(x, y) { return x + y; }; a();", None::<Rc<dyn Object>>),
+            // ("fn () {}", None::<Rc<dyn Object>>),
+            // ("fn a() {}; a();", None::<Rc<dyn Object>>),
+            // ("fn a(i) {}; a();", None::<Rc<dyn Object>>),
+            // ("fn a(x, y) {}; a();", None::<Rc<dyn Object>>),
+            // ("fn a(x, y) { return x + y; }; a();", None::<Rc<dyn Object>>),
             (
-                "fn a(x, y) { return x + y; }; a(1, 2);",
-                None::<Rc<dyn Object>>,
+                "let a = fn a(x, y) { return x + y; }; a(1, 2);",
+                3,
             ),
         ];
-        tests.iter().for_each(|(input, expected)| {
+        tests.iter().for_each(|&(input, expected)| {
             let parsed = test_parse(input);
             assert!(parsed.is_some());
             let evaluated = test_eval(input);
+            dbg!(&evaluated);
+            test_integer_object(evaluated, expected);
             // assert_eq!(evaluated, expected);
-            if expected.is_none() {
-                assert!(evaluated.is_none());
-            }
+            // if expected.is_none() {
+            //     assert!(evaluated.is_none());
+            // }
         });
     }
 
@@ -231,6 +252,7 @@ mod test {
         ];
         test_cases.iter().for_each(|&(case, expected)| {
             let evaluated = test_eval(case);
+            // assert_eq!(format!("{}", evaluated), out);
             assert!(evaluated.is_some());
             assert!(test_integer_object(evaluated, expected));
         });
@@ -260,7 +282,7 @@ mod test {
         assert!(pr.is_some());
         let pr = pr.unwrap();
         let context = Context::new();
-        return eval(&pr, &context);
+        return eval(&pr, Rc::new(context));
     }
 
     #[allow(unused)]

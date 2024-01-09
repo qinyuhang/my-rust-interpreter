@@ -5,6 +5,7 @@ use std::rc::Rc;
 #[ast_node(Statement)]
 pub struct LetStatement {
     pub token: Token,
+    // FIXME: change to Rc
     pub name: Box<Identifier>,
     // FIXME: make it clone make it Option<Rc<dyn Expression>>;
     pub value: Option<Rc<dyn Expression>>,

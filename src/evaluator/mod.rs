@@ -12,7 +12,7 @@ thread_local! {
     pub static FALSEOBJ:Rc<dyn Object> = Rc::new(Boolean { value: false });
 }
 
-pub fn eval(node: &dyn Node, context: &Context) -> Option<Rc<dyn Object>> {
+pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
     let n = node.as_any();
     // println!("eval: {:?}", node);
     // Program
@@ -27,7 +27,7 @@ pub fn eval(node: &dyn Node, context: &Context) -> Option<Rc<dyn Object>> {
     if n.is::<ExpressionStatement>() {
         if let Some(n) = n.downcast_ref::<ExpressionStatement>() {
             // println!("ExpressionStatement {:?}", n);
-            return eval(n.expression.as_ref().unwrap().upcast(), context);
+            return eval(n.expression.as_ref().unwrap().upcast(), context.clone());
         }
     }
     if n.is::<IntegerLiteral>() {
@@ -47,7 +47,7 @@ pub fn eval(node: &dyn Node, context: &Context) -> Option<Rc<dyn Object>> {
     if n.is::<IfExpression>() {
         if let Some(n) = n.downcast_ref::<IfExpression>() {
             // println!("IfExpression {:?}", n);
-            return eval_if_expression(n, context);
+            return eval_if_expression(n, context.clone());
             // return Some(Rc::new(If));
         }
     }
@@ -70,7 +70,7 @@ pub fn eval(node: &dyn Node, context: &Context) -> Option<Rc<dyn Object>> {
     if n.is::<LetStatement>() {
         if let Some(n) = n.downcast_ref::<LetStatement>() {
             if let Some(val) = n.value.as_ref() {
-                let result = eval(val.upcast(), context);
+                let result = eval(val.upcast(), context.clone());
                 if let Some(r) = result.as_ref() {
                     if r.as_any().is::<ErrorObject>() {
                         return result;
@@ -84,46 +84,100 @@ pub fn eval(node: &dyn Node, context: &Context) -> Option<Rc<dyn Object>> {
     }
     if n.is::<PrefixExpression>() {
         if let Some(n) = n.downcast_ref::<PrefixExpression>() {
-            let right = eval(n.right.as_ref().unwrap().upcast(), context);
+            let right = eval(n.right.as_ref().unwrap().upcast(), context.clone());
             return eval_prefix_expression(&n.operator, right);
         }
     }
     if n.is::<InfixExpression>() {
         if let Some(n) = n.downcast_ref::<InfixExpression>() {
-            let left = eval(n.left.as_ref().unwrap().upcast(), context);
-            let right = eval(n.right.as_ref().unwrap().upcast(), context);
+            let left = eval(n.left.as_ref().unwrap().upcast(), context.clone());
+            let right = eval(n.right.as_ref().unwrap().upcast(), context.clone());
             return eval_infix_expression(&n.operator, left, right);
         }
     }
     if n.is::<BlockStatement>() {
         println!("eval block Statement");
         if let Some(n) = n.downcast_ref::<BlockStatement>() {
-            return eval_block_statement(n.clone(), context);
+            return eval_block_statement(n.clone(), context.clone());
         }
     }
     if n.is::<ReturnStatement>() {
         if let Some(n) = n.downcast_ref::<ReturnStatement>() {
             if n.return_value.is_some() {
-                if let Some(value) = eval(n.return_value.as_ref().unwrap().upcast(), context) {
+                if let Some(value) =
+                    eval(n.return_value.as_ref().unwrap().upcast(), context.clone())
+                {
                     return Some(Rc::new(ReturnValue { value }));
                 }
             }
         }
     }
-    // if n.is::<CallExpression>() {
-    //     if let Some(n) = n.downcast_ref::<CallExpression>() {
-    //         return eval_block_statement(n.function.unwrap());
-    //         // return Some(TRUEOBJ.with(|val| val.clone()));
-    //     }
-    // }
+    if n.is::<FunctionLiteral>() {
+        if let Some(n) = n.downcast_ref::<FunctionLiteral>() {
+            return Some(Rc::new(FunctionObject {
+                parameters: n.parameters.clone(),
+                body: n.body.clone(),
+                context: context.clone(),
+            }));
+        }
+    }
+    if n.is::<CallExpression>() {
+        if let Some(n) = n.downcast_ref::<CallExpression>() {
+            if let Some(ref f) = n.function {
+                // get the function from context;
+                if let Some(r) = eval(f.as_ref().upcast(), context.clone()) {
+                    if r.as_any().is::<ErrorObject>() {
+                        return Some(r);
+                    }
+                    // TODO: 错误处理
+                    let args = eval_expressions(n.arguments.as_ref().unwrap_or(&vec![]), context.clone());
+                    return apply_function(r, args);
+                }
+            }
+        }
+    }
     None
 }
 
-pub fn eval_if_expression(ex: &IfExpression, context: &Context) -> Option<Rc<dyn Object>> {
-    if is_truthy(eval(ex.condition.upcast(), context)) {
-        return eval(ex.consequence.as_ref().unwrap().upcast(), context);
+pub fn apply_function(func: Rc<dyn Object>, args: Vec<Option<Rc<dyn Object>>>) -> Option<Rc<dyn Object>> {
+    if let Some(f) = func.as_any().downcast_ref::<FunctionObject>() {
+        let extended_context = extend_function_context(f, args);
+        if let Some(ref body) = f.body {
+            let evaluated = eval(body.as_ref().upcast(), extended_context);
+            return evaluated;
+        }
+    }
+    None
+}
+
+//
+pub fn extend_function_context(func: &FunctionObject, args: Vec<Option<Rc<dyn Object>>>) -> Rc<Context> {
+    let context = Context::extend(func.context.clone());
+    // func.parameters
+    if let Some(ref pr) = func.parameters {
+        pr.iter().zip(args.iter()).for_each(|(id, ob)| {
+            match ob {
+                Some(ob) => {
+                    context.set(id.clone(), ob.clone())
+                }
+                _ => {}
+            }
+        });
+    }
+    Rc::new(context)
+}
+
+pub fn eval_expressions(exps: &Vec<Rc<dyn Expression>>, context: Rc<Context>) -> Vec<Option<Rc<dyn Object>>> {
+    exps.iter().map(|exp| {
+        eval(exp.upcast(), context.clone())
+    }).collect()
+}
+
+pub fn eval_if_expression(ex: &IfExpression, context: Rc<Context>) -> Option<Rc<dyn Object>> {
+    if is_truthy(eval(ex.condition.upcast(), context.clone())) {
+        return eval(ex.consequence.as_ref().unwrap().upcast(), context.clone());
     } else if ex.alternative.is_some() {
-        return eval(ex.alternative.as_ref().unwrap().upcast(), context);
+        return eval(ex.alternative.as_ref().unwrap().upcast(), context.clone());
     } else {
         return Some(NULLOBJ.with(|val| val.clone()));
     }
@@ -150,76 +204,76 @@ pub fn eval_infix_expression(
 ) -> Option<Rc<dyn Object>> {
     match (left.as_ref(), right.as_ref()) {
         (Some(l), Some(r))
-            if (left.as_ref().unwrap().as_any()).is::<Integer>()
-                && (right.as_ref().unwrap().as_any()).is::<Integer>() =>
-        {
-            let l = l.as_any().downcast_ref::<Integer>().unwrap();
-            let r = r.as_any().downcast_ref::<Integer>().unwrap();
-            // Some(Rc::new(Integer { value: val }))
-            match operator {
-                "+" => Some(Rc::new(Integer {
-                    value: l.value + r.value,
-                })),
-                "-" => Some(Rc::new(Integer {
-                    value: l.value - r.value,
-                })),
-                "*" => Some(Rc::new(Integer {
-                    value: l.value * r.value,
-                })),
-                "/" => Some(Rc::new(Integer {
-                    value: l.value / r.value,
-                })),
-                "<" => Some(if l.value < r.value {
-                    TRUEOBJ.with(|val| val.clone())
-                } else {
-                    FALSEOBJ.with(|val| val.clone())
-                }),
-                ">" => Some(if l.value > r.value {
-                    TRUEOBJ.with(|val| val.clone())
-                } else {
-                    FALSEOBJ.with(|val| val.clone())
-                }),
-                "==" => Some(if l.value == r.value {
-                    TRUEOBJ.with(|val| val.clone())
-                } else {
-                    FALSEOBJ.with(|val| val.clone())
-                }),
-                "!=" => Some(if l.value != r.value {
-                    TRUEOBJ.with(|val| val.clone())
-                } else {
-                    FALSEOBJ.with(|val| val.clone())
-                }),
-                _ => None,
+        if (left.as_ref().unwrap().as_any()).is::<Integer>()
+            && (right.as_ref().unwrap().as_any()).is::<Integer>() =>
+            {
+                let l = l.as_any().downcast_ref::<Integer>().unwrap();
+                let r = r.as_any().downcast_ref::<Integer>().unwrap();
+                // Some(Rc::new(Integer { value: val }))
+                match operator {
+                    "+" => Some(Rc::new(Integer {
+                        value: l.value + r.value,
+                    })),
+                    "-" => Some(Rc::new(Integer {
+                        value: l.value - r.value,
+                    })),
+                    "*" => Some(Rc::new(Integer {
+                        value: l.value * r.value,
+                    })),
+                    "/" => Some(Rc::new(Integer {
+                        value: l.value / r.value,
+                    })),
+                    "<" => Some(if l.value < r.value {
+                        TRUEOBJ.with(|val| val.clone())
+                    } else {
+                        FALSEOBJ.with(|val| val.clone())
+                    }),
+                    ">" => Some(if l.value > r.value {
+                        TRUEOBJ.with(|val| val.clone())
+                    } else {
+                        FALSEOBJ.with(|val| val.clone())
+                    }),
+                    "==" => Some(if l.value == r.value {
+                        TRUEOBJ.with(|val| val.clone())
+                    } else {
+                        FALSEOBJ.with(|val| val.clone())
+                    }),
+                    "!=" => Some(if l.value != r.value {
+                        TRUEOBJ.with(|val| val.clone())
+                    } else {
+                        FALSEOBJ.with(|val| val.clone())
+                    }),
+                    _ => None,
+                }
             }
-        }
         (Some(l), Some(r))
-            if (left.as_ref().unwrap().as_any()).is::<Boolean>()
-                && (right.as_ref().unwrap().as_any()).is::<Boolean>() =>
-        {
-            let l = l.as_any().downcast_ref::<Boolean>().unwrap();
-            let r = r.as_any().downcast_ref::<Boolean>().unwrap();
-            // Some(Rc::new(Integer { value: val }))
-            match operator {
-                "==" => Some(if l.value == r.value {
-                    TRUEOBJ.with(|val| val.clone())
-                } else {
-                    FALSEOBJ.with(|val| val.clone())
-                }),
-                "!=" => Some(if l.value != r.value {
-                    TRUEOBJ.with(|val| val.clone())
-                } else {
-                    FALSEOBJ.with(|val| val.clone())
-                }),
-                _ => Some(Rc::new(ErrorObject {
-                    message: format!(
-                        "unknown operator: {} {} {}",
-                        l.object_type(),
-                        operator,
-                        r.object_type()
-                    ),
-                })),
+        if (left.as_ref().unwrap().as_any()).is::<Boolean>()
+            && (right.as_ref().unwrap().as_any()).is::<Boolean>() =>
+            {
+                let l = l.as_any().downcast_ref::<Boolean>().unwrap();
+                let r = r.as_any().downcast_ref::<Boolean>().unwrap();
+                // Some(Rc::new(Integer { value: val }))
+                match operator {
+                    "==" => Some(if l.value == r.value {
+                        TRUEOBJ.with(|val| val.clone())
+                    } else {
+                        FALSEOBJ.with(|val| val.clone())
+                    }),
+                    "!=" => Some(if l.value != r.value {
+                        TRUEOBJ.with(|val| val.clone())
+                    } else {
+                        FALSEOBJ.with(|val| val.clone())
+                    }),
+                    _ => Some(Rc::new(ErrorObject {
+                        message: format!(
+                            "unknown operator: {} {} {}",
+                            l.object_type(),
+                            operator,
+                            r.object_type()
+                        ),
+                    })),
+                }
             }
-        }
         (Some(a), Some(b)) => Some(Rc::new(ErrorObject {
             message: format!(
                 "type mismatch: {} {} {}",
@@ -285,13 +339,13 @@ pub fn eval_minus_prefix_operator_expression(
 
 pub fn eval_program(stmts: Vec<Rc<dyn Statement>>) -> Option<Rc<dyn Object>> {
     let mut result = None;
-    let context = Context::new();
+    let context = Rc::new(Context::new());
     for st in stmts.iter() {
         // converter Statement to Node
         // rust not support convert sub-trait-object to parent-trait-object
         // so here using a upcast function to convert Statement/Expression to Node trait
         println!("try eval st: {:?}", st);
-        result = eval(st.upcast(), &context);
+        result = eval(st.upcast(), context.clone());
         // if
         if let Some(r) = result.as_ref() {
             if r.as_any().is::<ErrorObject>() {
@@ -311,10 +365,10 @@ pub fn eval_program(stmts: Vec<Rc<dyn Statement>>) -> Option<Rc<dyn Object>> {
     result
 }
 
-pub fn eval_block_statement(blk: BlockStatement, context: &Context) -> Option<Rc<dyn Object>> {
+pub fn eval_block_statement(blk: BlockStatement, context: Rc<Context>) -> Option<Rc<dyn Object>> {
     let mut result = None;
     for st in blk.statement.iter() {
-        result = eval(st.upcast(), context);
+        result = eval(st.upcast(), context.clone());
         if result.is_some() {
             let r = result.as_ref().unwrap();
             if r.object_type() == ERROR_OBJECT {

@@ -6,7 +6,9 @@ use std::rc::Rc;
 pub struct FunctionLiteral {
     pub token: Token,
     pub parameters: Option<Vec<Identifier>>,
+    // blockStatement
     pub body: Option<Rc<dyn Statement>>,
+    // functioin name
     pub name: Option<Identifier>,
     // pub body: Option<BlockStatement>,
 }
