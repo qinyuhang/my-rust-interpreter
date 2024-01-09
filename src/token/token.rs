@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 pub type TokenType = &'static str;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Token {
     pub token_type: TokenType,
     pub literal: String,

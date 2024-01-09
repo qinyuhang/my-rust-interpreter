@@ -2,6 +2,7 @@ use crate::ast::{Node, *};
 use crate::token::*;
 
 #[ast_node(Expression)]
+#[derive(Hash, Eq, PartialEq)]
 pub struct Identifier {
     pub token: Token,
 

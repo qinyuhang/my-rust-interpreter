@@ -208,6 +208,7 @@ mod test {
                 "if (10 > 1) { true + false; }; return 1;",
                 "unknown operator: BOOLEAN + BOOLEAN",
             ),
+            ("foobar", "identifier not found: foobar"),
         ];
         test_cases.iter().for_each(|&(case, out)| {
             let evaluated = test_eval(case);
@@ -217,6 +218,21 @@ mod test {
             assert!(err.is_ok());
             // println!("{:?}", err.unwrap());
             assert_eq!(err.unwrap().message, out);
+        });
+    }
+
+    #[test]
+    fn test_let_state() {
+        let test_cases = vec![
+            ("let a = 5; a;", 5),
+            ("let a = 5 * 5; a;", 25),
+            ("let a = 5; let b = a; b;", 5),
+            ("let a = 5; let b = a; let c = a + b + 5; c;", 15),
+        ];
+        test_cases.iter().for_each(|&(case, expected)| {
+            let evaluated = test_eval(case);
+            assert!(evaluated.is_some());
+            assert!(test_integer_object(evaluated, expected));
         });
     }
 
@@ -243,7 +259,8 @@ mod test {
         let pr = p.parse_program();
         assert!(pr.is_some());
         let pr = pr.unwrap();
-        return eval(&pr);
+        let context = Context::new();
+        return eval(&pr, &context);
     }
 
     #[allow(unused)]

@@ -1,11 +1,13 @@
 use std::{any::Any, fmt::Debug};
 pub mod boolean;
+pub mod context;
 mod error_object;
 pub mod integer;
 pub mod null;
 pub mod return_value;
 
 pub use boolean::*;
+pub use context::*;
 pub use error_object::*;
 pub use integer::*;
 pub use null::*;

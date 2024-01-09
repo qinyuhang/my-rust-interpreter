@@ -32,6 +32,7 @@ pub fn start() {
     // readline in
     let stdin = io::stdin();
     let mut input = String::new();
+    let context = Context::new();
     loop {
         print!("{PROMPT}");
         std::io::stdout().flush().unwrap();
@@ -55,7 +56,7 @@ pub fn start() {
         }
         let pr = pr.unwrap();
         println!("{}", &pr);
-        if let Some(r) = eval(&pr).as_ref() {
+        if let Some(r) = eval(&pr, &context).as_ref() {
             println!("{}", r);
         }
         // eval(&pr);
