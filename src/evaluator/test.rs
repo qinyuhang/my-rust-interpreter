@@ -194,7 +194,7 @@ mod test {
             // ("fn a() {}; a();", None::<Rc<dyn Object>>),
             // ("fn a(i) {}; a();", None::<Rc<dyn Object>>),
             // ("fn a(x, y) {}; a();", None::<Rc<dyn Object>>),
-            // ("fn a(x, y) { return x + y; }; a();", None::<Rc<dyn Object>>),
+            ("fn a(x, y) { return x + y; }; a(1, 2);", 3),
             (
                 "let a = fn a(x, y) { return x + y; }; a(1, 2);",
                 3,

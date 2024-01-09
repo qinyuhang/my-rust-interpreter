@@ -421,10 +421,10 @@ impl Parser {
 
         if self.peek_token_is(IDENT) {
             self.next_token();
-            name = Some(Identifier {
+            name = Some(Rc::new(Identifier {
                 token: (*self.cur_token.borrow()).clone(),
                 value: self.cur_token.borrow().literal.clone(),
-            });
+            }));
             // println!("function name: {}", name.as_ref().unwrap());
         }
         if !self.expect_peek(LPAREN) {
@@ -447,7 +447,7 @@ impl Parser {
         };
         Some(Rc::new(lit))
     }
-    pub fn parse_function_parameters(&self) -> Option<Vec<Identifier>> {
+    pub fn parse_function_parameters(&self) -> Option<Vec<Rc<Identifier>>> {
         let mut identifiers = vec![];
 
         if self.peek_token_is(RPAREN) {
@@ -457,10 +457,10 @@ impl Parser {
 
         self.next_token();
 
-        let ident = Identifier {
+        let ident = Rc::new(Identifier {
             token: (*self.cur_token.borrow()).clone(),
             value: self.cur_token.borrow().literal.clone(),
-        };
+        });
 
         identifiers.push(ident);
 
@@ -473,10 +473,10 @@ impl Parser {
             self.next_token();
             self.next_token();
             // fixme fn as p
-            let ident = Identifier {
+            let ident = Rc::new(Identifier {
                 token: (*self.cur_token.borrow()).clone(),
                 value: self.cur_token.borrow().literal.clone(),
-            };
+            });
             identifiers.push(ident);
         }
 

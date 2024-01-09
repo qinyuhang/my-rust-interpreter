@@ -7,7 +7,7 @@ pub struct FunctionObject {
     pub context: Rc<Context>,
 
     // TODO change to RC
-    pub parameters: Option<Vec<Identifier>>,
+    pub parameters: Option<Vec<Rc<Identifier>>>,
     // blockStatement
     pub body: Option<Rc<dyn Statement>>,
     // pub body: Option<BlockStatement>,

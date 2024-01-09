@@ -5,11 +5,11 @@ use std::rc::Rc;
 #[ast_node(Expression)]
 pub struct FunctionLiteral {
     pub token: Token,
-    pub parameters: Option<Vec<Identifier>>,
+    pub parameters: Option<Vec<Rc<Identifier>>>,
     // blockStatement
     pub body: Option<Rc<dyn Statement>>,
     // functioin name
-    pub name: Option<Identifier>,
+    pub name: Option<Rc<Identifier>>,
     // pub body: Option<BlockStatement>,
 }
 

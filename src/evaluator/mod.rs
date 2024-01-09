@@ -114,11 +114,15 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
     }
     if n.is::<FunctionLiteral>() {
         if let Some(n) = n.downcast_ref::<FunctionLiteral>() {
-            return Some(Rc::new(FunctionObject {
+            let function = Rc::new(FunctionObject {
                 parameters: n.parameters.clone(),
                 body: n.body.clone(),
                 context: context.clone(),
-            }));
+            });
+            if let Some(ref name) = n.name {
+                context.set(name.clone(), function.clone());
+            }
+            return Some(function.clone());
         }
     }
     if n.is::<CallExpression>() {
@@ -158,7 +162,7 @@ pub fn extend_function_context(func: &FunctionObject, args: Vec<Option<Rc<dyn Ob
         pr.iter().zip(args.iter()).for_each(|(id, ob)| {
             match ob {
                 Some(ob) => {
-                    context.set(Rc::new(id.clone()), ob.clone())
+                    context.set(id.clone(), ob.clone())
                 }
                 _ => {}
             }
