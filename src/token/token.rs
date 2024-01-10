@@ -56,10 +56,11 @@ pub const TRUE: TokenType = "TRUE";
 pub const FALSE: TokenType = "FLASE";
 pub const IF: TokenType = "if";
 pub const ELSE: TokenType = "ELSE";
-pub const RETURN: TokenType = "RETURE";
+pub const RETURN: TokenType = "RETURN";
 
 pub const EQ: TokenType = "==";
 pub const NOT_EQ: TokenType = "!=";
+pub const STRING: TokenType = "STRING";
 
 // pub const KEYWORDS: HashMap<String, TokenType> = HashMap::new();
 pub fn lookup_ident(ident: &String) -> TokenType {

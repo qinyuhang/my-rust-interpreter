@@ -89,6 +89,10 @@ impl Lexer {
             '*' => token::ASTERISK,
             '<' => token::LT,
             '>' => token::GT,
+            '"' => {
+                self.read_char();
+                token::STRING
+            },
             '\0' => token::EOF,
             _ => token::IDENT,
         };
@@ -98,6 +102,7 @@ impl Lexer {
             token::POW => "^^".into(),
             token::LOGICOR => "||".into(),
             token::LOGICAND => "&&".into(),
+            token::STRING => self.read_string(),
             token::IDENT => {
                 if is_letter(*self.ch.borrow()) {
                     should_read_one_more = false;
@@ -187,5 +192,16 @@ impl Lexer {
         {
             self.read_char();
         }
+    }
+    pub fn read_string(&self) -> String {
+        let position = self.position.get();
+        self.read_char();
+        while is_valid_identifier_char(*self.ch.borrow()) {
+            self.read_char();
+        }
+        self.input_chars[position..self.position.get()]
+            .iter()
+            .map(|c| c.clone().to_string())
+            .collect::<String>()
     }
 }

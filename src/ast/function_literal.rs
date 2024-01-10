@@ -8,7 +8,7 @@ pub struct FunctionLiteral {
     pub parameters: Option<Vec<Rc<Identifier>>>,
     // blockStatement
     pub body: Option<Rc<dyn Statement>>,
-    // functioin name
+    // function name
     pub name: Option<Rc<Identifier>>,
     // pub body: Option<BlockStatement>,
 }
