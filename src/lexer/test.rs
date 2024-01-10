@@ -303,10 +303,7 @@ if ( 5 < 10 ) {
     fn test_string_literal() {
         let input = r#""foobar""#;
 
-        let tests = vec![
-            (token::STRING, "foobar"),
-            (token::EOF, "\0"),
-        ];
+        let tests = vec![(token::STRING, "foobar"), (token::EOF, "\0")];
 
         let lex = Lexer::new(input);
 

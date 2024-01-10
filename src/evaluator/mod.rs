@@ -134,16 +134,27 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
                         return Some(r);
                     }
                     // TODO: 错误处理
-                    let args = eval_expressions(n.arguments.as_ref().unwrap_or(&vec![]), context.clone());
+                    let args =
+                        eval_expressions(n.arguments.as_ref().unwrap_or(&vec![]), context.clone());
                     return apply_function(r, args);
                 }
             }
         }
     }
+    if n.is::<StringLiteral>() {
+        if let Some(f) = n.downcast_ref::<StringLiteral>() {
+            return Some(Rc::new(StringObject {
+                value: f.value.clone(),
+            }));
+        }
+    }
     None
 }
 
-pub fn apply_function(func: Rc<dyn Object>, args: Vec<Option<Rc<dyn Object>>>) -> Option<Rc<dyn Object>> {
+pub fn apply_function(
+    func: Rc<dyn Object>,
+    args: Vec<Option<Rc<dyn Object>>>,
+) -> Option<Rc<dyn Object>> {
     if let Some(f) = func.as_any().downcast_ref::<FunctionObject>() {
         let extended_context = extend_function_context(f, args);
         if let Some(ref body) = f.body {
@@ -155,26 +166,28 @@ pub fn apply_function(func: Rc<dyn Object>, args: Vec<Option<Rc<dyn Object>>>) -
 }
 
 //
-pub fn extend_function_context(func: &FunctionObject, args: Vec<Option<Rc<dyn Object>>>) -> Rc<Context> {
+pub fn extend_function_context(
+    func: &FunctionObject,
+    args: Vec<Option<Rc<dyn Object>>>,
+) -> Rc<Context> {
     let context = Context::extend(func.context.clone());
     // func.parameters
     if let Some(ref pr) = func.parameters {
-        pr.iter().zip(args.iter()).for_each(|(id, ob)| {
-            match ob {
-                Some(ob) => {
-                    context.set(id.clone(), ob.clone())
-                }
-                _ => {}
-            }
+        pr.iter().zip(args.iter()).for_each(|(id, ob)| match ob {
+            Some(ob) => context.set(id.clone(), ob.clone()),
+            _ => {}
         });
     }
     Rc::new(context)
 }
 
-pub fn eval_expressions(exps: &Vec<Rc<dyn Expression>>, context: Rc<Context>) -> Vec<Option<Rc<dyn Object>>> {
-    exps.iter().map(|exp| {
-        eval(exp.upcast(), context.clone())
-    }).collect()
+pub fn eval_expressions(
+    exps: &Vec<Rc<dyn Expression>>,
+    context: Rc<Context>,
+) -> Vec<Option<Rc<dyn Object>>> {
+    exps.iter()
+        .map(|exp| eval(exp.upcast(), context.clone()))
+        .collect()
 }
 
 pub fn eval_if_expression(ex: &IfExpression, context: Rc<Context>) -> Option<Rc<dyn Object>> {
@@ -208,76 +221,76 @@ pub fn eval_infix_expression(
 ) -> Option<Rc<dyn Object>> {
     match (left.as_ref(), right.as_ref()) {
         (Some(l), Some(r))
-        if (left.as_ref().unwrap().as_any()).is::<Integer>()
-            && (right.as_ref().unwrap().as_any()).is::<Integer>() =>
-            {
-                let l = l.as_any().downcast_ref::<Integer>().unwrap();
-                let r = r.as_any().downcast_ref::<Integer>().unwrap();
-                // Some(Rc::new(Integer { value: val }))
-                match operator {
-                    "+" => Some(Rc::new(Integer {
-                        value: l.value + r.value,
-                    })),
-                    "-" => Some(Rc::new(Integer {
-                        value: l.value - r.value,
-                    })),
-                    "*" => Some(Rc::new(Integer {
-                        value: l.value * r.value,
-                    })),
-                    "/" => Some(Rc::new(Integer {
-                        value: l.value / r.value,
-                    })),
-                    "<" => Some(if l.value < r.value {
-                        TRUEOBJ.with(|val| val.clone())
-                    } else {
-                        FALSEOBJ.with(|val| val.clone())
-                    }),
-                    ">" => Some(if l.value > r.value {
-                        TRUEOBJ.with(|val| val.clone())
-                    } else {
-                        FALSEOBJ.with(|val| val.clone())
-                    }),
-                    "==" => Some(if l.value == r.value {
-                        TRUEOBJ.with(|val| val.clone())
-                    } else {
-                        FALSEOBJ.with(|val| val.clone())
-                    }),
-                    "!=" => Some(if l.value != r.value {
-                        TRUEOBJ.with(|val| val.clone())
-                    } else {
-                        FALSEOBJ.with(|val| val.clone())
-                    }),
-                    _ => None,
-                }
+            if (left.as_ref().unwrap().as_any()).is::<Integer>()
+                && (right.as_ref().unwrap().as_any()).is::<Integer>() =>
+        {
+            let l = l.as_any().downcast_ref::<Integer>().unwrap();
+            let r = r.as_any().downcast_ref::<Integer>().unwrap();
+            // Some(Rc::new(Integer { value: val }))
+            match operator {
+                "+" => Some(Rc::new(Integer {
+                    value: l.value + r.value,
+                })),
+                "-" => Some(Rc::new(Integer {
+                    value: l.value - r.value,
+                })),
+                "*" => Some(Rc::new(Integer {
+                    value: l.value * r.value,
+                })),
+                "/" => Some(Rc::new(Integer {
+                    value: l.value / r.value,
+                })),
+                "<" => Some(if l.value < r.value {
+                    TRUEOBJ.with(|val| val.clone())
+                } else {
+                    FALSEOBJ.with(|val| val.clone())
+                }),
+                ">" => Some(if l.value > r.value {
+                    TRUEOBJ.with(|val| val.clone())
+                } else {
+                    FALSEOBJ.with(|val| val.clone())
+                }),
+                "==" => Some(if l.value == r.value {
+                    TRUEOBJ.with(|val| val.clone())
+                } else {
+                    FALSEOBJ.with(|val| val.clone())
+                }),
+                "!=" => Some(if l.value != r.value {
+                    TRUEOBJ.with(|val| val.clone())
+                } else {
+                    FALSEOBJ.with(|val| val.clone())
+                }),
+                _ => None,
             }
+        }
         (Some(l), Some(r))
-        if (left.as_ref().unwrap().as_any()).is::<Boolean>()
-            && (right.as_ref().unwrap().as_any()).is::<Boolean>() =>
-            {
-                let l = l.as_any().downcast_ref::<Boolean>().unwrap();
-                let r = r.as_any().downcast_ref::<Boolean>().unwrap();
-                // Some(Rc::new(Integer { value: val }))
-                match operator {
-                    "==" => Some(if l.value == r.value {
-                        TRUEOBJ.with(|val| val.clone())
-                    } else {
-                        FALSEOBJ.with(|val| val.clone())
-                    }),
-                    "!=" => Some(if l.value != r.value {
-                        TRUEOBJ.with(|val| val.clone())
-                    } else {
-                        FALSEOBJ.with(|val| val.clone())
-                    }),
-                    _ => Some(Rc::new(ErrorObject {
-                        message: format!(
-                            "unknown operator: {} {} {}",
-                            l.object_type(),
-                            operator,
-                            r.object_type()
-                        ),
-                    })),
-                }
+            if (left.as_ref().unwrap().as_any()).is::<Boolean>()
+                && (right.as_ref().unwrap().as_any()).is::<Boolean>() =>
+        {
+            let l = l.as_any().downcast_ref::<Boolean>().unwrap();
+            let r = r.as_any().downcast_ref::<Boolean>().unwrap();
+            // Some(Rc::new(Integer { value: val }))
+            match operator {
+                "==" => Some(if l.value == r.value {
+                    TRUEOBJ.with(|val| val.clone())
+                } else {
+                    FALSEOBJ.with(|val| val.clone())
+                }),
+                "!=" => Some(if l.value != r.value {
+                    TRUEOBJ.with(|val| val.clone())
+                } else {
+                    FALSEOBJ.with(|val| val.clone())
+                }),
+                _ => Some(Rc::new(ErrorObject {
+                    message: format!(
+                        "unknown operator: {} {} {}",
+                        l.object_type(),
+                        operator,
+                        r.object_type()
+                    ),
+                })),
             }
+        }
         (Some(a), Some(b)) => Some(Rc::new(ErrorObject {
             message: format!(
                 "type mismatch: {} {} {}",

@@ -6,6 +6,7 @@ pub mod function_object;
 pub mod integer;
 pub mod null;
 pub mod return_value;
+mod string_object;
 
 pub use boolean::*;
 pub use context::*;
@@ -14,6 +15,7 @@ pub use function_object::*;
 pub use integer::*;
 pub use null::*;
 pub use return_value::*;
+pub use string_object::*;
 
 pub type ObjectType = &'static str;
 
@@ -29,3 +31,4 @@ pub const NULL_OBJECT: &str = "NULL";
 pub const RETURN_VALUE_OBJECT: &str = "RETURN_VALUE";
 pub const ERROR_OBJECT: &str = "ERROR_OBJECT";
 pub const FUNCTION_OBJECT: &str = "FUNCTION_OBJECT";
+pub const STRING_OBJECT: &str = "STRING_OBJECT";

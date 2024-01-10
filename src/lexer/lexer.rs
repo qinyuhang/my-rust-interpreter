@@ -92,7 +92,7 @@ impl Lexer {
             '"' => {
                 self.read_char();
                 token::STRING
-            },
+            }
             '\0' => token::EOF,
             _ => token::IDENT,
         };

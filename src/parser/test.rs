@@ -562,4 +562,26 @@ let mf = fn(x, y) { return x + y; };"#;
         let pr = pr.unwrap();
         println!("test_hex_binary_string: pr: {:?}", pr);
     }
+
+    #[test]
+    fn test_string_literal() {
+        let input = r#""foobar""#;
+        let l = Lexer::new(input);
+
+        let p = Parser::new(l);
+
+        let pr = p.parse_program();
+
+        assert!(pr.is_some());
+
+        let pr = pr.unwrap();
+        println!("test_string_literal: pr: {:?}", pr);
+
+        // if let Program { ref statement } = pr {
+        //     dbg!(statement[0].as_ref().expression);
+        //     let x = statement[0].as_ref().as_any();
+        //     dbg!(&x);
+        //     assert!(x.is::<StringLiteral>());
+        // }
+    }
 }

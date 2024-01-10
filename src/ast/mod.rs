@@ -19,6 +19,7 @@ pub mod let_statement;
 pub mod prefix_expression;
 pub mod program;
 pub mod return_statement;
+mod string_literal;
 
 pub use block_statement::*;
 pub use bool_literal::*;
@@ -33,6 +34,7 @@ pub use let_statement::*;
 pub use prefix_expression::*;
 pub use program::*;
 pub use return_statement::*;
+pub use string_literal::*;
 
 pub trait Node: Debug + Display {
     fn token_literal(&self) -> String;

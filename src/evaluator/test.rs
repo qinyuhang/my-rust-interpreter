@@ -153,25 +153,22 @@ mod test {
             // ("fn a(i) {}", None::<Rc<dyn Object>>),
             // ("fn a(x, y) {}", None::<Rc<dyn Object>>),
             ("let add = fn (x, y) { x + y; }; add (1, 1);", 2),
-            (
-                "let add = fn (x, y) { x + y; }; add(1, 1);",
-                2,
-            ),
-            (
-                "let a = fn a(x, y) { return x + y; }; a(1,1);",
-                2,
-            ),
+            ("let add = fn (x, y) { x + y; }; add(1, 1);", 2),
+            ("let a = fn a(x, y) { return x + y; }; a(1,1);", 2),
             // (
             //     "let a = fn a(x, y) { return x + y; }; return a(1,1);",
             //     2,
             // ),
             ("fn (x) { x; }(5)", 5),
-            (r#"
+            (
+                r#"
             let add = fn(a, b) { a + b; };
             let sub = fn(a, b) { a - b; };
             let applyFunc = fn(a, b, func) { func(a, b) };
             applyFunc(2, 2, add);
-            "#, 4),
+            "#,
+                4,
+            ),
         ];
         tests.iter().for_each(|&(input, expected)| {
             let parsed = test_parse(input);
@@ -195,10 +192,7 @@ mod test {
             // ("fn a(i) {}; a();", None::<Rc<dyn Object>>),
             // ("fn a(x, y) {}; a();", None::<Rc<dyn Object>>),
             ("fn a(x, y) { return x + y; }; a(1, 2);", 3),
-            (
-                "let a = fn a(x, y) { return x + y; }; a(1, 2);",
-                3,
-            ),
+            ("let a = fn a(x, y) { return x + y; }; a(1, 2);", 3),
         ];
         tests.iter().for_each(|&(input, expected)| {
             let parsed = test_parse(input);
@@ -256,6 +250,16 @@ mod test {
             assert!(evaluated.is_some());
             assert!(test_integer_object(evaluated, expected));
         });
+    }
+
+    #[test]
+    fn test_string_literal() {
+        let input = r#""hello world""#;
+        let evaluated = test_eval(input);
+        assert!(evaluated.is_some());
+        let evaluated = evaluated.unwrap();
+        let x = evaluated.as_any();
+        assert!(x.is::<StringObject>());
     }
 
     #[allow(unused)]

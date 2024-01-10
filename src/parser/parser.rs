@@ -13,17 +13,27 @@ use std::rc::Rc;
 /// 或者 5 * 2 + abc(1) 应该先运算函数再运算乘法最后运算加法
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Ord, PartialOrd)]
 pub enum ExpressionConst {
-    LOWEST = 1,  // what is this?
-    EQUALS,      // =
-    LESSGREATER, // > or <
-    SUM,         // +
-    PRODUCT,     // "*
-    PREFIX,      // -X or !X
-    BITOP,       // ^ or | or &
-    LOGICOP,     // && or ||
-    POW,         // ^^
-    CALL,        // function
+    LOWEST = 1,
+    // what is this?
+    EQUALS,
+    // =
+    LESSGREATER,
+    // > or <
+    SUM,
+    // +
+    PRODUCT,
+    // "*
+    PREFIX,
+    // -X or !X
+    BITOP,
+    // ^ or | or &
+    LOGICOP,
+    // && or ||
+    POW,
+    // ^^
+    CALL, // function
 }
+
 impl From<isize> for ExpressionConst {
     fn from(value: isize) -> Self {
         match value {
@@ -134,6 +144,8 @@ impl Parser {
         pc.register_prefix(LPAREN, Rc::new(move || pd.parse_grouped_expression()));
         let pd = pc.clone();
         pc.register_prefix(IF, Rc::new(move || pd.parse_if_expression()));
+        let pd = pc.clone();
+        pc.register_prefix(STRING, Rc::new(move || pd.parse_string_literal()));
 
         let pd = pc.clone();
         pc.register_infix(LPAREN, Rc::new(move |val| pd.parse_call_expression(val)));
@@ -521,6 +533,14 @@ impl Parser {
         }
 
         Some(args)
+    }
+    pub fn parse_string_literal(&self) -> Option<Rc<dyn Expression>> {
+        let literal = self.cur_token.borrow().literal.clone();
+        if let Ok(v) = StringLiteral::try_from(literal) {
+            Some(Rc::new(v))
+        } else {
+            None
+        }
     }
     pub fn expect_peek(&self, token: TokenType) -> bool {
         let r = self.peek_token_is(token);
