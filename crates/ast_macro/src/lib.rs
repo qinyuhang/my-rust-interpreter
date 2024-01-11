@@ -102,25 +102,23 @@ pub fn ast_node(
 /// add derive(Debug, Clone) to struct
 #[proc_macro_attribute]
 pub fn object(args: TokenStream, input: TokenStream) -> TokenStream {
+    // let args_clone = args.clone();
     let ipt = syn::parse_macro_input!(input as syn::DeriveInput);
     let name = &ipt.ident;
+    let attr_args = syn::parse_macro_input!(args as syn::Ident);
 
     let s = quote! {
         #[derive(Debug, Clone)]
         #ipt
-        impl Object for #name {
-            fn object_type(&self) -> ObjectType {
-                BOOLEAN_OBJECT
+        impl ObjectWithoutInspect for #name {
+            fn _object_type(&self) -> ObjectType {
+                #attr_args
             }
-
-            default fn inspect(&self) -> String {
-                "Object Default Implement".into()
-            }
-
-            fn as_any(&self) -> &dyn Any {
+            fn _as_any(&self) -> &dyn Any {
                 self
             }
         }
+        impl Object for #name {}
     };
     TokenStream::from(s)
 }

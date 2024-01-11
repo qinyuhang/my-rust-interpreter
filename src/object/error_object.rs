@@ -1,23 +1,16 @@
 // use ast_macro::object;
 
 pub use crate::object::*;
+use ast_macro::object;
 
-#[derive(Debug, Clone)]
+#[object(ERROR_OBJECT)]
 pub struct ErrorObject {
     pub message: String,
 }
 
-impl Object for ErrorObject {
-    fn object_type(&self) -> ObjectType {
-        ERROR_OBJECT
-    }
-
-    fn inspect(&self) -> String {
+impl ObjectInspect for ErrorObject {
+    fn _inspect(&self) -> String {
         format!("Error: {}", self.message)
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 

@@ -1,8 +1,9 @@
 use crate::object::*;
 use crate::*;
+use ast_macro::object;
 use std::rc::Rc;
 
-#[derive(Debug)]
+#[object(FUNCTION_OBJECT)]
 pub struct FunctionObject {
     pub context: Rc<Context>,
 
@@ -13,17 +14,9 @@ pub struct FunctionObject {
     // pub body: Option<BlockStatement>,
 }
 
-impl Object for FunctionObject {
-    fn object_type(&self) -> ObjectType {
-        FUNCTION_OBJECT
-    }
-
-    fn inspect(&self) -> String {
+impl ObjectInspect for FunctionObject {
+    fn _inspect(&self) -> String {
         format!("fn ({}) {{ {} }}", 1, 2)
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 

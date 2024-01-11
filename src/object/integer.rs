@@ -1,22 +1,15 @@
 pub use crate::object::*;
+use ast_macro::object;
 pub use std::rc::Rc;
 
-#[derive(Debug, Clone)]
+#[object(INTEGER_OBJECT)]
 pub struct Integer {
     pub value: i64,
 }
 
-impl Object for Integer {
-    fn object_type(&self) -> ObjectType {
-        INTEGER_OBJECT
-    }
-
-    fn inspect(&self) -> String {
+impl ObjectInspect for Integer {
+    fn _inspect(&self) -> String {
         self.value.to_string()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 

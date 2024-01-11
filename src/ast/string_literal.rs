@@ -55,7 +55,7 @@ impl TryFrom<Box<&dyn Expression>> for StringLiteral {
                 value: x.value.clone(),
             });
         }
-        Err(format!("Cannot cast {:?} into IntegerLiteral", value))
+        Err(format!("Cannot cast {:?} into StringLiteral", value))
     }
 }
 

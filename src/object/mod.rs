@@ -19,10 +19,25 @@ pub use string_object::*;
 
 pub type ObjectType = &'static str;
 
-pub trait Object: Debug + std::fmt::Display {
-    fn object_type(&self) -> ObjectType;
-    fn inspect(&self) -> String;
-    fn as_any(&self) -> &dyn Any;
+pub trait ObjectWithoutInspect {
+    fn _object_type(&self) -> ObjectType;
+
+    fn _as_any(&self) -> &dyn Any;
+}
+
+pub trait ObjectInspect {
+    fn _inspect(&self) -> String;
+}
+pub trait Object: Debug + std::fmt::Display + ObjectInspect + ObjectWithoutInspect {
+    fn object_type(&self) -> ObjectType {
+        ObjectWithoutInspect::_object_type(self)
+    }
+    fn inspect(&self) -> String {
+        ObjectInspect::_inspect(self)
+    }
+    fn as_any(&self) -> &dyn Any {
+        ObjectWithoutInspect::_as_any(self)
+    }
 }
 
 pub const BOOLEAN_OBJECT: &str = "BOOLEAN";

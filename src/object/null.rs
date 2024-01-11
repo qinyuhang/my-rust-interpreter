@@ -1,19 +1,12 @@
 use crate::object::*;
+use ast_macro::object;
 
-#[derive(Debug, Clone)]
+#[object(NULL_OBJECT)]
 pub struct Null {}
 
-impl Object for Null {
-    fn object_type(&self) -> ObjectType {
-        NULL_OBJECT
-    }
-
-    fn inspect(&self) -> String {
+impl ObjectInspect for Null {
+    fn _inspect(&self) -> String {
         "null".to_string()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 

@@ -1,22 +1,15 @@
 pub use crate::object::*;
+use ast_macro::object;
 pub use std::rc::Rc;
 
-#[derive(Debug, Clone)]
+#[object(RETURN_VALUE_OBJECT)]
 pub struct ReturnValue {
     pub value: Rc<dyn Object>,
 }
 
-impl Object for ReturnValue {
-    fn object_type(&self) -> ObjectType {
-        RETURN_VALUE_OBJECT
-    }
-
-    fn inspect(&self) -> String {
+impl ObjectInspect for ReturnValue {
+    fn _inspect(&self) -> String {
         self.value.inspect()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 

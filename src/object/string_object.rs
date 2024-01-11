@@ -1,22 +1,15 @@
 pub use crate::object::*;
+use ast_macro::object;
 pub use std::rc::Rc;
 
-#[derive(Debug, Clone)]
+#[object(STRING_OBJECT)]
 pub struct StringObject {
     pub value: Rc<String>,
 }
 
-impl Object for StringObject {
-    fn object_type(&self) -> ObjectType {
-        STRING_OBJECT
-    }
-
-    fn inspect(&self) -> String {
+impl ObjectInspect for StringObject {
+    fn _inspect(&self) -> String {
         self.value.as_ref().clone()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 
