@@ -291,6 +291,36 @@ pub fn eval_infix_expression(
                 })),
             }
         }
+        (Some(l), Some(r))
+            if (left.as_ref().unwrap().as_any()).is::<StringObject>()
+                && (right.as_ref().unwrap().as_any()).is::<StringObject>() =>
+        {
+            let l = l.as_any().downcast_ref::<StringObject>().unwrap();
+            let r = r.as_any().downcast_ref::<StringObject>().unwrap();
+            match operator {
+                "==" => Some(if l.value == r.value {
+                    TRUEOBJ.with(|val| val.clone())
+                } else {
+                    FALSEOBJ.with(|val| val.clone())
+                }),
+                "!=" => Some(if l.value != r.value {
+                    TRUEOBJ.with(|val| val.clone())
+                } else {
+                    FALSEOBJ.with(|val| val.clone())
+                }),
+                "+" => Some(Rc::new(StringObject {
+                    value: Rc::new(format!("{}{}", l.value, r.value)),
+                })),
+                _ => Some(Rc::new(ErrorObject {
+                    message: format!(
+                        "unknown operator: {} {} {}",
+                        l.object_type(),
+                        operator,
+                        r.object_type()
+                    ),
+                })),
+            }
+        }
         (Some(a), Some(b)) => Some(Rc::new(ErrorObject {
             message: format!(
                 "type mismatch: {} {} {}",

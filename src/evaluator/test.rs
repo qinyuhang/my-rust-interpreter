@@ -262,6 +262,32 @@ mod test {
         assert!(x.is::<StringObject>());
     }
 
+    #[test]
+    fn test_string_opr() {
+        let input = r#""hello" + "world""#;
+        let evaluated = test_eval(input);
+        assert!(evaluated.is_some());
+        let evaluated = evaluated.unwrap();
+        let x = evaluated.as_any();
+        assert!(x.is::<StringObject>());
+
+        let input = r#""hello" == "world""#;
+        let evaluated = test_eval(input);
+        assert!(evaluated.is_some());
+        let evaluated = evaluated.unwrap();
+        let x = evaluated.as_any();
+        assert!(x.is::<Boolean>());
+        assert!(!x.downcast_ref::<Boolean>().unwrap().value);
+
+        let input = r#""hello" != "world""#;
+        let evaluated = test_eval(input);
+        assert!(evaluated.is_some());
+        let evaluated = evaluated.unwrap();
+        let x = evaluated.as_any();
+        assert!(x.is::<Boolean>());
+        assert!(x.downcast_ref::<Boolean>().unwrap().value);
+    }
+
     #[allow(unused)]
     fn test_null_object(obj: &Option<Rc<dyn Object>>) {
         assert!(obj.is_some());
