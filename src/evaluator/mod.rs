@@ -167,9 +167,11 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
                         eval_expressions(n.arguments.as_ref().unwrap_or(&vec![]), context.clone());
 
                     // 错误处理
-                    if args.iter().any(|item| item.is_none()) {
+                    if let Some((id, _)) =
+                        args.iter().enumerate().find(|(idx, item)| item.is_none())
+                    {
                         return Some(Rc::new(ErrorObject {
-                            message: "Err".into(),
+                            message: format!("Cannot eval arguments at position: {}", id),
                         }));
                     }
                     let args = args.iter().map(|item| item.clone().unwrap()).collect();
