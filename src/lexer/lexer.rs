@@ -93,6 +93,8 @@ impl Lexer {
                 self.read_char();
                 token::STRING
             }
+            '[' => token::LBRACKET,
+            ']' => token::RBRACKET,
             '\0' => token::EOF,
             _ => token::IDENT,
         };
@@ -103,6 +105,8 @@ impl Lexer {
             token::LOGICOR => "||".into(),
             token::LOGICAND => "&&".into(),
             token::STRING => self.read_string(),
+            token::LBRACKET => "[".into(),
+            token::RBRACKET => "]".into(),
             token::IDENT => {
                 if is_letter(*self.ch.borrow()) {
                     should_read_one_more = false;

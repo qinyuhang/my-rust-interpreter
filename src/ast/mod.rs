@@ -6,6 +6,7 @@ use std::{
 
 mod test;
 
+mod array_literal;
 pub mod block_statement;
 pub mod bool_literal;
 pub mod call_expression;
@@ -21,6 +22,7 @@ pub mod program;
 pub mod return_statement;
 mod string_literal;
 
+pub use array_literal::*;
 pub use block_statement::*;
 pub use bool_literal::*;
 pub use call_expression::*;

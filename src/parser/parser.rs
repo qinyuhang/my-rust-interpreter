@@ -3,6 +3,7 @@ use crate::lexer::*;
 use crate::parser::*;
 use crate::token::*;
 
+use crate::ExpressionConst::LOWEST;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -146,6 +147,9 @@ impl Parser {
         pc.register_prefix(IF, Rc::new(move || pd.parse_if_expression()));
         let pd = pc.clone();
         pc.register_prefix(STRING, Rc::new(move || pd.parse_string_literal()));
+
+        let pd = pc.clone();
+        pc.register_prefix(LBRACKET, Rc::new(move || pd.parse_array_literal()));
 
         let pd = pc.clone();
         pc.register_infix(LPAREN, Rc::new(move |val| pd.parse_call_expression(val)));
@@ -502,37 +506,13 @@ impl Parser {
         println!("\n\nparse_call_expression\n\n{:?}", "args");
 
         let token = (*self.cur_token.borrow()).clone();
-        let args = self.parse_call_arguments();
+        let args = self.parse_expression_list(RPAREN);
 
         Some(Rc::new(CallExpression {
             token,
-            arguments: args,
+            arguments: Some(args),
             function: Some(f.clone()),
         }))
-    }
-    pub fn parse_call_arguments(&self) -> Option<Vec<Rc<dyn Expression>>> {
-        let mut args = vec![];
-
-        if self.peek_token_is(RPAREN) {
-            self.next_token();
-            return Some(args);
-        }
-
-        self.next_token();
-
-        args.push(self.parse_expression(ExpressionConst::LOWEST).unwrap());
-
-        while self.peek_token_is(COMMA) {
-            self.next_token();
-            self.next_token();
-            args.push(self.parse_expression(ExpressionConst::LOWEST).unwrap());
-        }
-
-        if !self.expect_peek(RPAREN) {
-            return None;
-        }
-
-        Some(args)
     }
     pub fn parse_string_literal(&self) -> Option<Rc<dyn Expression>> {
         let literal = self.cur_token.borrow().literal.clone();
@@ -541,6 +521,39 @@ impl Parser {
         } else {
             None
         }
+    }
+    pub fn parse_array_literal(&self) -> Option<Rc<dyn Expression>> {
+        // let mut list = vec![];
+        // Some(Rc::new())
+        let literal = self.cur_token.borrow().literal.clone();
+        let arr = ArrayLiteral {
+            token: Token {
+                literal,
+                token_type: token::LBRACKET,
+            },
+            elements: self.parse_expression_list(token::RBRACKET),
+        };
+        Some(Rc::new(arr))
+    }
+
+    pub fn parse_expression_list(&self, end: TokenType) -> Vec<Rc<dyn Expression>> {
+        let mut r = vec![];
+        if self.peek_token_is(end) {
+            self.next_token();
+            return r;
+        }
+        self.next_token();
+        r.push(self.parse_expression(LOWEST).unwrap());
+
+        while self.peek_token_is(token::COMMA) {
+            self.next_token();
+            self.next_token();
+            r.push(self.parse_expression(LOWEST).unwrap());
+        }
+        if !self.expect_peek(end) {
+            return vec![];
+        }
+        return r;
     }
     pub fn expect_peek(&self, token: TokenType) -> bool {
         let r = self.peek_token_is(token);

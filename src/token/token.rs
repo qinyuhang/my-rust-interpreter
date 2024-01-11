@@ -49,6 +49,8 @@ pub const LPAREN: TokenType = "(";
 pub const RPAREN: TokenType = ")";
 pub const LBRACE: TokenType = "{";
 pub const RBRACE: TokenType = "}";
+pub const LBRACKET: TokenType = "[";
+pub const RBRACKET: TokenType = "]";
 
 pub const FUNCTION: TokenType = "FUNCTION";
 pub const LET: TokenType = "LET";
