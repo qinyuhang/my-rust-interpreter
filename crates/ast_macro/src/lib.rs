@@ -127,3 +127,12 @@ pub fn object(args: TokenStream, input: TokenStream) -> TokenStream {
     };
     TokenStream::from(s)
 }
+
+// #[proc_macro]
+// macro_rules! hashmap {
+//     ($( $key: expr => $val: expr ),*) => {{
+//          let mut map = ::std::collections::HashMap::new();
+//          $( map.insert($key, $val); )*
+//          map
+//     }}
+// }

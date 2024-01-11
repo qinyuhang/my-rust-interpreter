@@ -2,6 +2,12 @@ mod test {
     #[allow(unused)]
     use {crate::evaluator::*, crate::lexer::*, crate::object::*, crate::parser::*};
 
+    enum FinalResult {
+        STRING(String),
+        Int(i64),
+        Bool(bool),
+    }
+
     #[test]
     fn test_eval_integer_expression() {
         let tests = vec![
@@ -174,6 +180,7 @@ mod test {
             let parsed = test_parse(input);
             assert!(parsed.is_some());
             let evaluated = test_eval(input);
+            dbg!(&evaluated);
             test_integer_object(evaluated, expected);
             // assert_eq!(evaluated, expected);
             // if expected.is_none() {
@@ -286,6 +293,42 @@ mod test {
         let x = evaluated.as_any();
         assert!(x.is::<Boolean>());
         assert!(x.downcast_ref::<Boolean>().unwrap().value);
+    }
+
+    #[test]
+    fn test_builtin_len_fn() {
+        let cases = vec![
+            (r#"len("H")"#, FinalResult::Int(1)),
+            (
+                r#"len(1)"#,
+                FinalResult::STRING("argument to `len` not supported, got INTEGER".into()),
+            ),
+            (
+                r#"len("H", "w")"#,
+                FinalResult::STRING("wrong number of arguments. got=2, want=1".into()),
+            ),
+        ];
+        cases.iter().for_each(|(case, out)| {
+            let input = case;
+            let evaluated = test_eval(input);
+            assert!(evaluated.is_some());
+            dbg!(&evaluated);
+            match out {
+                FinalResult::Bool(b) => {}
+                FinalResult::STRING(st) => {
+                    // convert to ErrorObject
+                    let err = ErrorObject::try_from(evaluated.clone().unwrap());
+                    assert!(err.is_ok());
+                    // println!("{:?}", err.unwrap());
+                    assert_eq!(err.unwrap().message, st.to_string());
+                }
+                FinalResult::Int(n) => {
+                    test_integer_object(evaluated, *n);
+                }
+            }
+            // let x = evaluated.as_any();
+            // assert!(x.is::<Integer>());
+        });
     }
 
     #[allow(unused)]

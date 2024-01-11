@@ -1,5 +1,6 @@
 use std::{any::Any, fmt::Debug};
 pub mod boolean;
+mod builtin;
 pub mod context;
 mod error_object;
 pub mod function_object;
@@ -9,6 +10,7 @@ pub mod return_value;
 mod string_object;
 
 pub use boolean::*;
+pub use builtin::*;
 pub use context::*;
 pub use error_object::*;
 pub use function_object::*;
@@ -47,3 +49,4 @@ pub const RETURN_VALUE_OBJECT: &str = "RETURN_VALUE";
 pub const ERROR_OBJECT: &str = "ERROR_OBJECT";
 pub const FUNCTION_OBJECT: &str = "FUNCTION_OBJECT";
 pub const STRING_OBJECT: &str = "STRING_OBJECT";
+pub const BUILTIN_OBJECT: &str = "BUILTIN";

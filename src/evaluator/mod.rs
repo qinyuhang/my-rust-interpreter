@@ -2,7 +2,10 @@ pub use crate::ast::*;
 pub use crate::lexer::*;
 pub use crate::object::*;
 pub use crate::parser::*;
+pub use crate::token::*;
+use std::collections::HashMap;
 pub use std::rc::Rc;
+use std::vec::Vec;
 
 mod test;
 
@@ -10,6 +13,25 @@ thread_local! {
     pub static NULLOBJ: Rc<dyn Object> = Rc::new(Null {});
     pub static TRUEOBJ: Rc<dyn Object> = Rc::new(Boolean { value: true });
     pub static FALSEOBJ:Rc<dyn Object> = Rc::new(Boolean { value: false });
+
+    pub static BUILTINS:Rc<HashMap<&'static str, Rc<dyn Object>>> = Rc::new([
+        (
+            "len",
+            Rc::new(BuiltinObject { func: Rc::new(|args: Vec<Rc<dyn Object>>| {
+                match args.as_slice() {
+                    [a] => {
+                        if let Some(inner_string) = a.as_any().downcast_ref::<StringObject>() {
+                            return Some(Rc::new(Integer { value: inner_string.value.to_string().len() as i64 }));
+                        }
+                        return Some(Rc::new(ErrorObject { message: format!( "argument to `len` not supported, got {}", a.object_type())}));
+                    },
+                    _ => {
+                        Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) }))
+                    }
+                }
+            }) }) as Rc<dyn Object>
+        ),
+    ].iter().cloned().collect::<HashMap<&'static str, Rc<dyn Object>>>()); // Rc::new(HashMap::new());
 }
 
 pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
@@ -58,6 +80,14 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
             if let Some(val) = context.get(&Rc::new(n.clone())) {
                 return Some(val);
             }
+
+            let idf = &n.value;
+
+            let hm = BUILTINS.with(|hm| hm.clone());
+            if let Some(val) = hm.get(idf.as_str()) {
+                return Some(val.clone());
+            }
+
             return Some(Rc::new(ErrorObject {
                 message: format!("identifier not found: {}", n),
             }));
@@ -133,9 +163,16 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
                     if r.as_any().is::<ErrorObject>() {
                         return Some(r);
                     }
-                    // TODO: 错误处理
                     let args =
                         eval_expressions(n.arguments.as_ref().unwrap_or(&vec![]), context.clone());
+
+                    // 错误处理
+                    if args.iter().any(|item| item.is_none()) {
+                        return Some(Rc::new(ErrorObject {
+                            message: "Err".into(),
+                        }));
+                    }
+                    let args = args.iter().map(|item| item.clone().unwrap()).collect();
                     return apply_function(r, args);
                 }
             }
@@ -151,32 +188,28 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
     None
 }
 
-pub fn apply_function(
-    func: Rc<dyn Object>,
-    args: Vec<Option<Rc<dyn Object>>>,
-) -> Option<Rc<dyn Object>> {
+pub fn apply_function(func: Rc<dyn Object>, args: Vec<Rc<dyn Object>>) -> Option<Rc<dyn Object>> {
     if let Some(f) = func.as_any().downcast_ref::<FunctionObject>() {
-        let extended_context = extend_function_context(f, args);
+        let extended_context = extend_function_context(f, &args);
         if let Some(ref body) = f.body {
             let evaluated = eval(body.as_ref().upcast(), extended_context);
             return evaluated;
         }
     }
+    if let Some(f) = func.as_any().downcast_ref::<BuiltinObject>() {
+        return (f.func)(args.clone());
+    }
     None
 }
 
 //
-pub fn extend_function_context(
-    func: &FunctionObject,
-    args: Vec<Option<Rc<dyn Object>>>,
-) -> Rc<Context> {
+pub fn extend_function_context(func: &FunctionObject, args: &Vec<Rc<dyn Object>>) -> Rc<Context> {
     let context = Context::extend(func.context.clone());
     // func.parameters
     if let Some(ref pr) = func.parameters {
-        pr.iter().zip(args.iter()).for_each(|(id, ob)| match ob {
-            Some(ob) => context.set(id.clone(), ob.clone()),
-            _ => {}
-        });
+        pr.iter()
+            .zip(args.iter())
+            .for_each(|(id, ob)| context.set(id.clone(), ob.clone()));
     }
     Rc::new(context)
 }
@@ -387,6 +420,7 @@ pub fn eval_minus_prefix_operator_expression(
 pub fn eval_program(stmts: Vec<Rc<dyn Statement>>) -> Option<Rc<dyn Object>> {
     let mut result = None;
     let context = Rc::new(Context::new());
+    // add builtin functions to context
     for st in stmts.iter() {
         // converter Statement to Node
         // rust not support convert sub-trait-object to parent-trait-object
