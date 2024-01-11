@@ -13,12 +13,6 @@ impl ObjectInspect for StringObject {
     }
 }
 
-impl std::fmt::Display for StringObject {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.value)
-    }
-}
-
 impl TryFrom<Rc<dyn Object>> for StringObject {
     type Error = String;
 

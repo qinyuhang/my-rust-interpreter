@@ -7,14 +7,10 @@ struct A {}
 
 impl ObjectInspect for A {
     fn _inspect(&self) -> String {
-        "todo!()".into()
+        "A {{ }}".into()
     }
 }
-impl std::fmt::Display for A {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "A {{ }}")
-    }
-}
+
 fn main() {
     let a = A {};
     dbg!(a);

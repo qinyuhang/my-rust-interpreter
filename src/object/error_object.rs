@@ -14,12 +14,6 @@ impl ObjectInspect for ErrorObject {
     }
 }
 
-impl std::fmt::Display for ErrorObject {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Error: {}", self.message)
-    }
-}
-
 impl TryFrom<Rc<dyn Object>> for ErrorObject {
     type Error = String;
 

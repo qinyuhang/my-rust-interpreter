@@ -20,12 +20,6 @@ impl ObjectInspect for FunctionObject {
     }
 }
 
-impl std::fmt::Display for FunctionObject {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", "")
-    }
-}
-
 impl TryFrom<Rc<dyn Object>> for FunctionObject {
     type Error = String;
 

@@ -12,13 +12,6 @@ impl ObjectInspect for Integer {
         self.value.to_string()
     }
 }
-
-impl std::fmt::Display for Integer {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.value)
-    }
-}
-
 impl TryFrom<Rc<dyn Object>> for Integer {
     type Error = String;
 
