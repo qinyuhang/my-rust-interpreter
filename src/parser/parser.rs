@@ -579,7 +579,6 @@ impl Parser {
             left: left.clone(),
             index: index.unwrap(),
         }));
-        None
     }
     pub fn expect_peek(&self, token: TokenType) -> bool {
         let r = self.peek_token_is(token);

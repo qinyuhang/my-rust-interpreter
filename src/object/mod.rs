@@ -1,14 +1,16 @@
 use std::{any::Any, fmt::Debug};
+pub mod array_object;
 pub mod boolean;
-mod builtin;
+pub mod builtin;
 pub mod context;
-mod error_object;
+pub mod error_object;
 pub mod function_object;
 pub mod integer;
 pub mod null;
 pub mod return_value;
-mod string_object;
+pub mod string_object;
 
+pub use array_object::*;
 pub use boolean::*;
 pub use builtin::*;
 pub use context::*;
@@ -50,3 +52,4 @@ pub const ERROR_OBJECT: &str = "ERROR_OBJECT";
 pub const FUNCTION_OBJECT: &str = "FUNCTION_OBJECT";
 pub const STRING_OBJECT: &str = "STRING_OBJECT";
 pub const BUILTIN_OBJECT: &str = "BUILTIN";
+pub const ARRAY_OBJECT: &str = "ARRAY_OBJECT";

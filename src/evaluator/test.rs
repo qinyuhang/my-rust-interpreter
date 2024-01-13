@@ -6,6 +6,7 @@ mod test {
         STRING(String),
         Int(i64),
         Bool(bool),
+        Vec(Vec<i64>),
     }
 
     #[test]
@@ -325,12 +326,40 @@ mod test {
                 FinalResult::Int(n) => {
                     test_integer_object(evaluated, *n);
                 }
+                _ => assert!(false),
             }
             // let x = evaluated.as_any();
             // assert!(x.is::<Integer>());
         });
     }
 
+    #[test]
+    fn test_array_literal() {
+        let cases = vec![
+            ("[1,2,3];", FinalResult::Vec(vec![1, 2, 3])),
+            ("[1,2+1,3];", FinalResult::Vec(vec![1, 2, 3])),
+            ("[1,2+5,3];", FinalResult::Vec(vec![1, 7, 3])),
+            (
+                "let a = fn() { 5 }; [1,a(),3];",
+                FinalResult::Vec(vec![1, 5, 3]),
+            ),
+            (
+                "let a = fn() { 5 }; [1,a(),3];",
+                FinalResult::Vec(vec![1, 5, 3]),
+            ),
+        ];
+
+        cases.iter().for_each(|(case, out)| {
+            let input = case;
+            let evaluated = test_eval(input);
+            assert!(evaluated.is_some());
+            dbg!(&evaluated);
+            match out {
+                FinalResult::Vec(v) => {}
+                _ => assert!(false),
+            }
+        });
+    }
     #[allow(unused)]
     fn test_null_object(obj: &Option<Rc<dyn Object>>) {
         assert!(obj.is_some());

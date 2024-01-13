@@ -163,19 +163,15 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
                     if r.as_any().is::<ErrorObject>() {
                         return Some(r);
                     }
-                    let args =
-                        eval_expressions(n.arguments.as_ref().unwrap_or(&vec![]), context.clone());
-
-                    // 错误处理
-                    if let Some((id, _)) =
-                        args.iter().enumerate().find(|(idx, item)| item.is_none())
-                    {
-                        return Some(Rc::new(ErrorObject {
+                    return match eval_expressions(
+                        n.arguments.as_ref().unwrap_or(&vec![]),
+                        context.clone(),
+                    ) {
+                        Ok(args) => apply_function(r, args),
+                        Err(id) => Some(Rc::new(ErrorObject {
                             message: format!("Cannot eval arguments at position: {}", id),
-                        }));
-                    }
-                    let args = args.iter().map(|item| item.clone().unwrap()).collect();
-                    return apply_function(r, args);
+                        })),
+                    };
                 }
             }
         }
@@ -185,6 +181,16 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
             return Some(Rc::new(StringObject {
                 value: f.value.clone(),
             }));
+        }
+    }
+    if n.is::<ArrayLiteral>() {
+        if let Some(arr) = n.downcast_ref::<ArrayLiteral>() {
+            return match eval_expressions(&arr.elements.clone(), context.clone()) {
+                Ok(elements) => Some(Rc::new(ArrayObject { elements })),
+                Err(id) => Some(Rc::new(ErrorObject {
+                    message: format!("Cannot eval arguments at position: {}", id),
+                })),
+            };
         }
     }
     None
@@ -219,10 +225,15 @@ pub fn extend_function_context(func: &FunctionObject, args: &Vec<Rc<dyn Object>>
 pub fn eval_expressions(
     exps: &Vec<Rc<dyn Expression>>,
     context: Rc<Context>,
-) -> Vec<Option<Rc<dyn Object>>> {
-    exps.iter()
+) -> Result<Vec<Rc<dyn Object>>, usize> {
+    let exps: Vec<_> = exps
+        .iter()
         .map(|exp| eval(exp.upcast(), context.clone()))
-        .collect()
+        .collect();
+    if let Some((id, _)) = exps.iter().enumerate().find(|(idx, item)| item.is_none()) {
+        return Err(id);
+    }
+    return Ok(exps.iter().map(|item| item.clone().unwrap()).collect());
 }
 
 pub fn eval_if_expression(ex: &IfExpression, context: Rc<Context>) -> Option<Rc<dyn Object>> {
