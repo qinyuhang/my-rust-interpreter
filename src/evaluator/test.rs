@@ -7,6 +7,8 @@ mod test {
         Int(i64),
         Bool(bool),
         Vec(Vec<i64>),
+        Err(String),
+        Nil,
     }
 
     #[test]
@@ -356,6 +358,39 @@ mod test {
             dbg!(&evaluated);
             match out {
                 FinalResult::Vec(v) => {}
+                _ => assert!(false),
+            }
+        });
+    }
+
+    #[test]
+    fn test_index_expression() {
+        let cases = vec![
+            ("[1,2,3][0]", FinalResult::Int(1)),
+            ("[1,2,3][1]", FinalResult::Int(2)),
+            ("[1,2,3][2]", FinalResult::Int(3)),
+            ("let i = 0; [1][i]", FinalResult::Int(1)),
+            ("[1,2,3][1+1]", FinalResult::Int(3)),
+            ("let arr=[1,2,3]; arr[2]", FinalResult::Int(3)),
+            (
+                "let arr=[1,2,3]; arr[0] + arr[1] + arr[2]",
+                FinalResult::Int(6),
+            ),
+            ("[1,2,3][3]", FinalResult::Nil),
+            ("[1,2,3][-1]", FinalResult::Nil),
+        ];
+        cases.iter().for_each(|(case, out)| {
+            let input = case;
+            let evaluated = test_eval(input);
+            assert!(evaluated.is_some());
+            dbg!(&evaluated);
+            match out {
+                FinalResult::Int(i) => {
+                    test_integer_object(evaluated, *i);
+                }
+                FinalResult::Nil => {
+                    test_null_object(&evaluated);
+                }
                 _ => assert!(false),
             }
         });

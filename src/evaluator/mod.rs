@@ -193,6 +193,23 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
             };
         }
     }
+    if n.is::<IndexExpression>() {
+        if let Some(exp) = n.downcast_ref::<IndexExpression>() {
+            let left = eval(exp.left.as_ref().upcast(), context.clone());
+            // if is error left return ErrorObject
+            let index = eval(exp.index.as_ref().upcast(), context.clone());
+            // if is error index
+            return match (left, index) {
+                (Some(left), Some(index)) => {
+                    return eval_index_expression(left, index);
+                }
+                // FIXME: ErrorObject message
+                _ => Some(Rc::new(ErrorObject {
+                    message: format!("cannot eval {}", exp),
+                })),
+            };
+        }
+    }
     None
 }
 
@@ -210,6 +227,34 @@ pub fn apply_function(func: Rc<dyn Object>, args: Vec<Rc<dyn Object>>) -> Option
     None
 }
 
+pub fn eval_index_expression(
+    left: Rc<dyn Object>,
+    index: Rc<dyn Object>,
+) -> Option<Rc<dyn Object>> {
+    return match (left.object_type(), index.object_type()) {
+        ("ARRAY_OBJECT", "INTEGER") => eval_array_index_expression(left, index),
+        _ => None,
+    };
+}
+
+pub fn eval_array_index_expression(
+    arr: Rc<dyn Object>,
+    index: Rc<dyn Object>,
+) -> Option<Rc<dyn Object>> {
+    return match (
+        arr.as_ref().as_any().downcast_ref::<ArrayObject>(),
+        index.as_ref().as_any().downcast_ref::<Integer>(),
+    ) {
+        (Some(arr), Some(index)) => {
+            let max = arr.elements.len() - 1;
+            if index.value > max as i64 || index.value < 0 {
+                return Some(NULLOBJ.with(|n| n.clone()));
+            }
+            Some(arr.elements[index.value as usize].clone())
+        }
+        _ => Some(NULLOBJ.with(|n| n.clone())),
+    };
+}
 //
 pub fn extend_function_context(func: &FunctionObject, args: &Vec<Rc<dyn Object>>) -> Rc<Context> {
     let context = Context::extend(func.context.clone());
