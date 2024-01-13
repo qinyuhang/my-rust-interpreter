@@ -404,6 +404,14 @@ return 500;
                 "add(a + b + c * d / f + g)",
                 "add((((a + b) + ((c * d) / f)) + g))",
             ),
+            (
+                "a * [1, 2, 3][b * c] * d",
+                "((a * ([1, 2, 3][(b * c)])) * d)",
+            ),
+            (
+                "add(a * b[2], b[1], 2 * [1, 2][1])",
+                "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))",
+            ),
         ];
 
         #[allow(unused)]
@@ -598,5 +606,10 @@ let mf = fn(x, y) { return x + y; };"#;
 
         let pr = pr.unwrap();
         println!("test_array_literal: pr: {:?}", pr);
+    }
+
+    #[test]
+    fn test_index_literal() {
+        let cases = vec![("[1, 2, 3][0]")];
     }
 }

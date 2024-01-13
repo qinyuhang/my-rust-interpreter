@@ -32,7 +32,8 @@ pub enum ExpressionConst {
     // && or ||
     POW,
     // ^^
-    CALL, // function
+    CALL,  // function
+    INDEX, // a[1]
 }
 
 impl From<isize> for ExpressionConst {
@@ -48,6 +49,7 @@ impl From<isize> for ExpressionConst {
             8 => ExpressionConst::LOGICOP,     // && or ||
             9 => ExpressionConst::POW,         // ^^
             10 => ExpressionConst::CALL,       // function
+            11 => ExpressionConst::INDEX,      // a[1]
             _ => ExpressionConst::LOWEST,
         }
     }
@@ -76,6 +78,7 @@ thread_local! {
 
         (ASTERISK, ExpressionConst::PRODUCT),
         (LPAREN, ExpressionConst::CALL),
+        (LBRACKET, ExpressionConst::INDEX),
     ]);
 }
 
@@ -154,6 +157,9 @@ impl Parser {
         let pd = pc.clone();
         pc.register_infix(LPAREN, Rc::new(move |val| pd.parse_call_expression(val)));
 
+        let pd = pc.clone();
+        pc.register_infix(LBRACKET, Rc::new(move |val| pd.parse_index_expression(val)));
+
         // let pd = pc.clone();
         // pc.register_prefix(IF, Rc::new(move || pd.parse_block_statement()));
 
@@ -162,6 +168,9 @@ impl Parser {
             #[allow(unused_variables)]
             ps.iter().for_each(|(&token, ec)| {
                 if token == LPAREN {
+                    return;
+                }
+                if token == LBRACKET {
                     return;
                 }
                 let pd = pc.clone();
@@ -554,6 +563,23 @@ impl Parser {
             return vec![];
         }
         return r;
+    }
+    pub fn parse_index_expression(&self, left: Rc<dyn Expression>) -> Option<Rc<dyn Expression>> {
+        let literal = self.cur_token.borrow().literal.clone();
+        self.next_token();
+        let index = self.parse_expression(LOWEST);
+        if !self.expect_peek(token::RBRACKET) {
+            return None;
+        }
+        return Some(Rc::new(IndexExpression {
+            token: Token {
+                literal,
+                token_type: token::LBRACKET,
+            },
+            left: left.clone(),
+            index: index.unwrap(),
+        }));
+        None
     }
     pub fn expect_peek(&self, token: TokenType) -> bool {
         let r = self.peek_token_is(token);

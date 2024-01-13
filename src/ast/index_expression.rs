@@ -11,7 +11,7 @@ pub struct IndexExpression {
 
 impl std::fmt::Display for IndexExpression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}[{}]", self.left, self.index)
+        write!(f, "({}[{}])", self.left, self.index)
     }
 }
 
@@ -42,6 +42,6 @@ mod test {
             }),
         };
         dbg!(&x);
-        assert_eq!(format!("{}", x), "a[a]");
+        assert_eq!(format!("{}", x), "(a[a])");
     }
 }

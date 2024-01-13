@@ -2,7 +2,7 @@ use crate::ast::*;
 use crate::token::*;
 use std::rc::Rc;
 
-#[ast_node(Statement)]
+#[ast_node(Expression)]
 pub struct ArrayLiteral {
     pub token: Token,
     pub elements: Vec<Rc<dyn Expression>>,
