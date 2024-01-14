@@ -11,6 +11,27 @@ mod test {
         Nil,
     }
 
+    macro_rules! f {
+        (String, $e:expr) => {
+            FinalResult::String($e.to_string())
+        };
+        (Int, $e:expr) => {
+            FinalResult::Int($e)
+        };
+        (Bool, $e:expr) => {
+            FinalResult::Bool($e)
+        };
+        (Vec, $e:expr) => {
+            FinalResult::Vec($e)
+        };
+        (Err, $e:expr) => {
+            FinalResult::Err($e.to_string())
+        };
+        (Nil) => {
+            FinalResult::Nil
+        };
+    }
+
     #[test]
     fn test_eval_integer_expression() {
         let tests = vec![
@@ -301,7 +322,7 @@ mod test {
     #[test]
     fn test_builtin_len_fn() {
         let cases = vec![
-            (r#"len("H")"#, FinalResult::Int(1)),
+            (r#"len("H")"#, f!(Int, 1)),
             (
                 r#"len(1)"#,
                 FinalResult::STRING("argument to `len` not supported, got INTEGER".into()),
@@ -310,6 +331,7 @@ mod test {
                 r#"len("H", "w")"#,
                 FinalResult::STRING("wrong number of arguments. got=2, want=1".into()),
             ),
+            (r#"len([1])"#, FinalResult::Int(1)),
         ];
         cases.iter().for_each(|(case, out)| {
             let input = case;
@@ -338,17 +360,11 @@ mod test {
     #[test]
     fn test_array_literal() {
         let cases = vec![
-            ("[1,2,3];", FinalResult::Vec(vec![1, 2, 3])),
-            ("[1,2+1,3];", FinalResult::Vec(vec![1, 2, 3])),
-            ("[1,2+5,3];", FinalResult::Vec(vec![1, 7, 3])),
-            (
-                "let a = fn() { 5 }; [1,a(),3];",
-                FinalResult::Vec(vec![1, 5, 3]),
-            ),
-            (
-                "let a = fn() { 5 }; [1,a(),3];",
-                FinalResult::Vec(vec![1, 5, 3]),
-            ),
+            ("[1,2,3];", f!(Vec, vec![1, 2, 3])),
+            ("[1,2+1,3];", f!(Vec, vec![1, 2, 3])),
+            ("[1,2+5,3];", f!(Vec, vec![1, 7, 3])),
+            ("let a = fn() { 5 }; [1,a(),3];", f!(Vec, vec![1, 5, 3])),
+            ("let a = fn() { 5 }; [1,a(),3];", f!(Vec, vec![1, 5, 3])),
         ];
 
         cases.iter().for_each(|(case, out)| {
@@ -366,16 +382,13 @@ mod test {
     #[test]
     fn test_index_expression() {
         let cases = vec![
-            ("[1,2,3][0]", FinalResult::Int(1)),
-            ("[1,2,3][1]", FinalResult::Int(2)),
-            ("[1,2,3][2]", FinalResult::Int(3)),
-            ("let i = 0; [1][i]", FinalResult::Int(1)),
-            ("[1,2,3][1+1]", FinalResult::Int(3)),
-            ("let arr=[1,2,3]; arr[2]", FinalResult::Int(3)),
-            (
-                "let arr=[1,2,3]; arr[0] + arr[1] + arr[2]",
-                FinalResult::Int(6),
-            ),
+            ("[1,2,3][0]", f!(Int, 1)),
+            ("[1,2,3][1]", f!(Int, 2)),
+            ("[1,2,3][2]", f!(Int, 3)),
+            ("let i = 0; [1][i]", f!(Int, 1)),
+            ("[1,2,3][1+1]", f!(Int, 3)),
+            ("let arr=[1,2,3]; arr[2]", f!(Int, 3)),
+            ("let arr=[1,2,3]; arr[0] + arr[1] + arr[2]", f!(Int, 6)),
             ("[1,2,3][3]", FinalResult::Nil),
             ("[1,2,3][-1]", FinalResult::Nil),
         ];

@@ -606,6 +606,18 @@ let mf = fn(x, y) { return x + y; };"#;
 
         let pr = pr.unwrap();
         println!("test_array_literal: pr: {:?}", pr);
+
+        let input = r#"[1,2,3,]"#;
+        let l = Lexer::new(input);
+
+        let p = Parser::new(l);
+
+        let pr = p.parse_program();
+
+        assert!(pr.is_some());
+
+        let pr = pr.unwrap();
+        println!("test_array_literal: pr: {:?}", pr);
     }
 
     #[test]

@@ -557,7 +557,9 @@ impl Parser {
         while self.peek_token_is(token::COMMA) {
             self.next_token();
             self.next_token();
-            r.push(self.parse_expression(LOWEST).unwrap());
+            if let Some(e) = self.parse_expression(LOWEST) {
+                r.push(e);
+            }
         }
         if !self.expect_peek(end) {
             return vec![];

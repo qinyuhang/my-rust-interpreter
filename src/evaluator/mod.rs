@@ -19,15 +19,19 @@ thread_local! {
             "len",
             Rc::new(BuiltinObject { func: Rc::new(|args: Vec<Rc<dyn Object>>| {
                 match args.as_slice() {
+                    &[]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
+                    [_, _, ..]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
+                    [a] if a.as_ref().as_any().is::<StringObject>() => {
+                        let inner_string = a.as_any().downcast_ref::<StringObject>().unwrap() ;
+                        return Some(Rc::new(Integer { value: inner_string.value.to_string().len() as i64 }));
+                    },
+                    [a] if a.as_ref().as_any().is::<ArrayObject>() =>{
+                        let inner = a.as_any().downcast_ref::<ArrayObject>().unwrap();
+                        return Some(Rc::new(Integer { value: inner.elements.len() as i64}));
+                    },
                     [a] => {
-                        if let Some(inner_string) = a.as_any().downcast_ref::<StringObject>() {
-                            return Some(Rc::new(Integer { value: inner_string.value.to_string().len() as i64 }));
-                        }
                         return Some(Rc::new(ErrorObject { message: format!( "argument to `len` not supported, got {}", a.object_type())}));
                     },
-                    _ => {
-                        Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) }))
-                    }
                 }
             }) }) as Rc<dyn Object>
         ),
