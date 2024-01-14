@@ -52,7 +52,8 @@ mod test {
         assert_eq!(context.scope.borrow().len(), 0);
     }
 
-    fn genId(name: &str) -> Rc<Identifier> {
+    #[allow(unused)]
+    fn gen_id(name: &str) -> Rc<Identifier> {
         Rc::new(Identifier {
             token: Token {
                 token_type: IDENT,
@@ -66,7 +67,7 @@ mod test {
     fn test_insert() {
         let context = Context::new();
         assert_eq!(context.scope.borrow().len(), 0);
-        let key = genId("foobar");
+        let key = gen_id("foobar");
         context.set(
             key.clone(),
             Rc::new(ErrorObject {
@@ -82,7 +83,7 @@ mod test {
     fn test_extend() {
         let context = Rc::new(Context::new());
         assert_eq!(context.scope.borrow().len(), 0);
-        let key = genId("foobar");
+        let key = gen_id("foobar");
         context.set(
             key.clone(),
             Rc::new(ErrorObject {
@@ -98,7 +99,7 @@ mod test {
         assert_eq!(context1.scope.borrow().len(), 0);
         assert!(context1.get(&key.clone()).is_some());
 
-        let c1 = genId("c1");
+        let c1 = gen_id("c1");
         context1.set(
             c1,
             Rc::new(ErrorObject {
@@ -108,7 +109,7 @@ mod test {
         assert_eq!(context1.scope.borrow().len(), 1);
         assert_eq!(context.scope.borrow().len(), 1);
 
-        let c = genId("c");
+        let c = gen_id("c");
         context.set(
             c.clone(),
             Rc::new(ErrorObject {

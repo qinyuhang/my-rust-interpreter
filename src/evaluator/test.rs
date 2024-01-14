@@ -361,10 +361,13 @@ mod test {
     fn test_array_literal() {
         let cases = vec![
             ("[1,2,3];", f!(Vec, vec![1, 2, 3])),
-            ("[1,2+1,3];", f!(Vec, vec![1, 2, 3])),
+            ("[1,2+1,3];", f!(Vec, vec![1, 3, 3])),
             ("[1,2+5,3];", f!(Vec, vec![1, 7, 3])),
             ("let a = fn() { 5 }; [1,a(),3];", f!(Vec, vec![1, 5, 3])),
-            ("let a = fn() { 5 }; [1,a(),3];", f!(Vec, vec![1, 5, 3])),
+            (
+                "let b = 5; let a = fn() { b }; [1,a(),3];",
+                f!(Vec, vec![1, 5, 3]),
+            ),
         ];
 
         cases.iter().for_each(|(case, out)| {
@@ -373,7 +376,21 @@ mod test {
             assert!(evaluated.is_some());
             dbg!(&evaluated);
             match out {
-                FinalResult::Vec(v) => {}
+                FinalResult::Vec(v) => {
+                    v.iter()
+                        .zip(
+                            evaluated
+                                .unwrap()
+                                .as_any()
+                                .downcast_ref::<ArrayObject>()
+                                .unwrap()
+                                .elements
+                                .clone(),
+                        )
+                        .for_each(|(expected, ev)| {
+                            test_integer_object(Some(ev), *expected);
+                        });
+                }
                 _ => assert!(false),
             }
         });
