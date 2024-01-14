@@ -36,161 +36,147 @@ mod test {
     #[test]
     fn test_eval_integer_expression() {
         let tests = vec![
-            ("5", 5),
-            ("10", 10),
-            ("-5", -5),
-            ("-10", -10),
-            ("5 + 5 + 5 + 5 - 10", 10),
-            ("2 * 2 * 2 * 2 * 2", 32),
-            ("-50 + 100 + -50", 0),
-            ("5 * 2 + 10", 20),
-            ("5 + 2 * 10", 25),
-            ("20 + 2 * -10", 0),
-            ("50 / 2 * 2 + 10", 60),
-            ("2 * (5 + 10)", 30),
-            ("3 * 3 * 3 + 10", 37),
-            ("3 * (3 * 3) + 10", 37),
-            ("(5 + 10 * 2 + 15 / 3) * 2 + -10", 50),
+            ("5", f!(Int, 5)),
+            ("10", f!(Int, 10)),
+            ("-5", f!(Int, -5)),
+            ("-10", f!(Int, -10)),
+            ("5 + 5 + 5 + 5 - 10", f!(Int, 10)),
+            ("2 * 2 * 2 * 2 * 2", f!(Int, 32)),
+            ("-50 + 100 + -50", f!(Int, 0)),
+            ("5 * 2 + 10", f!(Int, 20)),
+            ("5 + 2 * 10", f!(Int, 25)),
+            ("20 + 2 * -10", f!(Int, 0)),
+            ("50 / 2 * 2 + 10", f!(Int, 60)),
+            ("2 * (5 + 10)", f!(Int, 30)),
+            ("3 * 3 * 3 + 10", f!(Int, 37)),
+            ("3 * (3 * 3) + 10", f!(Int, 37)),
+            ("(5 + 10 * 2 + 15 / 3) * 2 + -10", f!(Int, 50)),
         ];
 
-        tests.iter().for_each(|&(input, expected)| {
-            let evaluated = test_eval(input);
-            assert!(test_integer_object(evaluated, expected));
+        tests.iter().for_each(|(input, expected)| {
+            handle_test(input, expected);
         });
     }
 
     #[test]
     fn test_boolean_expression() {
         let tests = vec![
-            ("true", true),
-            ("false", false),
-            ("1 < 2", true),
-            ("1 > 2", false),
-            ("1 < 1", false),
-            ("1 > 1", false),
-            ("1 == 1", true),
-            ("1 != 1", false),
-            ("1 == 2", false),
-            ("1 != 2", true),
-            ("true == true", true),
-            ("false == false", true),
-            ("true == false", false),
-            ("true != false", true),
-            ("false != true", true),
-            ("(1 < 2) == true", true),
-            ("(1 < 2) == false", false),
-            ("(1 > 2) == true", false),
-            ("(1 > 2) == false", true),
+            ("true", f!(Bool, true)),
+            ("false", f!(Bool, false)),
+            ("1 < 2", f!(Bool, true)),
+            ("1 > 2", f!(Bool, false)),
+            ("1 < 1", f!(Bool, false)),
+            ("1 > 1", f!(Bool, false)),
+            ("1 == 1", f!(Bool, true)),
+            ("1 != 1", f!(Bool, false)),
+            ("1 == 2", f!(Bool, false)),
+            ("1 != 2", f!(Bool, true)),
+            ("true == true", f!(Bool, true)),
+            ("false == false", f!(Bool, true)),
+            ("true == false", f!(Bool, false)),
+            ("true != false", f!(Bool, true)),
+            ("false != true", f!(Bool, true)),
+            ("(1 < 2) == true", f!(Bool, true)),
+            ("(1 < 2) == false", f!(Bool, false)),
+            ("(1 > 2) == true", f!(Bool, false)),
+            ("(1 > 2) == false", f!(Bool, true)),
         ];
 
-        tests.iter().for_each(|&(input, expected)| {
-            let evaluated = test_eval(input);
-            assert!(test_boolean_object(evaluated, expected));
+        tests.iter().for_each(|(input, expected)| {
+            handle_test(input, expected);
         });
     }
 
     #[test]
     fn test_bang_operator() {
         let tests = vec![
-            ("!true", false),
-            ("!false", true),
-            ("!5", false),
-            ("!!true", true),
-            ("!!false", false),
-            ("!!5", true),
-            // ("!null", true),
+            ("!true", f!(Bool, false)),
+            ("!false", f!(Bool, true)),
+            ("!5", f!(Bool, false)),
+            ("!!true", f!(Bool, true)),
+            ("!!false", f!(Bool, false)),
+            ("!!5", f!(Bool, true)),
+            // ("!null", f!(Bool, true)),
         ];
-        tests.iter().for_each(|&(input, expected)| {
-            let evaluated = test_eval(input);
-            assert!(test_boolean_object(evaluated, expected));
+        tests.iter().for_each(|(input, expected)| {
+            handle_test(input, expected);
         });
     }
 
     #[test]
     fn test_if_else_expressions() {
         let tests = vec![
-            ("if (true) { 10 }", Some(10)),
-            ("if (false) { 10 }", None),
-            ("if (1) { 10 }", Some(10)),
-            ("if (1 < 2) { 10 }", Some(10)),
-            ("if (1 > 2) { 10 }", None),
-            ("if (1 > 2) { 10 } else { 20 }", Some(20)),
-            ("if (1 < 2) { 10 } else { 20 }", Some(10)),
+            ("if (true) { 10 }", f!(Int, 10)),
+            ("if (false) { 10 }", f!(Nil)),
+            ("if (1) { 10 }", f!(Int, 10)),
+            ("if (1 < 2) { 10 }", f!(Int, 10)),
+            ("if (1 > 2) { 10 }", f!(Nil)),
+            ("if (1 > 2) { 10 } else { 20 }", f!(Int, 20)),
+            ("if (1 < 2) { 10 } else { 20 }", f!(Int, 10)),
         ];
 
-        tests.iter().for_each(|&(input, value)| {
-            let evaluated = test_eval(input);
-            assert!(evaluated.is_some());
-
-            if let Some(int_val) = value {
-                test_integer_object(evaluated, int_val);
-            } else {
-                test_null_object(&evaluated);
-            }
+        tests.iter().for_each(|(input, value)| {
+            handle_test(input, value);
         })
     }
 
     #[test]
     fn test_hex_binary_string() {
         let tests = vec![
-            ("0x01", 1),
-            ("0xf", 15),
-            ("0b1", 1),
-            ("0x1_000", 0x1_000),
-            ("0x1_000_000", 0x1_000_000),
-            ("0x1_000_", 0x1_000_),
+            ("0x01", f!(Int, 1)),
+            ("0xf", f!(Int, 15)),
+            ("0b1", f!(Int, 1)),
+            ("0x1_000", f!(Int, 0x1_000)),
+            ("0x1_000_000", f!(Int, 0x1_000_000)),
+            ("0x1_000_", f!(Int, 0x1_000_)),
         ];
 
-        tests.iter().for_each(|&(input, value)| {
-            let evaluated = test_eval(input);
-            assert!(evaluated.is_some());
-
-            assert_eq!(Integer::try_from(evaluated.unwrap()).unwrap().value, value);
-
-            // println!("{}", evaluated.unwrap());
+        tests.iter().for_each(|(input, value)| {
+            handle_test(input, value);
         });
     }
 
     #[test]
     fn test_return_statements() {
         let tests = vec![
-            ("return 10;", 10),
-            ("return 10; 9;", 10),
-            ("return 5 * 2; 9;", 10),
-            ("9; return 2 * 5; 9;", 10),
+            ("return 10;", f!(Int, 10)),
+            ("return 10; 9;", f!(Int, 10)),
+            ("return 5 * 2; 9;", f!(Int, 10)),
+            ("9; return 2 * 5; 9;", f!(Int, 10)),
             (
                 r#"if (10 > 1) { 
                        if (10 > 1) {  return 10;  }
                        return 1; 
                    }"#,
-                10,
+                f!(Int, 10),
             ),
         ];
 
-        tests.iter().for_each(|&(input, expected)| {
-            let evaluated = test_eval(input);
-            assert!(evaluated.is_some());
-            test_integer_object(evaluated, expected);
+        tests.iter().for_each(|(input, expected)| {
+            handle_test(input, expected);
         });
     }
 
     #[test]
     fn test_function_declaration() {
         let tests = vec![
-            ("let b = 5; let a = fn() { b }; a();", 5),
-            ("let b = 5; let a = fn() { b }; let b = 10; a();", 10),
-            ("fn () { 1; }();", 1),
+            ("let b = 5; let a = fn() { b }; a();", f!(Int, 5)),
+            (
+                "let b = 5; let a = fn() { b }; let b = 10; a();",
+                f!(Int, 10),
+            ),
+            ("fn () { 1; }();", f!(Int, 1)),
             // ("fn a() {}", None::<Rc<dyn Object>>),
             // ("fn a(i) {}", None::<Rc<dyn Object>>),
             // ("fn a(x, y) {}", None::<Rc<dyn Object>>),
-            ("let add = fn (x, y) { x + y; }; add (1, 1);", 2),
-            ("let add = fn (x, y) { x + y; }; add(1, 1);", 2),
-            ("let a = fn a(x, y) { return x + y; }; a(1,1);", 2),
+            ("let add = fn (x, y) { x + y; }; add (1, 1);", f!(Int, 2)),
+            ("let add = fn (x, y) { x + y; }; add(1, 1);", f!(Int, 2)),
+            ("let a = fn a(x, y) { return x + y; }; a(1,1);", f!(Int, 2)),
             // (
             //     "let a = fn a(x, y) { return x + y; }; return a(1,1);",
             //     2,
             // ),
-            ("fn (x) { x; }(5)", 5),
+            ("fn (x) { x; }(5)", f!(Int, 5)),
             (
                 r#"
             let add = fn(a, b) { a + b; };
@@ -198,15 +184,11 @@ mod test {
             let applyFunc = fn(a, b, func) { func(a, b) };
             applyFunc(2, 2, add);
             "#,
-                4,
+                f!(Int, 4),
             ),
         ];
-        tests.iter().for_each(|&(input, expected)| {
-            let parsed = test_parse(input);
-            assert!(parsed.is_some());
-            let evaluated = test_eval(input);
-            dbg!(&evaluated);
-            test_integer_object(evaluated, expected);
+        tests.iter().for_each(|(input, expected)| {
+            handle_test(input, expected);
             // assert_eq!(evaluated, expected);
             // if expected.is_none() {
             //     assert!(evaluated.is_none());
@@ -223,64 +205,53 @@ mod test {
             // ("fn a() {}; a();", None::<Rc<dyn Object>>),
             // ("fn a(i) {}; a();", None::<Rc<dyn Object>>),
             // ("fn a(x, y) {}; a();", None::<Rc<dyn Object>>),
-            ("fn a(x, y) { return x + y; }; a(1, 2);", 3),
-            ("let a = fn a(x, y) { return x + y; }; a(1, 2);", 3),
+            ("fn a(x, y) { return x + y; }; a(1, 2);", f!(Int, 3)),
+            ("let a = fn a(x, y) { return x + y; }; a(1, 2);", f!(Int, 3)),
         ];
-        tests.iter().for_each(|&(input, expected)| {
-            let parsed = test_parse(input);
-            assert!(parsed.is_some());
-            let evaluated = test_eval(input);
-            dbg!(&evaluated);
-            test_integer_object(evaluated, expected);
-            // assert_eq!(evaluated, expected);
-            // if expected.is_none() {
-            //     assert!(evaluated.is_none());
-            // }
+        tests.iter().for_each(|(input, expected)| {
+            handle_test(input, expected);
         });
     }
 
     #[test]
     fn test_error_object_eval() {
         let test_cases = vec![
-            ("5 + true;", "type mismatch: INTEGER + BOOLEAN"),
-            ("5 + true; 5", "type mismatch: INTEGER + BOOLEAN"),
-            ("-true", "unknown operator: -BOOLEAN"),
-            ("true + false", "unknown operator: BOOLEAN + BOOLEAN"),
-            ("5; true + false; 5", "unknown operator: BOOLEAN + BOOLEAN"),
+            ("5 + true;", f!(Err, "type mismatch: INTEGER + BOOLEAN")),
+            ("5 + true; 5", f!(Err, "type mismatch: INTEGER + BOOLEAN")),
+            ("-true", f!(Err, "unknown operator: -BOOLEAN")),
+            (
+                "true + false",
+                f!(Err, "unknown operator: BOOLEAN + BOOLEAN"),
+            ),
+            (
+                "5; true + false; 5",
+                f!(Err, "unknown operator: BOOLEAN + BOOLEAN"),
+            ),
             (
                 "if (10 > 1) { true + false; }",
-                "unknown operator: BOOLEAN + BOOLEAN",
+                f!(Err, "unknown operator: BOOLEAN + BOOLEAN"),
             ),
             (
                 "if (10 > 1) { true + false; }; return 1;",
-                "unknown operator: BOOLEAN + BOOLEAN",
+                f!(Err, "unknown operator: BOOLEAN + BOOLEAN"),
             ),
-            ("foobar", "identifier not found: foobar"),
+            ("foobar", f!(Err, "identifier not found: foobar")),
         ];
-        test_cases.iter().for_each(|&(case, out)| {
-            let evaluated = test_eval(case);
-            // assert_eq!(format!("{}", evaluated), out);
-            assert!(evaluated.is_some());
-            let err = ErrorObject::try_from(evaluated.clone().unwrap());
-            assert!(err.is_ok());
-            // println!("{:?}", err.unwrap());
-            assert_eq!(err.unwrap().message, out);
+        test_cases.iter().for_each(|(case, out)| {
+            handle_test(case, out);
         });
     }
 
     #[test]
     fn test_let_state() {
         let test_cases = vec![
-            ("let a = 5; a;", 5),
-            ("let a = 5 * 5; a;", 25),
-            ("let a = 5; let b = a; b;", 5),
-            ("let a = 5; let b = a; let c = a + b + 5; c;", 15),
+            ("let a = 5; a;", f!(Int, 5)),
+            ("let a = 5 * 5; a;", f!(Int, 25)),
+            ("let a = 5; let b = a; b;", f!(Int, 5)),
+            ("let a = 5; let b = a; let c = a + b + 5; c;", f!(Int, 15)),
         ];
-        test_cases.iter().for_each(|&(case, expected)| {
-            let evaluated = test_eval(case);
-            // assert_eq!(format!("{}", evaluated), out);
-            assert!(evaluated.is_some());
-            assert!(test_integer_object(evaluated, expected));
+        test_cases.iter().for_each(|(case, out)| {
+            handle_test(case, out);
         });
     }
 
@@ -326,35 +297,16 @@ mod test {
             (r#"len("H")"#, f!(Int, 1)),
             (
                 r#"len(1)"#,
-                FinalResult::STRING("argument to `len` not supported, got INTEGER".into()),
+                FinalResult::Err("argument to `len` not supported, got INTEGER".into()),
             ),
             (
                 r#"len("H", "w")"#,
-                FinalResult::STRING("wrong number of arguments. got=2, want=1".into()),
+                FinalResult::Err("wrong number of arguments. got=2, want=1".into()),
             ),
             (r#"len([1])"#, FinalResult::Int(1)),
         ];
         cases.iter().for_each(|(case, out)| {
-            let input = case;
-            let evaluated = test_eval(input);
-            assert!(evaluated.is_some());
-            dbg!(&evaluated);
-            match out {
-                FinalResult::STRING(st) => {
-                    test_error_object(evaluated, st.to_string());
-                    // convert to ErrorObject
-                    // let err = ErrorObject::try_from(evaluated.clone().unwrap());
-                    // assert!(err.is_ok());
-                    // // println!("{:?}", err.unwrap());
-                    // assert_eq!(err.unwrap().message, st.to_string());
-                }
-                FinalResult::Int(n) => {
-                    assert!(test_integer_object(evaluated, *n));
-                }
-                _ => assert!(false),
-            }
-            // let x = evaluated.as_any();
-            // assert!(x.is::<Integer>());
+            handle_test(case, out);
         });
     }
 
@@ -372,28 +324,7 @@ mod test {
         ];
 
         cases.iter().for_each(|(case, out)| {
-            let input = case;
-            let evaluated = test_eval(input);
-            assert!(evaluated.is_some());
-            dbg!(&evaluated);
-            match out {
-                FinalResult::Vec(v) => {
-                    v.iter()
-                        .zip(
-                            evaluated
-                                .unwrap()
-                                .as_any()
-                                .downcast_ref::<ArrayObject>()
-                                .unwrap()
-                                .elements
-                                .clone(),
-                        )
-                        .for_each(|(expected, ev)| {
-                            test_integer_object(Some(ev), *expected);
-                        });
-                }
-                _ => assert!(false),
-            }
+            handle_test(case, out);
         });
     }
 
@@ -411,38 +342,14 @@ mod test {
             ("[1,2,3][-1]", FinalResult::Nil),
         ];
         cases.iter().for_each(|(case, out)| {
-            let input = case;
-            let evaluated = test_eval(input);
-            assert!(evaluated.is_some());
-            dbg!(&evaluated);
-            match out {
-                FinalResult::Int(i) => {
-                    test_integer_object(evaluated, *i);
-                }
-                FinalResult::Nil => {
-                    test_null_object(&evaluated);
-                }
-                _ => assert!(false),
-            }
+            handle_test(case, out);
         });
     }
     #[test]
     fn test_first_builtin_fn() {
         let cases = vec![("first([1,2,3])", f!(Int, 1)), ("first([])", f!(Nil))];
         cases.iter().for_each(|(case, out)| {
-            let input = case;
-            let evaluated = test_eval(input);
-            assert!(evaluated.is_some());
-            dbg!(&evaluated);
-            match out {
-                FinalResult::Int(i) => {
-                    test_integer_object(evaluated, *i);
-                }
-                FinalResult::Nil => {
-                    test_null_object(&evaluated);
-                }
-                _ => assert!(false),
-            }
+            handle_test(case, out);
         });
     }
 
@@ -450,20 +357,54 @@ mod test {
     fn test_last_builtin_fn() {
         let cases = vec![("last([1,2,3])", f!(Int, 3)), ("last([])", f!(Nil))];
         cases.iter().for_each(|(case, out)| {
-            let input = case;
-            let evaluated = test_eval(input);
-            assert!(evaluated.is_some());
-            dbg!(&evaluated);
-            match out {
-                FinalResult::Int(i) => {
-                    test_integer_object(evaluated, *i);
-                }
-                FinalResult::Nil => {
-                    test_null_object(&evaluated);
-                }
-                _ => assert!(false),
-            }
+            handle_test(case, out);
         });
+    }
+
+    #[allow(unused)]
+    fn handle_test(case: &str, out: &FinalResult) {
+        let input = case;
+        let evaluated = test_eval(input);
+        assert!(evaluated.is_some());
+        dbg!(&evaluated);
+        match out {
+            FinalResult::STRING(s) => {
+                test_string_object(evaluated, s.to_string());
+            }
+            FinalResult::Int(i) => {
+                test_integer_object(evaluated, *i);
+            }
+            FinalResult::Bool(b) => {
+                test_boolean_object(evaluated, *b);
+            }
+            FinalResult::Vec(v) => {
+                v.iter()
+                    .zip(
+                        evaluated
+                            .unwrap()
+                            .as_any()
+                            .downcast_ref::<ArrayObject>()
+                            .unwrap()
+                            .elements
+                            .clone(),
+                    )
+                    .for_each(|(expected, ev)| {
+                        test_integer_object(Some(ev), *expected);
+                    });
+            }
+            FinalResult::Err(st) => {
+                test_error_object(evaluated, st.to_string());
+                // convert to ErrorObject
+                // let err = ErrorObject::try_from(evaluated.clone().unwrap());
+                // assert!(err.is_ok());
+                // // println!("{:?}", err.unwrap());
+                // assert_eq!(err.unwrap().message, st.to_string());
+            }
+            FinalResult::Nil => {
+                test_null_object(&evaluated);
+            }
+            _ => assert!(false),
+        }
     }
     #[allow(unused)]
     fn test_null_object(obj: &Option<Rc<dyn Object>>) {
@@ -502,6 +443,14 @@ mod test {
         true
     }
 
+    #[allow(unused)]
+    fn test_string_object(obj: Option<Rc<dyn Object>>, expected: String) -> bool {
+        let i = StringObject::try_from(obj.unwrap());
+        assert!(i.is_ok());
+        let i = i.unwrap();
+        assert_eq!(*i.value, expected);
+        true
+    }
     #[allow(unused)]
     fn test_error_object(object: Option<Rc<dyn Object>>, expected: String) -> bool {
         let err = ErrorObject::try_from(object.clone().unwrap());
