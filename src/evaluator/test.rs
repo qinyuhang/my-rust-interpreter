@@ -347,7 +347,11 @@ mod test {
     }
     #[test]
     fn test_first_builtin_fn() {
-        let cases = vec![("first([1,2,3])", f!(Int, 1)), ("first([])", f!(Nil))];
+        let cases = vec![
+            ("first([1,2,3])", f!(Int, 1)),
+            ("first([])", f!(Nil)),
+            ("let a = [1,2,3]; first([1,2,3]); a", f!(Vec, vec![1, 2, 3])),
+        ];
         cases.iter().for_each(|(case, out)| {
             handle_test(case, out);
         });
@@ -355,7 +359,11 @@ mod test {
 
     #[test]
     fn test_last_builtin_fn() {
-        let cases = vec![("last([1,2,3])", f!(Int, 3)), ("last([])", f!(Nil))];
+        let cases = vec![
+            ("last([1,2,3])", f!(Int, 3)),
+            ("last([])", f!(Nil)),
+            ("let a = [1,2,3]; last([1,2,3]); a", f!(Vec, vec![1, 2, 3])),
+        ];
         cases.iter().for_each(|(case, out)| {
             handle_test(case, out);
         });
@@ -366,6 +374,90 @@ mod test {
         let cases = vec![
             ("rest([1,2,3])", f!(Vec, vec![2, 3])),
             ("rest([])", f!(Vec, vec![])),
+            ("let a = [1,2,3]; rest(a); a", f!(Vec, vec![1, 2, 3])),
+            ("let a = [1,2,3]; rest(a)", f!(Vec, vec![2, 3])),
+        ];
+        cases.iter().for_each(|(case, out)| {
+            handle_test(case, out);
+        });
+    }
+
+    #[test]
+    fn test_push_builtin_fn() {
+        let cases = vec![
+            ("push([1,2,3], 4)", f!(Vec, vec![1, 2, 3, 4])),
+            ("push([], 1)", f!(Vec, vec![1])),
+            ("let a = []; push(a, 1); a", f!(Vec, vec![1])),
+        ];
+        cases.iter().for_each(|(case, out)| {
+            handle_test(case, out);
+        });
+    }
+
+    #[test]
+    fn test_compose_builtin_array_fn() {
+        let cases = vec![
+            (
+                r#"
+        let map = fn(arr, f) {
+            let iter = fn(arr, acc) {
+                if (len(arr) == 0) {
+                    acc
+                } else {
+                    iter(rest(arr), push(acc, f(first(arr))));
+                }
+            };
+
+            iter(arr, []);
+        };
+
+        let a = [1,2,3];
+        map(a, fn(x) { x * 2 })
+"#,
+                f!(Vec, vec![2, 4, 6]),
+            ),
+            (
+                r#"
+            let reduce = fn(arr, initial, f) {
+            let iter = fn(arr, result) {
+                if (len(arr) == 0) {
+                    result
+                } else {
+                    iter(rest(arr), f(result, first(arr)));
+                }
+            };
+
+            iter(arr, initial);
+
+        };
+
+        let a = [1,2,3];
+        reduce(a, 0, fn(x,y) { x + y })"#,
+                f!(Int, 6),
+            ),
+            (
+                r#"
+            let reduce = fn(arr, initial, f) {
+            let iter = fn(arr, result) {
+                if (len(arr) == 0) {
+                    result
+                } else {
+                    iter(rest(arr), f(result, first(arr)));
+                }
+            };
+
+            iter(arr, initial);
+
+        };
+
+        let sum = fn(arr) {
+            reduce(arr, 0, fn(x, y) { x + y })
+        };
+
+        let a = [1,2,3];
+        sum(a)"#,
+                f!(Int, 6),
+            ),
         ];
         cases.iter().for_each(|(case, out)| {
             handle_test(case, out);
@@ -397,10 +489,12 @@ mod test {
                             .downcast_ref::<ArrayObject>()
                             .unwrap()
                             .elements
-                            .clone(),
+                            .clone()
+                            .borrow()
+                            .iter(),
                     )
                     .for_each(|(expected, ev)| {
-                        test_integer_object(Some(ev), *expected);
+                        test_integer_object(Some(ev.clone()), *expected);
                     });
             }
             FinalResult::Err(st) => {

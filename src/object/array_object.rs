@@ -1,9 +1,10 @@
 pub use crate::object::*;
 use ast_macro::object;
+use std::cell::RefCell;
 
 #[object(ARRAY_OBJECT)]
 pub struct ArrayObject {
-    pub elements: Vec<Rc<dyn Object>>,
+    pub elements: RefCell<Vec<Rc<dyn Object>>>,
 }
 
 impl ObjectInspect for ArrayObject {
@@ -11,6 +12,7 @@ impl ObjectInspect for ArrayObject {
         format!(
             "[{}]",
             self.elements
+                .borrow()
                 .iter()
                 .map(|v| v.inspect())
                 .collect::<String>()

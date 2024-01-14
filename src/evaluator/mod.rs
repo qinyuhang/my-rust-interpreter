@@ -3,6 +3,7 @@ pub use crate::lexer::*;
 pub use crate::object::*;
 pub use crate::parser::*;
 pub use crate::token::*;
+use std::cell::RefCell;
 use std::collections::HashMap;
 pub use std::rc::Rc;
 use std::vec::Vec;
@@ -27,7 +28,7 @@ thread_local! {
                     },
                     [a] if a.as_ref().as_any().is::<ArrayObject>() =>{
                         let inner = a.as_any().downcast_ref::<ArrayObject>().unwrap();
-                        return Some(Rc::new(Integer { value: inner.elements.len() as i64}));
+                        return Some(Rc::new(Integer { value: inner.elements.borrow().len() as i64}));
                     },
                     [a] => {
                         return Some(Rc::new(ErrorObject { message: format!( "argument to `len` not supported, got {}", a.object_type())}));
@@ -43,7 +44,7 @@ thread_local! {
                     [_, _, ..]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
                     [a] if a.as_ref().as_any().is::<ArrayObject>() => {
                         let inner = a.as_any().downcast_ref::<ArrayObject>().unwrap();
-                        return Some(inner.elements.first().unwrap_or(&NULLOBJ.with(|n| n.clone())).clone());
+                        return Some(inner.elements.borrow().first().unwrap_or(&NULLOBJ.with(|n| n.clone())).clone());
                     },
                     [a] => Some(Rc::new(ErrorObject { message: format!("argument to `first` must be ARRAY, got {}", a.object_type())})),
                 }
@@ -57,7 +58,7 @@ thread_local! {
                     [_, _, ..]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
                     [a] if a.as_ref().as_any().is::<ArrayObject>()  => {
                         let inner = a.as_any().downcast_ref::<ArrayObject>().unwrap();
-                        return Some(inner.elements.last().unwrap_or(&NULLOBJ.with(|n| n.clone())).clone());
+                        return Some(inner.elements.borrow().last().unwrap_or(&NULLOBJ.with(|n| n.clone())).clone());
                     },
                     [a] => Some(Rc::new(ErrorObject { message: format!("argument to `first` must be ARRAY, got {}", a.object_type())}))
                 }
@@ -75,6 +76,7 @@ thread_local! {
                         let inner = a.as_any().downcast_ref::<ArrayObject>().unwrap();
                         let els = inner
                             .elements
+                            .borrow()
                             .iter()
                             .enumerate()
                             .map(|(idx, val)| {
@@ -86,13 +88,39 @@ thread_local! {
                             .filter(|val| val.is_some()).map(|v| v.unwrap())
                             .collect::<Vec<_>>();
                         return Some(Rc::new(ArrayObject {
-                            elements: els,
+                            elements: RefCell::new(els),
                         }));
                     },
                     [a] => Some(Rc::new(ErrorObject { message: format!("argument to `first` must be ARRAY, got {}", a.object_type())}))
                 }
             })}),
-        )
+        ),
+        (
+            // let a = [1,2,3]
+            // push(a, 4);
+            // a // -> [1,2,3,4]
+            "push",
+            Rc::new(BuiltinObject { func: Rc::new(|args: Vec<Rc<dyn Object>>| {
+                match args.as_slice() {
+                    &[_] | &[]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=2", args.len()) })),
+                    [_, _, _, ..]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=2", args.len()) })),
+                    [a, target] if a.as_ref().as_any().is::<ArrayObject>()  => {
+                        let inner = a.as_any().downcast_ref::<ArrayObject>().unwrap();
+                        let mut els = inner
+                            .elements
+                            .borrow()
+                            .iter()
+                            .map(|v| v.clone())
+                            .collect::<Vec<Rc<dyn Object>>>();
+                        els.push(target.clone());
+                        return Some(Rc::new(ArrayObject {
+                            elements: RefCell::new(els),
+                        }));
+                    },
+                    [a, _, ..] => Some(Rc::new(ErrorObject { message: format!("argument[0] to `push` must be ARRAY, got {}", a.object_type())}))
+                }
+            })}),
+        ),
     ].iter().cloned().collect::<HashMap<&'static str, Rc<dyn Object>>>()); // Rc::new(HashMap::new());
 }
 
@@ -248,7 +276,9 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
     if n.is::<ArrayLiteral>() {
         if let Some(arr) = n.downcast_ref::<ArrayLiteral>() {
             return match eval_expressions(&arr.elements.clone(), context.clone()) {
-                Ok(elements) => Some(Rc::new(ArrayObject { elements })),
+                Ok(elements) => Some(Rc::new(ArrayObject {
+                    elements: elements.into(),
+                })),
                 Err(id) => Some(Rc::new(ErrorObject {
                     message: format!("Cannot eval arguments at position: {}", id),
                 })),
@@ -313,11 +343,11 @@ pub fn eval_array_index_expression(
         index.as_ref().as_any().downcast_ref::<Integer>(),
     ) {
         (Some(arr), Some(index)) => {
-            let max = arr.elements.len() - 1;
+            let max = arr.elements.borrow().len() - 1;
             if index.value > max as i64 || index.value < 0 {
                 return Some(NULLOBJ.with(|n| n.clone()));
             }
-            Some(arr.elements[index.value as usize].clone())
+            Some(arr.elements.borrow()[index.value as usize].clone())
         }
         _ => Some(NULLOBJ.with(|n| n.clone())),
     };
