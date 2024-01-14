@@ -361,6 +361,17 @@ mod test {
         });
     }
 
+    #[test]
+    fn test_rest_builtin_fn() {
+        let cases = vec![
+            ("rest([1,2,3])", f!(Vec, vec![2, 3])),
+            ("rest([])", f!(Vec, vec![])),
+        ];
+        cases.iter().for_each(|(case, out)| {
+            handle_test(case, out);
+        });
+    }
+
     #[allow(unused)]
     fn handle_test(case: &str, out: &FinalResult) {
         let input = case;

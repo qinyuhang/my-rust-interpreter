@@ -62,6 +62,36 @@ thread_local! {
                     [a] => Some(Rc::new(ErrorObject { message: format!("argument to `first` must be ARRAY, got {}", a.object_type())}))
                 }
             })})
+        ),
+        (
+            // returns the other data in a new Array
+            // etc: rest([1,2,3]) -> [2,3]
+            "rest",
+            Rc::new(BuiltinObject { func: Rc::new(|args: Vec<Rc<dyn Object>>| {
+                match args.as_slice() {
+                    &[]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
+                    [_, _, ..]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
+                    [a] if a.as_ref().as_any().is::<ArrayObject>()  => {
+                        let inner = a.as_any().downcast_ref::<ArrayObject>().unwrap();
+                        let els = inner
+                            .elements
+                            .iter()
+                            .enumerate()
+                            .map(|(idx, val)| {
+                                if idx > 0 {
+                                    return Some(val.clone());
+                                }
+                                return None;
+                            })
+                            .filter(|val| val.is_some()).map(|v| v.unwrap())
+                            .collect::<Vec<_>>();
+                        return Some(Rc::new(ArrayObject {
+                            elements: els,
+                        }));
+                    },
+                    [a] => Some(Rc::new(ErrorObject { message: format!("argument to `first` must be ARRAY, got {}", a.object_type())}))
+                }
+            })}),
         )
     ].iter().cloned().collect::<HashMap<&'static str, Rc<dyn Object>>>()); // Rc::new(HashMap::new());
 }
