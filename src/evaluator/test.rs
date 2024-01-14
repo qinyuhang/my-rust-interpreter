@@ -1,7 +1,8 @@
 #[cfg(test)]
 mod test {
-    use {crate::evaluator::*, crate::lexer::*, crate::object::*, crate::parser::*};
+    use crate::*;
 
+    #[allow(dead_code)]
     enum FinalResult {
         STRING(String),
         Int(i64),

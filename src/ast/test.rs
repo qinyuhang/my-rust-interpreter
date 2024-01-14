@@ -1,16 +1,6 @@
 #[cfg(test)]
 mod test {
-    use {
-        crate::lexer::*,
-        crate::token::*,
-        crate::*,
-        crate::{
-            ast::*,
-            token::{Token, INT},
-            *,
-        },
-        std::rc::Rc,
-    };
+    use {crate::*, std::rc::Rc};
 
     #[test]
     fn test_program() {

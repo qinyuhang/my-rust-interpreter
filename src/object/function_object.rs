@@ -23,7 +23,7 @@ impl ObjectInspect for FunctionObject {
 impl TryFrom<Rc<dyn Object>> for FunctionObject {
     type Error = String;
 
-    fn try_from(value: Rc<dyn Object>) -> Result<Self, Self::Error> {
+    fn try_from(_value: Rc<dyn Object>) -> Result<Self, Self::Error> {
         // let val = value.as_any();
         // if val.is::<Integer>() {
         //     if let Some(v) = val.downcast_ref::<Integer>() {
@@ -37,4 +37,26 @@ impl TryFrom<Rc<dyn Object>> for FunctionObject {
 #[cfg(test)]
 mod test {
     use crate::*;
+    #[test]
+    fn test_function() {
+        let input = r#"fn() {}"#;
+
+        let tests = vec![
+            (FUNCTION, "fn"),
+            (LPAREN, "("),
+            (RPAREN, ")"),
+            (LBRACE, "{"),
+            (RBRACE, "}"),
+            (EOF, "\0"),
+        ];
+
+        let lex = Lexer::new(input);
+
+        tests.iter().for_each(|test| {
+            let p_token = lex.next_token();
+            // println!("Running Test: {:?}, lexer.next_token: {:?}", test, p_token);
+            assert_eq!(p_token.token_type, test.0);
+            assert_eq!(p_token.literal, test.1);
+        });
+    }
 }

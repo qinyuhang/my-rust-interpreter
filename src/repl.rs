@@ -1,6 +1,5 @@
 use crate::evaluator::*;
-use crate::lexer::*;
-use crate::parser::*;
+
 use std::cell::RefCell;
 use std::io;
 use std::io::Write;

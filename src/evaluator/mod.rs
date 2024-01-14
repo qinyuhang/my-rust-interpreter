@@ -284,7 +284,7 @@ pub fn eval_expressions(
         .iter()
         .map(|exp| eval(exp.upcast(), context.clone()))
         .collect();
-    if let Some((id, _)) = exps.iter().enumerate().find(|(idx, item)| item.is_none()) {
+    if let Some((id, _)) = exps.iter().enumerate().find(|(_idx, item)| item.is_none()) {
         return Err(id);
     }
     return Ok(exps.iter().map(|item| item.clone().unwrap()).collect());

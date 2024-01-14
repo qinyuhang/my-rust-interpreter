@@ -23,8 +23,9 @@ impl VM {
     pub fn run(mut self, program: Vec<(Instruction, Option<i32>)>) -> i32 {
         while self.pc < program.len() {
             let (current_instruction, data) = &program[self.pc];
-
+            #[allow(unused_assignments)]
             let mut left = 0i32;
+            #[allow(unused_assignments)]
             let mut right = 0i32;
 
             match current_instruction {

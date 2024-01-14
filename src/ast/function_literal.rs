@@ -45,7 +45,7 @@ impl std::fmt::Display for FunctionLiteral {
 
 #[cfg(test)]
 mod test {
-    use {crate::ast::*, crate::lexer::Lexer, crate::parser::Parser};
+    use crate::*;
 
     #[test]
     fn test_function_literal_to_string() {

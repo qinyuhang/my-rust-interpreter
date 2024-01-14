@@ -1,18 +1,6 @@
 #[cfg(test)]
 mod test {
-    use {
-        crate::{
-            ast::{
-                Expression, ExpressionStatement, IntegerLiteral, LetStatement, Node,
-                PrefixExpression, ReturnStatement, Statement, *,
-            },
-            lexer::*,
-            parser::Parser,
-            token::*,
-            *,
-        },
-        std::rc::Rc,
-    };
+    use {crate::*, std::rc::Rc};
 
     #[test]
     fn test_parser() {
@@ -622,5 +610,14 @@ let mf = fn(x, y) { return x + y; };"#;
     #[test]
     fn test_index_literal() {
         let cases = vec![("[1, 2, 3][0]")];
+        cases.iter().for_each(|&input| {
+            let l = Lexer::new(input);
+
+            let p = Parser::new(l);
+
+            let pr = p.parse_program();
+
+            assert!(pr.is_some());
+        });
     }
 }

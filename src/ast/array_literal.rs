@@ -29,7 +29,7 @@ mod test {
 
     #[test]
     fn test_array_literal_display() {
-        let input = "[1,2]";
+        let input = "[1, 2]";
         let i = ArrayLiteral {
             token: Token {
                 token_type: LBRACKET,
@@ -43,6 +43,6 @@ mod test {
         // dbg!(&i);
         // println!("{}", &i);
 
-        assert_eq!(format!("{}", i), "[1, 2]");
+        assert_eq!(format!("{}", i), input);
     }
 }

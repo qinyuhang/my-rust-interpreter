@@ -1,6 +1,5 @@
 pub use crate::object::*;
 use ast_macro::object;
-use std::fmt::{Display, Formatter, Result};
 
 pub type BuiltinFunction = fn(args: Vec<Rc<dyn Object>>) -> Option<Rc<dyn Object>>;
 #[object(BUILTIN_OBJECT)]
