@@ -42,6 +42,7 @@ impl std::fmt::Display for InfixExpression {
     }
 }
 
+#[cfg(test)]
 mod test {
     #[test]
     fn test_infix_display() {}

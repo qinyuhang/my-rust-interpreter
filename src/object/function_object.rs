@@ -34,6 +34,7 @@ impl TryFrom<Rc<dyn Object>> for FunctionObject {
     }
 }
 
+#[cfg(test)]
 mod test {
     use crate::*;
 }

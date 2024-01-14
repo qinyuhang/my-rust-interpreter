@@ -1,5 +1,5 @@
+#[cfg(test)]
 mod test {
-    #[allow(unused)]
     use {crate::lexer::Lexer, crate::token};
 
     #[test]

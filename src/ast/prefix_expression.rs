@@ -33,11 +33,11 @@ impl std::fmt::Display for PrefixExpression {
     }
 }
 
+#[cfg(test)]
 mod test {
-    #[allow(unused)]
     use {
         crate::{ast::*, token::*, *},
-        std::{cell::RefCell, rc::Rc},
+        std::rc::Rc,
     };
 
     #[test]

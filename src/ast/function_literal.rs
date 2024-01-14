@@ -43,12 +43,9 @@ impl std::fmt::Display for FunctionLiteral {
     }
 }
 
+#[cfg(test)]
 mod test {
-    #[allow(unused)]
-    use {
-        crate::ast::*, crate::lexer::Lexer, crate::parser::Parser, crate::token::*,
-        std::cell::RefCell, std::rc::Rc,
-    };
+    use {crate::ast::*, crate::lexer::Lexer, crate::parser::Parser};
 
     #[test]
     fn test_function_literal_to_string() {

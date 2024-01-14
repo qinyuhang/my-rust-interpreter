@@ -65,9 +65,9 @@ impl std::fmt::Display for StringLiteral {
     }
 }
 
+#[cfg(test)]
 mod test {
     use crate::ast::string_literal::StringLiteral;
-    #[allow(unused)]
     use crate::*;
 
     #[test]

@@ -93,9 +93,8 @@ impl std::fmt::Display for IntegerLiteral {
     }
 }
 
+#[cfg(test)]
 mod test {
-
-    #[allow(unused)]
     use crate::{
         ast::IntegerLiteral,
         token::{Token, INT},

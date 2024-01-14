@@ -15,6 +15,7 @@ impl std::fmt::Display for IndexExpression {
     }
 }
 
+#[cfg(test)]
 mod test {
     use crate::{Identifier, IndexExpression, Token, LPAREN};
     use std::rc::Rc;

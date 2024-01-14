@@ -22,6 +22,7 @@ impl std::fmt::Display for ArrayLiteral {
     }
 }
 
+#[cfg(test)]
 mod test {
     use crate::{ArrayLiteral, IntegerLiteral, Token, LBRACKET};
     use std::rc::Rc;

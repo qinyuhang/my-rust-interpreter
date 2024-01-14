@@ -31,4 +31,5 @@ impl std::fmt::Display for Program {
     }
 }
 
+#[cfg(test)]
 mod test {}

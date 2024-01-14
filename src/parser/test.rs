@@ -1,17 +1,16 @@
+#[cfg(test)]
 mod test {
-    #[allow(unused)]
     use {
         crate::{
             ast::{
-                Expression, ExpressionStatement, Identifier, IntegerLiteral, LetStatement, Node,
+                Expression, ExpressionStatement, IntegerLiteral, LetStatement, Node,
                 PrefixExpression, ReturnStatement, Statement, *,
             },
             lexer::*,
-            parser::{Parser, PrefixParseFn},
+            parser::Parser,
             token::*,
             *,
         },
-        std::cell::RefCell,
         std::rc::Rc,
     };
 

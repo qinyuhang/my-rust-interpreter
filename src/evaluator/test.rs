@@ -1,5 +1,5 @@
+#[cfg(test)]
 mod test {
-    #[allow(unused)]
     use {crate::evaluator::*, crate::lexer::*, crate::object::*, crate::parser::*};
 
     enum FinalResult {

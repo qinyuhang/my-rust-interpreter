@@ -182,12 +182,9 @@ impl std::fmt::Display for ExpressionStatement {
     }
 }
 
+#[cfg(test)]
 mod test {
-    #[allow(unused)]
-    use {
-        crate::{ast::ExpressionStatement, token::Token, token::EOF},
-        std::{cell::RefCell, rc::Rc},
-    };
+    use crate::{ast::ExpressionStatement, token::Token, token::EOF};
 
     #[test]
     fn test_to_string() {
