@@ -240,7 +240,7 @@ mod test {
     }
 
     #[test]
-    fn test_error_object() {
+    fn test_error_object_eval() {
         let test_cases = vec![
             ("5 + true;", "type mismatch: INTEGER + BOOLEAN"),
             ("5 + true; 5", "type mismatch: INTEGER + BOOLEAN"),
@@ -340,16 +340,16 @@ mod test {
             assert!(evaluated.is_some());
             dbg!(&evaluated);
             match out {
-                FinalResult::Bool(b) => {}
                 FinalResult::STRING(st) => {
+                    test_error_object(evaluated, st.to_string());
                     // convert to ErrorObject
-                    let err = ErrorObject::try_from(evaluated.clone().unwrap());
-                    assert!(err.is_ok());
-                    // println!("{:?}", err.unwrap());
-                    assert_eq!(err.unwrap().message, st.to_string());
+                    // let err = ErrorObject::try_from(evaluated.clone().unwrap());
+                    // assert!(err.is_ok());
+                    // // println!("{:?}", err.unwrap());
+                    // assert_eq!(err.unwrap().message, st.to_string());
                 }
                 FinalResult::Int(n) => {
-                    test_integer_object(evaluated, *n);
+                    assert!(test_integer_object(evaluated, *n));
                 }
                 _ => assert!(false),
             }
@@ -460,6 +460,15 @@ mod test {
         assert!(i.is_ok());
         let i = i.unwrap();
         assert_eq!(i.value, expected);
+        true
+    }
+
+    #[allow(unused)]
+    fn test_error_object(object: Option<Rc<dyn Object>>, expected: String) -> bool {
+        let err = ErrorObject::try_from(object.clone().unwrap());
+        assert!(err.is_ok());
+        // println!("{:?}", err.unwrap());
+        assert_eq!(err.unwrap().message, expected.to_string());
         true
     }
 
