@@ -200,9 +200,11 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
             let index = eval(exp.index.as_ref().upcast(), context.clone());
             // if is error index
             return match (left, index) {
-                (Some(left), Some(index)) => {
+                (Some(left), Some(index)) if !is_error(&left) && !is_error(&index) => {
                     return eval_index_expression(left, index);
                 }
+                (Some(l), _) if is_error(&l) => Some(l),
+                (_, Some(i)) if is_error(&i) => Some(i),
                 // FIXME: ErrorObject message
                 _ => Some(Rc::new(ErrorObject {
                     message: format!("cannot eval {}", exp),
@@ -213,6 +215,9 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
     None
 }
 
+pub fn is_error(object: &Rc<dyn Object>) -> bool {
+    object.object_type() == "ERROR_OBJECT"
+}
 pub fn apply_function(func: Rc<dyn Object>, args: Vec<Rc<dyn Object>>) -> Option<Rc<dyn Object>> {
     if let Some(f) = func.as_any().downcast_ref::<FunctionObject>() {
         let extended_context = extend_function_context(f, &args);
