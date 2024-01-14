@@ -363,6 +363,28 @@ if ( 5 < 10 ) {
             assert_eq!(p_token.literal, test.1);
         });
     }
+
+    #[test]
+    fn test_hash_table_literal() {
+        let input = r#"{"foo": "bar"}"#;
+        let tests = vec![
+            (token::LBRACE, "{"),
+            (token::STRING, "foo"),
+            (token::COLON, ":"),
+            (token::STRING, "bar"),
+            (token::RBRACE, "}"),
+            (token::EOF, "\0"),
+        ];
+
+        let lex = Lexer::new(input);
+
+        tests.iter().for_each(|test| {
+            let p_token = lex.next_token();
+            // println!("Running Test: {:?}, lexer.next_token: {:?}", test, p_token);
+            assert_eq!(p_token.token_type, test.0);
+            assert_eq!(p_token.literal, test.1);
+        });
+    }
     //     #[test]
     //     fn test_unicode() {
     //         let input = r#"let abcd = 1;

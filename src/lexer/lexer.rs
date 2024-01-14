@@ -96,6 +96,7 @@ impl Lexer {
             '[' => token::LBRACKET,
             ']' => token::RBRACKET,
             '\0' => token::EOF,
+            ':' => token::COLON,
             _ => token::IDENT,
         };
         let ch = match token_type {

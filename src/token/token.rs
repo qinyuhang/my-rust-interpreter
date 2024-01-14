@@ -63,6 +63,7 @@ pub const RETURN: TokenType = "RETURN";
 pub const EQ: TokenType = "==";
 pub const NOT_EQ: TokenType = "!=";
 pub const STRING: TokenType = "STRING";
+pub const COLON: TokenType = ":";
 
 // pub const KEYWORDS: HashMap<String, TokenType> = HashMap::new();
 pub fn lookup_ident(ident: &String) -> TokenType {
