@@ -35,6 +35,34 @@ thread_local! {
                 }
             }) }) as Rc<dyn Object>
         ),
+        (
+            "first",
+            Rc::new(BuiltinObject { func: Rc::new(|args: Vec<Rc<dyn Object>>| {
+                match args.as_slice() {
+                    &[]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
+                    [_, _, ..]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
+                    [a] if a.as_ref().as_any().is::<ArrayObject>() => {
+                        let inner = a.as_any().downcast_ref::<ArrayObject>().unwrap();
+                        return Some(inner.elements.first().unwrap_or(&NULLOBJ.with(|n| n.clone())).clone());
+                    },
+                    [a] => Some(Rc::new(ErrorObject { message: format!("argument to `first` must be ARRAY, got {}", a.object_type())})),
+                }
+            })})
+        ),
+        (
+            "last",
+            Rc::new(BuiltinObject { func: Rc::new(|args: Vec<Rc<dyn Object>>| {
+                match args.as_slice() {
+                    &[]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
+                    [_, _, ..]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
+                    [a] if a.as_ref().as_any().is::<ArrayObject>()  => {
+                        let inner = a.as_any().downcast_ref::<ArrayObject>().unwrap();
+                        return Some(inner.elements.last().unwrap_or(&NULLOBJ.with(|n| n.clone())).clone());
+                    },
+                    [a] => Some(Rc::new(ErrorObject { message: format!("argument to `first` must be ARRAY, got {}", a.object_type())}))
+                }
+            })})
+        )
     ].iter().cloned().collect::<HashMap<&'static str, Rc<dyn Object>>>()); // Rc::new(HashMap::new());
 }
 

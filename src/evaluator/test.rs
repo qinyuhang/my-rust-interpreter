@@ -426,6 +426,45 @@ mod test {
             }
         });
     }
+    #[test]
+    fn test_first_builtin_fn() {
+        let cases = vec![("first([1,2,3])", f!(Int, 1)), ("first([])", f!(Nil))];
+        cases.iter().for_each(|(case, out)| {
+            let input = case;
+            let evaluated = test_eval(input);
+            assert!(evaluated.is_some());
+            dbg!(&evaluated);
+            match out {
+                FinalResult::Int(i) => {
+                    test_integer_object(evaluated, *i);
+                }
+                FinalResult::Nil => {
+                    test_null_object(&evaluated);
+                }
+                _ => assert!(false),
+            }
+        });
+    }
+
+    #[test]
+    fn test_last_builtin_fn() {
+        let cases = vec![("last([1,2,3])", f!(Int, 3)), ("last([])", f!(Nil))];
+        cases.iter().for_each(|(case, out)| {
+            let input = case;
+            let evaluated = test_eval(input);
+            assert!(evaluated.is_some());
+            dbg!(&evaluated);
+            match out {
+                FinalResult::Int(i) => {
+                    test_integer_object(evaluated, *i);
+                }
+                FinalResult::Nil => {
+                    test_null_object(&evaluated);
+                }
+                _ => assert!(false),
+            }
+        });
+    }
     #[allow(unused)]
     fn test_null_object(obj: &Option<Rc<dyn Object>>) {
         assert!(obj.is_some());
