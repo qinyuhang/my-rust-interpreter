@@ -133,7 +133,7 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
     println!("eval: {}", node);
     if n.is::<Program>() {
         if let Some(n) = n.downcast_ref::<Program>() {
-            return eval_program(n.statement.clone());
+            return eval_program(n.statement.clone(), Some(context.clone()));
         }
     }
     if n.is::<ExpressionStatement>() {
@@ -591,9 +591,12 @@ pub fn eval_minus_prefix_operator_expression(
     }))
 }
 
-pub fn eval_program(stmts: Vec<Rc<dyn Statement>>) -> Option<Rc<dyn Object>> {
+pub fn eval_program(
+    stmts: Vec<Rc<dyn Statement>>,
+    context: Option<Rc<Context>>,
+) -> Option<Rc<dyn Object>> {
     let mut result = None;
-    let context = Rc::new(Context::new());
+    let context = context.unwrap_or(Rc::new(Context::new()));
     // add builtin functions to context
     for st in stmts.iter() {
         // converter Statement to Node

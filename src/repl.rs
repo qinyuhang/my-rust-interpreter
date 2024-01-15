@@ -70,6 +70,7 @@ pub fn start() {
         // println!("{input}");
         input.clear();
         // print!("\r{PROMPT}");
+        // dbg!(&context);
     }
 
     // for line in stdin.lock().lines() {
