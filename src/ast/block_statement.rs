@@ -25,7 +25,18 @@ impl TryFrom<Box<&dyn Expression>> for BlockStatement {
     type Error = String;
 
     fn try_from(value: Box<&dyn Expression>) -> Result<Self, Self::Error> {
-        if let Some(val) = value.as_any().downcast_ref::<BlockStatement>() {
+        if let Some(val) = value.as_any().downcast_ref::<Self>() {
+            return Ok(val.clone());
+        }
+        Err(format!("error cast object {:?}", value))
+    }
+}
+
+impl TryFrom<Rc<&dyn Statement>> for BlockStatement {
+    type Error = String;
+
+    fn try_from(value: Rc<&dyn Statement>) -> Result<Self, Self::Error> {
+        if let Some(val) = value.as_any().downcast_ref::<Self>() {
             return Ok(val.clone());
         }
         Err(format!("error cast object {:?}", value))

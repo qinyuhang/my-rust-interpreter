@@ -1,18 +1,6 @@
+#[cfg(test)]
 mod test {
-    #[allow(unused)]
-    use {
-        crate::ast::let_statement::LetStatement,
-        crate::ast::program::Program,
-        crate::lexer::*,
-        crate::token::*,
-        crate::*,
-        crate::{
-            ast::*,
-            token::{Token, INT},
-            *,
-        },
-        std::{cell::RefCell, rc::Rc},
-    };
+    use {crate::*, std::rc::Rc};
 
     #[test]
     fn test_program() {

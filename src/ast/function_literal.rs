@@ -5,9 +5,11 @@ use std::rc::Rc;
 #[ast_node(Expression)]
 pub struct FunctionLiteral {
     pub token: Token,
-    pub parameters: Option<Vec<Identifier>>,
+    pub parameters: Option<Vec<Rc<Identifier>>>,
+    // blockStatement
     pub body: Option<Rc<dyn Statement>>,
-    pub name: Option<Identifier>,
+    // function name
+    pub name: Option<Rc<Identifier>>,
     // pub body: Option<BlockStatement>,
 }
 
@@ -19,12 +21,20 @@ impl std::fmt::Display for FunctionLiteral {
             format!(
                 "{} {}({}) {}",
                 self.token_literal(),
-                format!("{}", self.name.as_ref().map_or("".into(), |val| val.to_string() + " ")),
-                (*self.parameters.as_ref().map_or_else(|| vec![], |v| v.to_vec()))
-                    .iter()
-                    .map(|v| v.to_string())
-                    .collect::<Vec<String>>()
-                    .join(", "),
+                format!(
+                    "{}",
+                    self.name
+                        .as_ref()
+                        .map_or("".into(), |val| val.to_string() + " ")
+                ),
+                (*self
+                    .parameters
+                    .as_ref()
+                    .map_or_else(|| vec![], |v| v.to_vec()))
+                .iter()
+                .map(|v| v.to_string())
+                .collect::<Vec<String>>()
+                .join(", "),
                 self.body
                     .as_ref()
                     .map_or_else(|| "".into(), |v| v.to_string())
@@ -33,9 +43,9 @@ impl std::fmt::Display for FunctionLiteral {
     }
 }
 
+#[cfg(test)]
 mod test {
-    #[allow(unused)]
-    use {crate::ast::*, crate::token::*, crate::lexer::Lexer, crate::parser::Parser, std::cell::RefCell, std::rc::Rc};
+    use crate::*;
 
     #[test]
     fn test_function_literal_to_string() {

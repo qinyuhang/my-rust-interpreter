@@ -3,6 +3,7 @@ use crate::lexer::*;
 use crate::parser::*;
 use crate::token::*;
 
+use crate::ExpressionConst::LOWEST;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -13,30 +14,42 @@ use std::rc::Rc;
 /// 或者 5 * 2 + abc(1) 应该先运算函数再运算乘法最后运算加法
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Ord, PartialOrd)]
 pub enum ExpressionConst {
-    LOWEST = 1,  // what is this?
-    EQUALS,      // =
-    LESSGREATER, // > or <
-    SUM,         // +￼
-    PRODUCT,     // "*￼
-    PREFIX,      // -X or !X￼
-    BITOP,       // ^ or | or &
-    LOGICOP,     // && or ||
-    POW,         // ^^
-    CALL,        // function
+    LOWEST = 1,
+    // what is this?
+    EQUALS,
+    // =
+    LESSGREATER,
+    // > or <
+    SUM,
+    // +
+    PRODUCT,
+    // "*
+    PREFIX,
+    // -X or !X
+    BITOP,
+    // ^ or | or &
+    LOGICOP,
+    // && or ||
+    POW,
+    // ^^
+    CALL,  // function
+    INDEX, // a[1]
 }
+
 impl From<isize> for ExpressionConst {
     fn from(value: isize) -> Self {
         match value {
             1 => ExpressionConst::LOWEST,      // what is this?
             2 => ExpressionConst::EQUALS,      // =
             3 => ExpressionConst::LESSGREATER, // > or <
-            4 => ExpressionConst::SUM,         // +￼
-            5 => ExpressionConst::PRODUCT,     // "*￼
-            6 => ExpressionConst::PREFIX,      // -X or !X￼
+            4 => ExpressionConst::SUM,         // +
+            5 => ExpressionConst::PRODUCT,     // "*
+            6 => ExpressionConst::PREFIX,      // -X or !X
             7 => ExpressionConst::BITOP,       // ^ or | or &
             8 => ExpressionConst::LOGICOP,     // && or ||
             9 => ExpressionConst::POW,         // ^^
             10 => ExpressionConst::CALL,       // function
+            11 => ExpressionConst::INDEX,      // a[1]
             _ => ExpressionConst::LOWEST,
         }
     }
@@ -53,18 +66,19 @@ thread_local! {
         (PLUS, ExpressionConst::SUM),
         (MINUS, ExpressionConst::SUM),
         (SLASH, ExpressionConst::PRODUCT),
-        
+
         (BITAND, ExpressionConst::BITOP),
         (BITOR, ExpressionConst::BITOP),
         (BITXOR, ExpressionConst::BITOP),
 
         (LOGICAND, ExpressionConst::LOGICOP),
         (LOGICOR, ExpressionConst::LOGICOP),
-        
+
         (POW, ExpressionConst::POW),
-        
+
         (ASTERISK, ExpressionConst::PRODUCT),
         (LPAREN, ExpressionConst::CALL),
+        (LBRACKET, ExpressionConst::INDEX),
     ]);
 }
 
@@ -115,7 +129,7 @@ impl Parser {
         pc.register_prefix(BANG, Rc::new(move || pd.parse_prefix_expression()));
         let pd = pc.clone();
         pc.register_prefix(MINUS, Rc::new(move || pd.parse_prefix_expression()));
-        
+
         let pd = pc.clone();
         pc.register_prefix(BITAND, Rc::new(move || pd.parse_prefix_expression()));
         let pd = pc.clone();
@@ -134,9 +148,19 @@ impl Parser {
         pc.register_prefix(LPAREN, Rc::new(move || pd.parse_grouped_expression()));
         let pd = pc.clone();
         pc.register_prefix(IF, Rc::new(move || pd.parse_if_expression()));
+        let pd = pc.clone();
+        pc.register_prefix(STRING, Rc::new(move || pd.parse_string_literal()));
+
+        let pd = pc.clone();
+        pc.register_prefix(LBRACKET, Rc::new(move || pd.parse_array_literal()));
+        let pd = pc.clone();
+        pc.register_prefix(LBRACE, Rc::new(move || pd.parse_hash_literal()));
 
         let pd = pc.clone();
         pc.register_infix(LPAREN, Rc::new(move |val| pd.parse_call_expression(val)));
+
+        let pd = pc.clone();
+        pc.register_infix(LBRACKET, Rc::new(move |val| pd.parse_index_expression(val)));
 
         // let pd = pc.clone();
         // pc.register_prefix(IF, Rc::new(move || pd.parse_block_statement()));
@@ -146,6 +170,9 @@ impl Parser {
             #[allow(unused_variables)]
             ps.iter().for_each(|(&token, ec)| {
                 if token == LPAREN {
+                    return;
+                }
+                if token == LBRACKET {
                     return;
                 }
                 let pd = pc.clone();
@@ -184,7 +211,7 @@ impl Parser {
         Some(program)
     }
     pub fn parse_statement(&self) -> Option<Rc<dyn Statement>> {
-        let cur_type = self.cur_token.borrow().token_type.clone();
+        let cur_type = self.cur_token.borrow().token_type;
         match cur_type {
             LET => self.parse_let_statement(),
             RETURN => self.parse_return_statement(),
@@ -227,7 +254,7 @@ impl Parser {
 
         Some(Rc::new(LetStatement {
             token: cur_token.clone(),
-            name: Box::new(name),
+            name: Rc::new(name),
 
             // FIXME: make it clone
             value: Some(Rc::new(ExpressionStatement {
@@ -282,9 +309,7 @@ impl Parser {
         let pf = pf.unwrap();
         let mut left = pf();
         // println!("before parse_infix: {:?}", left);
-        while !self.peek_token_is(SEMICOLON)
-            && precedence < self.peek_precedence()
-        {
+        while !self.peek_token_is(SEMICOLON) && precedence < self.peek_precedence() {
             let pktp = self.peek_token.borrow().token_type.to_string();
             if let Some(infix) = self.infix_parse_fns.borrow().get(&*pktp) {
                 self.next_token();
@@ -423,10 +448,10 @@ impl Parser {
 
         if self.peek_token_is(IDENT) {
             self.next_token();
-            name = Some(Identifier {
+            name = Some(Rc::new(Identifier {
                 token: (*self.cur_token.borrow()).clone(),
                 value: self.cur_token.borrow().literal.clone(),
-            });
+            }));
             // println!("function name: {}", name.as_ref().unwrap());
         }
         if !self.expect_peek(LPAREN) {
@@ -449,7 +474,7 @@ impl Parser {
         };
         Some(Rc::new(lit))
     }
-    pub fn parse_function_parameters(&self) -> Option<Vec<Identifier>> {
+    pub fn parse_function_parameters(&self) -> Option<Vec<Rc<Identifier>>> {
         let mut identifiers = vec![];
 
         if self.peek_token_is(RPAREN) {
@@ -459,10 +484,10 @@ impl Parser {
 
         self.next_token();
 
-        let ident = Identifier {
+        let ident = Rc::new(Identifier {
             token: (*self.cur_token.borrow()).clone(),
             value: self.cur_token.borrow().literal.clone(),
-        };
+        });
 
         identifiers.push(ident);
 
@@ -475,10 +500,10 @@ impl Parser {
             self.next_token();
             self.next_token();
             // fixme fn as p
-            let ident = Identifier {
+            let ident = Rc::new(Identifier {
                 token: (*self.cur_token.borrow()).clone(),
                 value: self.cur_token.borrow().literal.clone(),
-            };
+            });
             identifiers.push(ident);
         }
 
@@ -492,37 +517,110 @@ impl Parser {
         println!("\n\nparse_call_expression\n\n{:?}", "args");
 
         let token = (*self.cur_token.borrow()).clone();
-        let args = self.parse_call_arguments();
+        let args = self.parse_expression_list(RPAREN);
 
         Some(Rc::new(CallExpression {
             token,
-            arguments: args,
+            arguments: Some(args),
             function: Some(f.clone()),
         }))
     }
-    pub fn parse_call_arguments(&self) -> Option<Vec<Rc<dyn Expression>>> {
-        let mut args = vec![];
-
-        if self.peek_token_is(RPAREN) {
-            self.next_token();
-            return Some(args);
+    pub fn parse_string_literal(&self) -> Option<Rc<dyn Expression>> {
+        let literal = self.cur_token.borrow().literal.clone();
+        if let Ok(v) = StringLiteral::try_from(literal) {
+            Some(Rc::new(v))
+        } else {
+            None
         }
+    }
+    pub fn parse_array_literal(&self) -> Option<Rc<dyn Expression>> {
+        // let mut list = vec![];
+        // Some(Rc::new())
+        let literal = self.cur_token.borrow().literal.clone();
+        let arr = ArrayLiteral {
+            token: Token {
+                literal,
+                token_type: token::LBRACKET,
+            },
+            elements: self.parse_expression_list(token::RBRACKET),
+        };
+        Some(Rc::new(arr))
+    }
+    pub fn parse_hash_literal(&self) -> Option<Rc<dyn Expression>> {
+        let literal = self.cur_token.borrow().literal.clone();
+        let mut pairs = HashMap::new();
 
-        self.next_token();
-
-        args.push(self.parse_expression(ExpressionConst::LOWEST).unwrap());
-
-        while self.peek_token_is(COMMA) {
+        while !self.peek_token_is(RBRACE) {
             self.next_token();
+            let k = self.parse_expression(LOWEST);
+            if !self.expect_peek(COLON) {
+                return None;
+            };
             self.next_token();
-            args.push(self.parse_expression(ExpressionConst::LOWEST).unwrap());
+            let v = self.parse_expression(LOWEST);
+            pairs.insert(
+                k.unwrap()
+                    .as_ref()
+                    .as_any()
+                    .downcast_ref::<StringLiteral>()
+                    .unwrap()
+                    .value
+                    .clone(),
+                v.unwrap(),
+            );
+
+            if !self.peek_token_is(RBRACE) && !self.expect_peek(COMMA) {
+                return None;
+            }
         }
-
-        if !self.expect_peek(RPAREN) {
+        if !self.expect_peek(RBRACE) {
             return None;
         }
+        Some(Rc::new(HashLiteral {
+            token: Token {
+                literal,
+                token_type: token::LBRACE,
+            },
+            pairs: RefCell::new(pairs),
+        }))
+        // None
+    }
+    pub fn parse_expression_list(&self, end: TokenType) -> Vec<Rc<dyn Expression>> {
+        let mut r = vec![];
+        if self.peek_token_is(end) {
+            self.next_token();
+            return r;
+        }
+        self.next_token();
+        r.push(self.parse_expression(LOWEST).unwrap());
 
-        Some(args)
+        while self.peek_token_is(token::COMMA) {
+            self.next_token();
+            self.next_token();
+            if let Some(e) = self.parse_expression(LOWEST) {
+                r.push(e);
+            }
+        }
+        if !self.expect_peek(end) {
+            return vec![];
+        }
+        return r;
+    }
+    pub fn parse_index_expression(&self, left: Rc<dyn Expression>) -> Option<Rc<dyn Expression>> {
+        let literal = self.cur_token.borrow().literal.clone();
+        self.next_token();
+        let index = self.parse_expression(LOWEST);
+        if !self.expect_peek(token::RBRACKET) {
+            return None;
+        }
+        return Some(Rc::new(IndexExpression {
+            token: Token {
+                literal,
+                token_type: token::LBRACKET,
+            },
+            left: left.clone(),
+            index: index.unwrap(),
+        }));
     }
     pub fn expect_peek(&self, token: TokenType) -> bool {
         let r = self.peek_token_is(token);
@@ -534,11 +632,11 @@ impl Parser {
         r
     }
     pub fn cur_token_is(&self, token: TokenType) -> bool {
-        let t = self.cur_token.borrow().token_type.clone();
+        let t = self.cur_token.borrow().token_type;
         t == token
     }
     pub fn peek_token_is(&self, token: TokenType) -> bool {
-        let t = self.peek_token.borrow().token_type.clone();
+        let t = self.peek_token.borrow().token_type;
         t == token
     }
     pub fn errors(&self) -> Rc<RefCell<Vec<String>>> {
@@ -564,7 +662,7 @@ impl Parser {
     pub fn peek_precedence(&self) -> ExpressionConst {
         let mut r = ExpressionConst::LOWEST;
         PRECEDENCES.with(|val| {
-            let tp = self.peek_token.borrow().token_type.clone();
+            let tp = self.peek_token.borrow().token_type;
             if let Some(rs) = val.get(tp) {
                 r = *rs;
             }
@@ -574,7 +672,7 @@ impl Parser {
     pub fn cur_precedence(&self) -> ExpressionConst {
         let mut r = ExpressionConst::LOWEST;
         PRECEDENCES.with(|val| {
-            let tp = self.cur_token.borrow().token_type.clone();
+            let tp = self.cur_token.borrow().token_type;
             if let Some(rs) = val.get(tp) {
                 r = *rs;
             }

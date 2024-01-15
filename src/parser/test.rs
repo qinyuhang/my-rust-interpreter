@@ -1,19 +1,6 @@
+#[cfg(test)]
 mod test {
-    #[allow(unused)]
-    use {
-        crate::{
-            ast::{
-                Expression, ExpressionStatement, Identifier, IntegerLiteral, LetStatement, Node,
-                PrefixExpression, ReturnStatement, Statement, *,
-            },
-            lexer::*,
-            parser::{Parser, PrefixParseFn},
-            token::*,
-            *,
-        },
-        std::cell::RefCell,
-        std::rc::Rc,
-    };
+    use {crate::*, std::rc::Rc};
 
     #[test]
     fn test_parser() {
@@ -404,6 +391,14 @@ return 500;
                 "add(a + b + c * d / f + g)",
                 "add((((a + b) + ((c * d) / f)) + g))",
             ),
+            (
+                "a * [1, 2, 3][b * c] * d",
+                "((a * ([1, 2, 3][(b * c)])) * d)",
+            ),
+            (
+                "add(a * b[2], b[1], 2 * [1, 2][1])",
+                "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))",
+            ),
         ];
 
         #[allow(unused)]
@@ -431,6 +426,114 @@ return 500;
         });
     }
 
+    #[test]
+    fn test_parse_hash_literal() {
+        let input = r#"{"one": 1, "two": 2, "three": 3 }"#;
+        let l = Lexer::new(input);
+        let p = Parser::new(l);
+        let pr = p.parse_program();
+        test_parser_errors(&p, None);
+
+        assert!(pr.is_some());
+        let pr = pr.unwrap();
+        assert_eq!(
+            pr.statement[0]
+                .as_any()
+                .downcast_ref::<ExpressionStatement>()
+                .unwrap()
+                .expression
+                .clone()
+                .unwrap()
+                .as_any()
+                .downcast_ref::<HashLiteral>()
+                .unwrap()
+                .pairs
+                .borrow()
+                .len(),
+            3
+        );
+
+        // get 0 of pr
+        // check is hashObject
+        // check hashObject.pair.len() == 3
+        // check every key and value is match the key&value
+    }
+
+    #[test]
+    fn test_empty_hash_literal() {
+        let input = r#"{}"#;
+        let l = Lexer::new(input);
+        let p = Parser::new(l);
+        let pr = p.parse_program();
+        test_parser_errors(&p, None);
+
+        assert!(pr.is_some());
+        let pr = pr.unwrap();
+
+        assert_eq!(
+            pr.statement[0]
+                .as_any()
+                .downcast_ref::<ExpressionStatement>()
+                .unwrap()
+                .expression
+                .clone()
+                .unwrap()
+                .as_any()
+                .downcast_ref::<HashLiteral>()
+                .unwrap()
+                .pairs
+                .borrow()
+                .len(),
+            0
+        );
+    }
+
+    #[test]
+    fn test_hash_literal_with_expression() {
+        let input = r#"{"one": 0 + 1, "two": 10 - 8, "three": 15 / 5 }"#;
+        let l = Lexer::new(input);
+        let p = Parser::new(l);
+        let pr = p.parse_program();
+        test_parser_errors(&p, None);
+
+        assert!(pr.is_some());
+        let pr = pr.unwrap();
+
+        // get 0 of pr
+        // check is hashObject
+        // check hashObject.pair.len() == 3
+        // check every key and value is match the key&value
+        assert_eq!(
+            pr.statement[0]
+                .as_any()
+                .downcast_ref::<ExpressionStatement>()
+                .unwrap()
+                .expression
+                .clone()
+                .unwrap()
+                .as_any()
+                .downcast_ref::<HashLiteral>()
+                .unwrap()
+                .pairs
+                .borrow()
+                .len(),
+            3
+        );
+
+        dbg!(
+            &pr.statement[0]
+                .as_any()
+                .downcast_ref::<ExpressionStatement>()
+                .unwrap()
+                .expression
+                .clone()
+                .unwrap()
+                .as_any()
+                .downcast_ref::<HashLiteral>()
+                .unwrap()
+                .pairs
+        );
+    }
     #[test]
     fn test_mixed_to_string() {
         let input = r#"let x = 1;
@@ -561,5 +664,68 @@ let mf = fn(x, y) { return x + y; };"#;
 
         let pr = pr.unwrap();
         println!("test_hex_binary_string: pr: {:?}", pr);
+    }
+
+    #[test]
+    fn test_string_literal() {
+        let input = r#""foobar""#;
+        let l = Lexer::new(input);
+
+        let p = Parser::new(l);
+
+        let pr = p.parse_program();
+
+        assert!(pr.is_some());
+
+        let pr = pr.unwrap();
+        println!("test_string_literal: pr: {:?}", pr);
+
+        // if let Program { ref statement } = pr {
+        //     dbg!(statement[0].as_ref().expression);
+        //     let x = statement[0].as_ref().as_any();
+        //     dbg!(&x);
+        //     assert!(x.is::<StringLiteral>());
+        // }
+    }
+
+    #[test]
+    fn test_array_literal() {
+        let input = r#"[1,2,3]"#;
+        let l = Lexer::new(input);
+
+        let p = Parser::new(l);
+
+        let pr = p.parse_program();
+
+        assert!(pr.is_some());
+
+        let pr = pr.unwrap();
+        println!("test_array_literal: pr: {:?}", pr);
+
+        let input = r#"[1,2,3,]"#;
+        let l = Lexer::new(input);
+
+        let p = Parser::new(l);
+
+        let pr = p.parse_program();
+
+        assert!(pr.is_some());
+
+        let pr = pr.unwrap();
+        println!("test_array_literal: pr: {:?}", pr);
+    }
+
+    #[test]
+    fn test_index_literal() {
+        let cases = vec![("[1, 2, 3][0]")];
+        cases.iter().for_each(|&input| {
+            let l = Lexer::new(input);
+
+            let p = Parser::new(l);
+
+            let pr = p.parse_program();
+
+            assert!(pr.is_some());
+        });
     }
 }

@@ -1,19 +1,14 @@
 use std::collections::HashMap;
 pub type TokenType = &'static str;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Token {
     pub token_type: TokenType,
     pub literal: String,
 }
 impl std::fmt::Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "<Token {} {}>",
-            self.token_type,
-            &self.literal,
-        )
+        write!(f, "<Token {} {}>", self.token_type, &self.literal,)
     }
 }
 impl Default for Token {
@@ -54,17 +49,21 @@ pub const LPAREN: TokenType = "(";
 pub const RPAREN: TokenType = ")";
 pub const LBRACE: TokenType = "{";
 pub const RBRACE: TokenType = "}";
+pub const LBRACKET: TokenType = "[";
+pub const RBRACKET: TokenType = "]";
 
 pub const FUNCTION: TokenType = "FUNCTION";
 pub const LET: TokenType = "LET";
 pub const TRUE: TokenType = "TRUE";
-pub const FALSE: TokenType = "FLASE";
+pub const FALSE: TokenType = "FALSE";
 pub const IF: TokenType = "if";
 pub const ELSE: TokenType = "ELSE";
-pub const RETURN: TokenType = "RETURE";
+pub const RETURN: TokenType = "RETURN";
 
 pub const EQ: TokenType = "==";
 pub const NOT_EQ: TokenType = "!=";
+pub const STRING: TokenType = "STRING";
+pub const COLON: TokenType = ":";
 
 // pub const KEYWORDS: HashMap<String, TokenType> = HashMap::new();
 pub fn lookup_ident(ident: &String) -> TokenType {

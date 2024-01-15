@@ -3,9 +3,13 @@ pub fn is_letter(ch: char) -> bool {
     'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
 }
 
+pub fn is_valid_identifier_char(ch: char) -> bool {
+    ch != '\0' && ch != '"'
+}
+
 #[allow(unused)]
 pub fn is_valid_variable_prefix(ch: char) -> bool {
-    // 不等于 0-9, 
+    // 不等于 0-9,
     true
 }
 

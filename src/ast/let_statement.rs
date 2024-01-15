@@ -1,39 +1,15 @@
-use std::rc::Rc;
 use crate::ast::*;
 use crate::token::*;
+use std::rc::Rc;
 
-#[derive(Debug, Clone)]
+#[ast_node(Statement)]
 pub struct LetStatement {
     pub token: Token,
-    pub name: Box<Identifier>,
-    // FIXME: make it clone make it Option<Rc<dyn Expression>>;
+    pub name: Rc<Identifier>,
+    //         Option<Rc<dyn Expression>>;
     pub value: Option<Rc<dyn Expression>>,
 }
-impl Node for LetStatement {
-    fn token_literal(&self) -> String {
-        self.token.literal.clone()
-    }
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-impl Statement for LetStatement {
-    fn statement_node(&self) {
-        todo!()
-    }
-    fn upcast(&self) -> &dyn Node {
-        self
-    }
-}
-impl Expression for LetStatement {
-    fn expression_node(&self) {
-        todo!()
-    }
-    fn upcast(&self) -> &dyn Node {
-        self
-    }
 
-}
 impl TryFrom<Box<&dyn Statement>> for LetStatement {
     type Error = String;
     fn try_from(value: Box<&dyn Statement>) -> Result<Self, Self::Error> {
@@ -58,7 +34,10 @@ impl TryFrom<Box<&dyn Expression>> for LetStatement {
                 return Ok(LetStatement {
                     token: x.token.clone(),
                     name: x.name.clone(),
-                    value: Some(Rc::new(LetStatement::try_from(Box::new(&*x.value.as_ref().unwrap().clone())).unwrap())),//x.value.clone(),
+                    value: Some(Rc::new(
+                        LetStatement::try_from(Box::new(&*x.value.as_ref().unwrap().clone()))
+                            .unwrap(),
+                    )), //x.value.clone(),
                 });
             } else {
                 return Err(format!(""));
@@ -71,6 +50,12 @@ impl std::fmt::Display for LetStatement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // FIXME:
         // write!(f, "{} {} = {};", self.token_literal(), self.name, self.value.unwrap_or(""))
-        write!(f, "{} {} = {};", self.token_literal(), self.name, self.value.as_ref().unwrap())
+        write!(
+            f,
+            "{} {} = {};",
+            self.token_literal(),
+            self.name,
+            self.value.as_ref().unwrap()
+        )
     }
 }

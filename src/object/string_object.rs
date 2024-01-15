@@ -2,23 +2,24 @@ pub use crate::object::*;
 use ast_macro::object;
 pub use std::rc::Rc;
 
-#[object(INTEGER_OBJECT)]
-pub struct Integer {
-    pub value: i64,
+#[object(STRING_OBJECT)]
+pub struct StringObject {
+    pub value: Rc<String>,
 }
 
-impl ObjectInspect for Integer {
+impl ObjectInspect for StringObject {
     fn _inspect(&self) -> String {
-        self.value.to_string()
+        self.value.as_ref().clone()
     }
 }
-impl TryFrom<Rc<dyn Object>> for Integer {
+
+impl TryFrom<Rc<dyn Object>> for StringObject {
     type Error = String;
 
     fn try_from(value: Rc<dyn Object>) -> Result<Self, Self::Error> {
         let val = value.as_any();
-        if val.is::<Integer>() {
-            if let Some(v) = val.downcast_ref::<Integer>() {
+        if val.is::<StringObject>() {
+            if let Some(v) = val.downcast_ref::<StringObject>() {
                 return Ok((*v).clone());
             }
         }

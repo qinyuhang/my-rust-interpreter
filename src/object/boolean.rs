@@ -1,27 +1,14 @@
 pub use crate::object::*;
+use ast_macro::object;
 
-#[derive(Debug, Clone)]
+#[object(BOOLEAN_OBJECT)]
 pub struct Boolean {
-    pub value: bool
+    pub value: bool,
 }
 
-impl Object for Boolean {
-    fn object_type(&self) -> ObjectType {
-        BOOLEAN_OBJECT
-    }
-
-    fn inspect(&self) -> String {
+impl ObjectInspect for Boolean {
+    fn _inspect(&self) -> String {
         format!("{}", self.value)
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
-impl std::fmt::Display for Boolean {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.value)
     }
 }
 

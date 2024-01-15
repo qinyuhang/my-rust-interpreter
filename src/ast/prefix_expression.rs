@@ -33,16 +33,9 @@ impl std::fmt::Display for PrefixExpression {
     }
 }
 
+#[cfg(test)]
 mod test {
-    #[allow(unused)]
-    use {
-        crate::{
-            ast::*,
-            token::*,
-            *,
-        },
-        std::{cell::RefCell, rc::Rc},
-    };
+    use {crate::*, std::rc::Rc};
 
     #[test]
     fn test_prefix_expression_to_string() {

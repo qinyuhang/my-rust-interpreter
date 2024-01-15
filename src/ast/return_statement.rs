@@ -24,7 +24,9 @@ impl std::fmt::Display for ReturnStatement {
             f,
             "{} {};",
             self.token_literal(),
-            self.return_value.as_ref().map_or("".into(), |v| v.to_string())
+            self.return_value
+                .as_ref()
+                .map_or("".into(), |v| v.to_string())
         )
     }
 }

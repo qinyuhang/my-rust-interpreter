@@ -1,5 +1,5 @@
+#[cfg(test)]
 mod test {
-    #[allow(unused)]
     use {crate::lexer::Lexer, crate::token};
 
     #[test]
@@ -299,19 +299,105 @@ if ( 5 < 10 ) {
         assert_eq!(count, 3);
     }
 
-//     #[test]
-//     fn test_unicode() {
-//         let input = r#"let abcd = 1;
-// let 中文名字 = 1;"#;
-//         let lex = Lexer::new(input);
-//         let mut tk = lex.next_token();
-//         let mut count = 0;
-//         while tk.token_type != token::EOF {
-//             count += 1;
-//             println!("{:?}", tk);
-//             tk = lex.next_token();
-//         }
-//         // FIXME: 等待 is_letter 方法支持unicode更多字符
-//         assert_eq!(count, 10);
-//     }
+    #[test]
+    fn test_string_literal() {
+        let input = r#""foobar""#;
+
+        let tests = vec![(token::STRING, "foobar"), (token::EOF, "\0")];
+
+        let lex = Lexer::new(input);
+
+        tests.iter().for_each(|test| {
+            let p_token = lex.next_token();
+            // println!("Running Test: {:?}, lexer.next_token: {:?}", test, p_token);
+            assert_eq!(p_token.token_type, test.0);
+            assert_eq!(p_token.literal, test.1);
+        });
+    }
+
+    #[test]
+    fn test_array_literal() {
+        let input = r#"[1, 2]"#;
+
+        let tests = vec![
+            (token::LBRACKET, "["),
+            (token::INT, "1"),
+            (token::COMMA, ","),
+            (token::INT, "2"),
+            (token::RBRACKET, "]"),
+            (token::EOF, "\0"),
+        ];
+
+        let lex = Lexer::new(input);
+
+        tests.iter().for_each(|test| {
+            let p_token = lex.next_token();
+            // println!("Running Test: {:?}, lexer.next_token: {:?}", test, p_token);
+            assert_eq!(p_token.token_type, test.0);
+            assert_eq!(p_token.literal, test.1);
+        });
+    }
+
+    #[test]
+    fn test_index_literal() {
+        let input = r#"[1, 2][0]"#;
+
+        let tests = vec![
+            (token::LBRACKET, "["),
+            (token::INT, "1"),
+            (token::COMMA, ","),
+            (token::INT, "2"),
+            (token::RBRACKET, "]"),
+            (token::LBRACKET, "["),
+            (token::INT, "0"),
+            (token::RBRACKET, "]"),
+            (token::EOF, "\0"),
+        ];
+
+        let lex = Lexer::new(input);
+
+        tests.iter().for_each(|test| {
+            let p_token = lex.next_token();
+            // println!("Running Test: {:?}, lexer.next_token: {:?}", test, p_token);
+            assert_eq!(p_token.token_type, test.0);
+            assert_eq!(p_token.literal, test.1);
+        });
+    }
+
+    #[test]
+    fn test_hash_table_literal() {
+        let input = r#"{"foo": "bar"}"#;
+        let tests = vec![
+            (token::LBRACE, "{"),
+            (token::STRING, "foo"),
+            (token::COLON, ":"),
+            (token::STRING, "bar"),
+            (token::RBRACE, "}"),
+            (token::EOF, "\0"),
+        ];
+
+        let lex = Lexer::new(input);
+
+        tests.iter().for_each(|test| {
+            let p_token = lex.next_token();
+            // println!("Running Test: {:?}, lexer.next_token: {:?}", test, p_token);
+            assert_eq!(p_token.token_type, test.0);
+            assert_eq!(p_token.literal, test.1);
+        });
+    }
+    //     #[test]
+    //     fn test_unicode() {
+    //         let input = r#"let abcd = 1;
+    // let 中文名字 = 1;"#;
+    //         let lex = Lexer::new(input);
+    //         let mut tk = lex.next_token();
+    //         let mut count = 0;
+    //         while tk.token_type != token::EOF {
+    //             count += 1;
+    //             println!("{:?}", tk);
+    //             tk = lex.next_token();
+    //         }
+    //         // FIXME: 等待 is_letter 方法支持unicode更多字符
+    //         assert_eq!(count, 10);
+    //     }
 }

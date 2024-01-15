@@ -32,13 +32,18 @@ impl TryFrom<Box<&dyn Expression>> for InfixExpression {
 
 impl std::fmt::Display for InfixExpression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "({} {} {})", self.left.as_ref().unwrap(), self.operator, self.right.as_ref().unwrap())
+        write!(
+            f,
+            "({} {} {})",
+            self.left.as_ref().unwrap(),
+            self.operator,
+            self.right.as_ref().unwrap()
+        )
     }
 }
 
+#[cfg(test)]
 mod test {
     #[test]
-    fn test_infix_display() {
-        
-    }
+    fn test_infix_display() {}
 }

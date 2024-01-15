@@ -68,7 +68,7 @@ impl Lexer {
                 } else {
                     token::BITXOR
                 }
-            },
+            }
             '|' => {
                 if self.peek_char() == "|" {
                     self.read_char();
@@ -76,7 +76,7 @@ impl Lexer {
                 } else {
                     token::BITOR
                 }
-            },
+            }
             '&' => {
                 if self.peek_char() == "&" {
                     self.read_char();
@@ -89,7 +89,14 @@ impl Lexer {
             '*' => token::ASTERISK,
             '<' => token::LT,
             '>' => token::GT,
+            '"' => {
+                self.read_char();
+                token::STRING
+            }
+            '[' => token::LBRACKET,
+            ']' => token::RBRACKET,
             '\0' => token::EOF,
+            ':' => token::COLON,
             _ => token::IDENT,
         };
         let ch = match token_type {
@@ -98,6 +105,9 @@ impl Lexer {
             token::POW => "^^".into(),
             token::LOGICOR => "||".into(),
             token::LOGICAND => "&&".into(),
+            token::STRING => self.read_string(),
+            token::LBRACKET => "[".into(),
+            token::RBRACKET => "]".into(),
             token::IDENT => {
                 if is_letter(*self.ch.borrow()) {
                     should_read_one_more = false;
@@ -163,7 +173,8 @@ impl Lexer {
     }
     pub fn read_number(&self) -> String {
         let position = self.position.get();
-        let is_read_hex = *self.ch.borrow() == '0' && (self.peek_char() == "x" || self.peek_char() == "X");
+        let is_read_hex =
+            *self.ch.borrow() == '0' && (self.peek_char() == "x" || self.peek_char() == "X");
         while is_digits(*self.ch.borrow())
             || is_not_decimal_symbol(*self.ch.borrow())
             || (is_read_hex && is_hex(*self.ch.borrow()))
@@ -186,5 +197,16 @@ impl Lexer {
         {
             self.read_char();
         }
+    }
+    pub fn read_string(&self) -> String {
+        let position = self.position.get();
+        self.read_char();
+        while is_valid_identifier_char(*self.ch.borrow()) {
+            self.read_char();
+        }
+        self.input_chars[position..self.position.get()]
+            .iter()
+            .map(|c| c.clone().to_string())
+            .collect::<String>()
     }
 }

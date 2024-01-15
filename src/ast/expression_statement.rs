@@ -92,7 +92,8 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
                     name: v.name.clone(),
                     // FIXME: change this
                     value: Some(Rc::new(
-                        ExpressionStatement::try_from(Box::new(&**v.value.as_ref().unwrap())).unwrap(),
+                        ExpressionStatement::try_from(Box::new(&**v.value.as_ref().unwrap()))
+                            .unwrap(),
                     )),
                 }));
                 // println!(
@@ -181,12 +182,9 @@ impl std::fmt::Display for ExpressionStatement {
     }
 }
 
+#[cfg(test)]
 mod test {
-    #[allow(unused)]
-    use {
-        crate::{ast::ExpressionStatement, token::Token, token::EOF},
-        std::{cell::RefCell, rc::Rc},
-    };
+    use crate::{ast::ExpressionStatement, token::Token, token::EOF};
 
     #[test]
     fn test_to_string() {

@@ -1,10 +1,9 @@
-use crate::lexer::*;
-use crate::parser::*;
 use crate::evaluator::*;
+
+use std::cell::RefCell;
 use std::io;
 use std::io::Write;
 use std::rc::Rc;
-use std::cell::RefCell;
 
 thread_local! {
     static HISTORY: Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(vec![]))
@@ -24,14 +23,15 @@ pub const SYMBOL: &'static str = r#"
   xx    xxxx
   xx      xxxx
   xx        xxxx
-  xx          xxxx
-xxxxxx       xxxxxxx"#;
+  xx          xxxx  #
+######       ########"#;
 
 pub fn start() {
     println!("{}", SYMBOL);
     // readline in
     let stdin = io::stdin();
     let mut input = String::new();
+    let context = Rc::new(Context::new());
     loop {
         print!("{PROMPT}");
         std::io::stdout().flush().unwrap();
@@ -55,7 +55,9 @@ pub fn start() {
         }
         let pr = pr.unwrap();
         println!("{}", &pr);
-        println!("{}", eval(&pr).as_ref().unwrap());
+        if let Some(r) = eval(&pr, context.clone()).as_ref() {
+            println!("{}", r);
+        }
         // eval(&pr);
         // loop {
         //     #[allow(unused_mut)]
@@ -68,6 +70,7 @@ pub fn start() {
         // println!("{input}");
         input.clear();
         // print!("\r{PROMPT}");
+        // dbg!(&context);
     }
 
     // for line in stdin.lock().lines() {

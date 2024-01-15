@@ -30,12 +30,9 @@ impl std::fmt::Display for BooleanLiteral {
     }
 }
 
+#[cfg(test)]
 mod test {
-    #[allow(unused)]
-    use {
-        crate::ast::BooleanLiteral, crate::token::Token, crate::token::TRUE, std::cell::RefCell,
-        std::rc::Rc,
-    };
+    use {crate::ast::BooleanLiteral, crate::token::Token, crate::token::TRUE};
 
     #[test]
     fn test_bool_literal() {

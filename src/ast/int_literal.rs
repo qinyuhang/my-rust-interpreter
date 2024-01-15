@@ -80,8 +80,9 @@ impl TryFrom<Box<&dyn Expression>> for IntegerLiteral {
         // FIXME: PrefixExpression 可以转换成 IntegerLiteral 吗？
         // if x.is::<PrefixExpression>() {
         //     let x = x.downcast_ref::<PrefixExpression>().unwrap();
+        //     if x.operator == "-" || x.operator == "+" {}
         // }
-        // println!("{}", format!("Cannot cast {:?} into IntegerLiteral", value));
+        println!("{}", format!("Cannot cast {:?} into IntegerLiteral", value));
         Err(format!("Cannot cast {:?} into IntegerLiteral", value))
     }
 }
@@ -92,15 +93,11 @@ impl std::fmt::Display for IntegerLiteral {
     }
 }
 
+#[cfg(test)]
 mod test {
-
-    #[allow(unused)]
-    use {
-        crate::{
-            ast::IntegerLiteral,
-            token::{Token, INT},
-        },
-        // std::{cell::RefCell, rc::Rc},
+    use crate::{
+        ast::IntegerLiteral,
+        token::{Token, INT},
     };
 
     #[test]
@@ -113,6 +110,18 @@ mod test {
             value: 5,
         };
         assert_eq!(format!("{s}"), "5");
+    }
+
+    #[test]
+    fn test_int_literal_try_from() {
+        let cases = vec![("1", 1), ("-1", -1)];
+        cases.iter().for_each(|&(input, out)| {
+            let r = IntegerLiteral::try_from(input.to_string());
+            assert!(r.is_ok());
+            let r = r.unwrap();
+            // dbg!(&r);
+            assert_eq!(r.value, out);
+        });
     }
 }
 
@@ -127,4 +136,4 @@ where
     // return test_integer_literal(exp, expected);
 }
 
-// pub(crate) fn 
+// pub(crate) fn
