@@ -153,6 +153,8 @@ impl Parser {
 
         let pd = pc.clone();
         pc.register_prefix(LBRACKET, Rc::new(move || pd.parse_array_literal()));
+        let pd = pc.clone();
+        pc.register_prefix(LBRACE, Rc::new(move || pd.parse_hash_literal()));
 
         let pd = pc.clone();
         pc.register_infix(LPAREN, Rc::new(move |val| pd.parse_call_expression(val)));
@@ -544,7 +546,45 @@ impl Parser {
         };
         Some(Rc::new(arr))
     }
+    pub fn parse_hash_literal(&self) -> Option<Rc<dyn Expression>> {
+        let literal = self.cur_token.borrow().literal.clone();
+        let mut pairs = HashMap::new();
 
+        while !self.peek_token_is(RBRACE) {
+            self.next_token();
+            let k = self.parse_expression(LOWEST);
+            if !self.expect_peek(COLON) {
+                return None;
+            };
+            self.next_token();
+            let v = self.parse_expression(LOWEST);
+            pairs.insert(
+                k.unwrap()
+                    .as_ref()
+                    .as_any()
+                    .downcast_ref::<StringLiteral>()
+                    .unwrap()
+                    .value
+                    .clone(),
+                v.unwrap(),
+            );
+
+            if !self.peek_token_is(RBRACE) && !self.expect_peek(COMMA) {
+                return None;
+            }
+        }
+        if !self.expect_peek(RBRACE) {
+            return None;
+        }
+        Some(Rc::new(HashLiteral {
+            token: Token {
+                literal,
+                token_type: token::LBRACE,
+            },
+            pairs: RefCell::new(pairs),
+        }))
+        // None
+    }
     pub fn parse_expression_list(&self, end: TokenType) -> Vec<Rc<dyn Expression>> {
         let mut r = vec![];
         if self.peek_token_is(end) {

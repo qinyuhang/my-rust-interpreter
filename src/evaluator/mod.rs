@@ -308,7 +308,7 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
 }
 
 pub fn is_error(object: &Rc<dyn Object>) -> bool {
-    object.object_type() == "ERROR_OBJECT"
+    object.object_type() == ERROR_OBJECT
 }
 pub fn apply_function(func: Rc<dyn Object>, args: Vec<Rc<dyn Object>>) -> Option<Rc<dyn Object>> {
     if let Some(f) = func.as_any().downcast_ref::<FunctionObject>() {
@@ -329,7 +329,7 @@ pub fn eval_index_expression(
     index: Rc<dyn Object>,
 ) -> Option<Rc<dyn Object>> {
     return match (left.object_type(), index.object_type()) {
-        ("ARRAY_OBJECT", "INTEGER") => eval_array_index_expression(left, index),
+        (ARRAY_OBJECT, INTEGER_OBJECT) => eval_array_index_expression(left, index),
         _ => None,
     };
 }

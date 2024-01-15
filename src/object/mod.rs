@@ -5,6 +5,7 @@ pub mod builtin;
 pub mod context;
 pub mod error_object;
 pub mod function_object;
+pub mod hash_object;
 pub mod integer;
 pub mod null;
 pub mod return_value;
@@ -16,11 +17,11 @@ pub use builtin::*;
 pub use context::*;
 pub use error_object::*;
 pub use function_object::*;
+pub use hash_object::*;
 pub use integer::*;
 pub use null::*;
 pub use return_value::*;
 pub use string_object::*;
-
 pub type ObjectType = &'static str;
 
 pub trait ObjectWithoutInspect {
@@ -53,3 +54,4 @@ pub const FUNCTION_OBJECT: &str = "FUNCTION_OBJECT";
 pub const STRING_OBJECT: &str = "STRING_OBJECT";
 pub const BUILTIN_OBJECT: &str = "BUILTIN";
 pub const ARRAY_OBJECT: &str = "ARRAY_OBJECT";
+pub const HASH_OBJECT: &str = "HASH_OBJECT";

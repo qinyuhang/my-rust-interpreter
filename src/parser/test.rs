@@ -427,6 +427,114 @@ return 500;
     }
 
     #[test]
+    fn test_parse_hash_literal() {
+        let input = r#"{"one": 1, "two": 2, "three": 3 }"#;
+        let l = Lexer::new(input);
+        let p = Parser::new(l);
+        let pr = p.parse_program();
+        test_parser_errors(&p, None);
+
+        assert!(pr.is_some());
+        let pr = pr.unwrap();
+        assert_eq!(
+            pr.statement[0]
+                .as_any()
+                .downcast_ref::<ExpressionStatement>()
+                .unwrap()
+                .expression
+                .clone()
+                .unwrap()
+                .as_any()
+                .downcast_ref::<HashLiteral>()
+                .unwrap()
+                .pairs
+                .borrow()
+                .len(),
+            3
+        );
+
+        // get 0 of pr
+        // check is hashObject
+        // check hashObject.pair.len() == 3
+        // check every key and value is match the key&value
+    }
+
+    #[test]
+    fn test_empty_hash_literal() {
+        let input = r#"{}"#;
+        let l = Lexer::new(input);
+        let p = Parser::new(l);
+        let pr = p.parse_program();
+        test_parser_errors(&p, None);
+
+        assert!(pr.is_some());
+        let pr = pr.unwrap();
+
+        assert_eq!(
+            pr.statement[0]
+                .as_any()
+                .downcast_ref::<ExpressionStatement>()
+                .unwrap()
+                .expression
+                .clone()
+                .unwrap()
+                .as_any()
+                .downcast_ref::<HashLiteral>()
+                .unwrap()
+                .pairs
+                .borrow()
+                .len(),
+            0
+        );
+    }
+
+    #[test]
+    fn test_hash_literal_with_expression() {
+        let input = r#"{"one": 0 + 1, "two": 10 - 8, "three": 15 / 5 }"#;
+        let l = Lexer::new(input);
+        let p = Parser::new(l);
+        let pr = p.parse_program();
+        test_parser_errors(&p, None);
+
+        assert!(pr.is_some());
+        let pr = pr.unwrap();
+
+        // get 0 of pr
+        // check is hashObject
+        // check hashObject.pair.len() == 3
+        // check every key and value is match the key&value
+        assert_eq!(
+            pr.statement[0]
+                .as_any()
+                .downcast_ref::<ExpressionStatement>()
+                .unwrap()
+                .expression
+                .clone()
+                .unwrap()
+                .as_any()
+                .downcast_ref::<HashLiteral>()
+                .unwrap()
+                .pairs
+                .borrow()
+                .len(),
+            3
+        );
+
+        dbg!(
+            &pr.statement[0]
+                .as_any()
+                .downcast_ref::<ExpressionStatement>()
+                .unwrap()
+                .expression
+                .clone()
+                .unwrap()
+                .as_any()
+                .downcast_ref::<HashLiteral>()
+                .unwrap()
+                .pairs
+        );
+    }
+    #[test]
     fn test_mixed_to_string() {
         let input = r#"let x = 1;
 let y = -10;
