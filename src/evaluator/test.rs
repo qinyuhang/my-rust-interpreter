@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod test {
     use crate::*;
+    use std::collections::HashMap;
 
     #[allow(dead_code)]
     enum FinalResult {
@@ -10,6 +11,7 @@ mod test {
         Vec(Vec<i64>),
         Err(String),
         Nil,
+        Hash(HashMap<Rc<String>, Box<FinalResult>>),
     }
 
     macro_rules! f {
@@ -31,6 +33,13 @@ mod test {
         (Nil) => {
             FinalResult::Nil
         };
+        (Hash, $e:expr) => {
+            FinalResult::Hash($e)
+        };
+    }
+
+    macro_rules! my_hash {
+        () => {};
     }
 
     #[test]
@@ -461,6 +470,19 @@ mod test {
         ];
         cases.iter().for_each(|(case, out)| {
             handle_test(case, out);
+        });
+    }
+
+    #[test]
+    fn test_hash_eval() {
+        let cases = vec![
+            ("{}", f!(Hash, HashMap::new())),
+            (r#"{"one": 1}"#, f!(Hash, HashMap::new())),
+            (r#"{"one": 1, "two": 1 + 1}"#, f!(Hash, HashMap::new())),
+        ];
+        cases.iter().for_each(|(case, _out)| {
+            test_eval(case);
+            // handle_test(case, out);
         });
     }
 

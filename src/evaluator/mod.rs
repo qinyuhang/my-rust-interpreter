@@ -304,6 +304,25 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
             };
         }
     }
+    if n.is::<HashLiteral>() {
+        if let Some(h) = n.downcast_ref::<HashLiteral>() {
+            return Some(Rc::new(HashObject {
+                pairs: RefCell::new(
+                    h.pairs
+                        .borrow()
+                        .iter()
+                        .map(|(k, v)| {
+                            (
+                                // FIXME: error Object handling
+                                k.clone(),
+                                eval(v.upcast(), context.clone()).unwrap(),
+                            )
+                        })
+                        .collect::<HashMap<Rc<String>, Rc<dyn Object>>>(),
+                ),
+            }));
+        }
+    }
     None
 }
 
