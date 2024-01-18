@@ -3,14 +3,15 @@ use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct Program {
-    pub statement: Vec<Rc<dyn Statement>>,
+    pub statement: Vec<Rc<AstExpression>>,
     // statement: Vec<String>,
 }
 
 impl Node for Program {
     fn token_literal(&self) -> String {
         if self.statement.len() > 0 {
-            self.statement[0].token_literal().clone()
+            // self.statement[0].token_literal().clone()
+            "".into()
         } else {
             "".into()
         }

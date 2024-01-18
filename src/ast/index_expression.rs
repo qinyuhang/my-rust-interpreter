@@ -3,10 +3,11 @@ use crate::token::*;
 use std::rc::Rc;
 
 #[ast_node(Expression)]
+#[derive(Hash)]
 pub struct IndexExpression {
     pub token: Token,
-    pub left: Rc<dyn Expression>,
-    pub index: Rc<dyn Expression>,
+    pub left: Rc<AstExpression>,
+    pub index: Rc<AstExpression>,
 }
 
 impl std::fmt::Display for IndexExpression {
@@ -17,7 +18,7 @@ impl std::fmt::Display for IndexExpression {
 
 #[cfg(test)]
 mod test {
-    use crate::{Identifier, IndexExpression, Token, LPAREN};
+    use crate::{AstExpression, Identifier, IndexExpression, Token, LPAREN};
     use std::rc::Rc;
 
     #[test]
@@ -27,20 +28,20 @@ mod test {
                 token_type: LPAREN,
                 literal: "".into(),
             },
-            left: Rc::new(Identifier {
+            left: Rc::new(AstExpression::Identifier(Identifier {
                 token: Token {
                     token_type: LPAREN,
                     literal: "a".into(),
                 },
                 value: "a".to_string(),
-            }),
-            index: Rc::new(Identifier {
+            })),
+            index: Rc::new(AstExpression::Identifier(Identifier {
                 token: Token {
                     token_type: LPAREN,
                     literal: "a".into(),
                 },
                 value: "a".to_string(),
-            }),
+            })),
         };
         dbg!(&x);
         assert_eq!(format!("{}", x), "(a[a])");

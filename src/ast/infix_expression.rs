@@ -4,11 +4,12 @@ use crate::token::Token;
 use std::rc::Rc;
 
 #[ast_node(Expression)]
+#[derive(Hash)]
 pub struct InfixExpression {
     pub token: Token,
     pub operator: String,
-    pub left: Option<Rc<dyn Expression>>,
-    pub right: Option<Rc<dyn Expression>>,
+    pub left: Option<Rc<AstExpression>>,
+    pub right: Option<Rc<AstExpression>>,
 }
 
 impl TryFrom<Box<&dyn Expression>> for InfixExpression {
@@ -27,6 +28,36 @@ impl TryFrom<Box<&dyn Expression>> for InfixExpression {
             });
         }
         Err(format!("Cannot cast {:?} to InfixExpression", value))
+    }
+}
+
+impl TryFrom<Box<&AstExpression>> for InfixExpression {
+    type Error = String;
+
+    fn try_from(value: Box<&AstExpression>) -> Result<Self, Self::Error> {
+        return match *value {
+            AstExpression::InfixExpression(value) => {
+                let x = value.as_any();
+                if x.is::<Self>() {
+                    // println!("Object is InfixExpression {:?}", value);
+                    let x = x.downcast_ref::<Self>().unwrap();
+                    return Ok(Self {
+                        token: x.token.clone(),
+                        operator: x.operator.clone(),
+                        right: x.right.clone(),
+                        left: x.left.clone(),
+                    });
+                }
+                Err(format!("Cannot cast {:?} to InfixExpression", value))
+            }
+            AstExpression::ExpressionStatement(value) => {
+                if let Some(value) = value.expression.clone() {
+                    return Self::try_from(Box::new(&value.as_ref().clone()));
+                }
+                Err(format!("Cannot cast {:?} to InfixExpression", value))
+            }
+            _ => Err(format!("Cannot cast {:?} to InfixExpression", value)),
+        };
     }
 }
 

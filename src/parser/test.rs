@@ -28,7 +28,12 @@ let foobar = 838383;
 
         for (i, &v) in tests.iter().enumerate() {
             let stmt = pr.statement[i].clone();
-            test_let_statement(&*stmt, v.into());
+            if let AstExpression::LetStatement(l) = &*stmt {
+                test_let_statement(l, v.into());
+            } else {
+                assert!(false);
+            }
+            // test_let_statement(&*stmt, v.into());
         }
     }
 
@@ -101,23 +106,27 @@ return 500;
 "#;
         let lex = Lexer::new(input);
         let p = Parser::new(lex);
-        fn the_fn() -> Option<Rc<dyn Expression>> {
-            Some(Rc::new(ExpressionStatement {
-                token: Token {
-                    literal: EOF.into(),
-                    token_type: EOF,
+        fn the_fn() -> Option<Rc<AstExpression>> {
+            Some(Rc::new(AstExpression::ExpressionStatement(
+                ExpressionStatement {
+                    token: Token {
+                        literal: EOF.into(),
+                        token_type: EOF,
+                    },
+                    expression: None,
                 },
-                expression: None,
-            }))
+            )))
         }
-        fn the_fn1() -> Option<Rc<dyn Expression>> {
-            Some(Rc::new(ExpressionStatement {
-                token: Token {
-                    literal: EOF.into(),
-                    token_type: EOF,
+        fn the_fn1() -> Option<Rc<AstExpression>> {
+            Some(Rc::new(AstExpression::ExpressionStatement(
+                ExpressionStatement {
+                    token: Token {
+                        literal: EOF.into(),
+                        token_type: EOF,
+                    },
+                    expression: None,
                 },
-                expression: None,
-            }))
+            )))
         }
         p.register_prefix(EOF, Rc::new(the_fn));
         p.register_prefix(EOF, Rc::new(the_fn1));
@@ -138,10 +147,7 @@ return 500;
 
         assert_eq!(pr.statement.len(), input.lines().count());
 
-        identifier::test_identifier_expression(
-            Box::new(&*pr.statement[0].clone()),
-            "foobar".into(),
-        );
+        identifier::test_identifier_enum(Box::new(&*pr.statement[0].clone()), "foobar".into());
     }
 
     #[test]

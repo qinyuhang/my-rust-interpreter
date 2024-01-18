@@ -10,7 +10,7 @@ pub struct FunctionObject {
     // TODO change to RC
     pub parameters: Option<Vec<Rc<Identifier>>>,
     // blockStatement
-    pub body: Option<Rc<dyn Statement>>,
+    pub body: Option<Rc<AstExpression>>,
     // pub body: Option<BlockStatement>,
 }
 

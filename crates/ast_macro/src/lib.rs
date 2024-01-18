@@ -89,7 +89,7 @@ pub fn ast_node(
     };
     // println!("add impl: {}", add_impl);
     let s = quote! {
-        #[derive(Debug, Clone)]
+        #[derive(Debug, Clone, Eq, PartialEq)]
         #ipt
         #add_impl
     };

@@ -210,7 +210,7 @@ impl Parser {
         let program = Program { statement: stm };
         Some(program)
     }
-    pub fn parse_statement(&self) -> Option<Rc<dyn Statement>> {
+    pub fn parse_statement(&self) -> Option<Rc<AstExpression>> {
         let cur_type = self.cur_token.borrow().token_type;
         match cur_type {
             LET => self.parse_let_statement(),
@@ -218,7 +218,7 @@ impl Parser {
             _ => self.parse_expression_statement(),
         }
     }
-    pub fn parse_let_statement(&self) -> Option<Rc<dyn Statement>> {
+    pub fn parse_let_statement(&self) -> Option<Rc<AstExpression>> {
         let cur_token = (*self.cur_token.borrow()).clone();
 
         // println!("\nParser::parse_let_statement {:?} {:?}\n", self.cur_token, self.peek_token);
@@ -252,21 +252,23 @@ impl Parser {
         // println!("\nParser::parse_let_statement3 {:?} {:?} {:?}\n", cur_token, self.peek_token, name);
         // println!("parse_let_statement return: {:?} {:?}", cur_token, name);
 
-        Some(Rc::new(LetStatement {
+        Some(Rc::new(AstExpression::LetStatement(LetStatement {
             token: cur_token.clone(),
             name: Rc::new(name),
 
             // FIXME: make it clone
-            value: Some(Rc::new(ExpressionStatement {
-                token: cur_token,
-                // FIXME: LetStatement expression
-                expression, // self.parse_expression(ExpressionConst::LOWEST), //None,
-            })),
+            value: Some(Rc::new(AstExpression::ExpressionStatement(
+                ExpressionStatement {
+                    token: cur_token,
+                    // FIXME: LetStatement expression
+                    expression, // self.parse_expression(ExpressionConst::LOWEST), //None,
+                },
+            ))),
             // value: Box::new(*self.parse_expression_statement().unwrap())
-        }))
+        })))
     }
 
-    pub fn parse_return_statement(&self) -> Option<Rc<dyn Statement>> {
+    pub fn parse_return_statement(&self) -> Option<Rc<AstExpression>> {
         let cur_token = (*self.cur_token.borrow()).clone();
         #[allow(unused_assignments)]
         let mut expression = None;
@@ -277,13 +279,13 @@ impl Parser {
         while !self.cur_token_is(SEMICOLON) {
             self.next_token();
         }
-        Some(Rc::new(ReturnStatement {
+        Some(Rc::new(AstExpression::ReturnStatement(ReturnStatement {
             token: cur_token,
             return_value: expression,
-        }))
+        })))
     }
 
-    fn parse_expression_statement(&self) -> Option<Rc<dyn Statement>> {
+    fn parse_expression_statement(&self) -> Option<Rc<AstExpression>> {
         let token = (*self.cur_token.borrow()).clone();
         if token.literal == ";" {
             println!("parse_expression_statement")
@@ -295,11 +297,11 @@ impl Parser {
         if self.peek_token_is(SEMICOLON) {
             self.next_token();
         }
-        Some(Rc::new(stm))
+        Some(Rc::new(AstExpression::ExpressionStatement(stm)))
     }
-    fn parse_expression(&self, precedence: ExpressionConst) -> Option<Rc<dyn Expression>> {
+    fn parse_expression(&self, precedence: ExpressionConst) -> Option<Rc<AstExpression>> {
         let tp = self.cur_token.borrow().token_type.to_string();
-        println!("parse_expression {}", &self.cur_token.borrow());
+        // println!("parse_expression {}", &self.cur_token.borrow());
         let pfs = self.prefix_parse_fns.borrow();
         let pf = pfs.get(&*tp);
         if pf.is_none() {
@@ -323,15 +325,18 @@ impl Parser {
         // None
     }
     // fixme: return Option is better?
-    pub fn parse_identifier(&self) -> Option<Rc<dyn Expression>> {
+    pub fn parse_identifier(&self) -> Option<Rc<AstExpression>> {
         let token = (*self.cur_token.borrow()).clone();
         let value = self.cur_token.borrow().literal.to_string();
-        Some(Rc::new(Identifier { token, value }))
+        Some(Rc::new(AstExpression::Identifier(Identifier {
+            token,
+            value,
+        })))
     }
-    pub fn parse_integer_literal(&self) -> Option<Rc<dyn Expression>> {
+    pub fn parse_integer_literal(&self) -> Option<Rc<AstExpression>> {
         let literal = self.cur_token.borrow().literal.clone();
         if let Ok(v) = IntegerLiteral::try_from(literal) {
-            Some(Rc::new(v))
+            Some(Rc::new(AstExpression::IntegerLiteral(v)))
         } else {
             None
         }
@@ -339,7 +344,7 @@ impl Parser {
         //     .map_or_else(|_| None, move |v| Some(Rc::new(v)))
     }
 
-    pub fn parse_prefix_expression(&self) -> Option<Rc<dyn Expression>> {
+    pub fn parse_prefix_expression(&self) -> Option<Rc<AstExpression>> {
         let token = (*self.cur_token.borrow()).clone();
         let operator = self.cur_token.borrow().literal.clone();
         let mut ex = PrefixExpression {
@@ -350,9 +355,9 @@ impl Parser {
         self.next_token();
         // None
         ex.right = self.parse_expression(ExpressionConst::PREFIX);
-        Some(Rc::new(ex))
+        Some(Rc::new(AstExpression::PrefixExpression(ex)))
     }
-    pub fn parse_infix_expression(&self, left: Rc<dyn Expression>) -> Option<Rc<dyn Expression>> {
+    pub fn parse_infix_expression(&self, left: Rc<AstExpression>) -> Option<Rc<AstExpression>> {
         let token = (*self.cur_token.borrow()).clone();
         let operator = self.cur_token.borrow().literal.clone().into();
 
@@ -370,21 +375,21 @@ impl Parser {
             right,
         };
         // println!("parse_infix_expression result: {:?}", expression);
-        Some(Rc::new(expression))
+        Some(Rc::new(AstExpression::InfixExpression(expression)))
     }
-    pub fn parse_boolean(&self) -> Option<Rc<dyn Expression>> {
-        Some(Rc::new(BooleanLiteral {
+    pub fn parse_boolean(&self) -> Option<Rc<AstExpression>> {
+        Some(Rc::new(AstExpression::BooleanLiteral(BooleanLiteral {
             token: (*self.cur_token.borrow()).clone(),
             value: self.cur_token_is(TRUE),
-        }))
+        })))
     }
-    pub fn parse_grouped_expression(&self) -> Option<Rc<dyn Expression>> {
+    pub fn parse_grouped_expression(&self) -> Option<Rc<AstExpression>> {
         self.next_token();
 
         let exp = self.parse_expression(ExpressionConst::LOWEST);
         self.expect_peek(RPAREN).then(|| exp.unwrap())
     }
-    pub fn parse_if_expression(&self) -> Option<Rc<dyn Expression>> {
+    pub fn parse_if_expression(&self) -> Option<Rc<AstExpression>> {
         let token = (*self.cur_token.borrow()).clone();
 
         if !self.expect_peek(LPAREN) {
@@ -419,9 +424,9 @@ impl Parser {
             consequence,
             alternative,
         };
-        Some(Rc::new(expression))
+        Some(Rc::new(AstExpression::IfExpression(expression)))
     }
-    pub fn parse_block_statement(&self) -> Option<Rc<dyn Statement>> {
+    pub fn parse_block_statement(&self) -> Option<Rc<AstExpression>> {
         let mut statement = vec![];
         let token = (*self.cur_token.borrow()).clone();
 
@@ -438,9 +443,12 @@ impl Parser {
         //     self.next_token();
         // }
 
-        Some(Rc::new(BlockStatement { token, statement }))
+        Some(Rc::new(AstExpression::BlockStatement(BlockStatement {
+            token,
+            statement,
+        })))
     }
-    pub fn parse_function_literal(&self) -> Option<Rc<dyn Expression>> {
+    pub fn parse_function_literal(&self) -> Option<Rc<AstExpression>> {
         let token = (*self.cur_token.borrow()).clone();
 
         // function name
@@ -472,7 +480,7 @@ impl Parser {
             parameters,
             body,
         };
-        Some(Rc::new(lit))
+        Some(Rc::new(AstExpression::FunctionLiteral(lit)))
     }
     pub fn parse_function_parameters(&self) -> Option<Vec<Rc<Identifier>>> {
         let mut identifiers = vec![];
@@ -513,27 +521,27 @@ impl Parser {
 
         Some(identifiers)
     }
-    pub fn parse_call_expression(&self, f: Rc<dyn Expression>) -> Option<Rc<dyn Expression>> {
+    pub fn parse_call_expression(&self, f: Rc<AstExpression>) -> Option<Rc<AstExpression>> {
         println!("\n\nparse_call_expression\n\n{:?}", "args");
 
         let token = (*self.cur_token.borrow()).clone();
         let args = self.parse_expression_list(RPAREN);
 
-        Some(Rc::new(CallExpression {
+        Some(Rc::new(AstExpression::CallExpression(CallExpression {
             token,
             arguments: Some(args),
             function: Some(f.clone()),
-        }))
+        })))
     }
-    pub fn parse_string_literal(&self) -> Option<Rc<dyn Expression>> {
+    pub fn parse_string_literal(&self) -> Option<Rc<AstExpression>> {
         let literal = self.cur_token.borrow().literal.clone();
         if let Ok(v) = StringLiteral::try_from(literal) {
-            Some(Rc::new(v))
+            Some(Rc::new(AstExpression::StringLiteral(v)))
         } else {
             None
         }
     }
-    pub fn parse_array_literal(&self) -> Option<Rc<dyn Expression>> {
+    pub fn parse_array_literal(&self) -> Option<Rc<AstExpression>> {
         // let mut list = vec![];
         // Some(Rc::new())
         let literal = self.cur_token.borrow().literal.clone();
@@ -544,9 +552,9 @@ impl Parser {
             },
             elements: self.parse_expression_list(token::RBRACKET),
         };
-        Some(Rc::new(arr))
+        Some(Rc::new(AstExpression::ArrayLiteral(arr)))
     }
-    pub fn parse_hash_literal(&self) -> Option<Rc<dyn Expression>> {
+    pub fn parse_hash_literal(&self) -> Option<Rc<AstExpression>> {
         let literal = self.cur_token.borrow().literal.clone();
         let mut pairs = HashMap::new();
 
@@ -558,16 +566,7 @@ impl Parser {
             };
             self.next_token();
             let v = self.parse_expression(LOWEST);
-            pairs.insert(
-                k.unwrap()
-                    .as_ref()
-                    .as_any()
-                    .downcast_ref::<StringLiteral>()
-                    .unwrap()
-                    .value
-                    .clone(),
-                v.unwrap(),
-            );
+            pairs.insert(k.unwrap(), v.unwrap());
 
             if !self.peek_token_is(RBRACE) && !self.expect_peek(COMMA) {
                 return None;
@@ -576,16 +575,16 @@ impl Parser {
         if !self.expect_peek(RBRACE) {
             return None;
         }
-        Some(Rc::new(HashLiteral {
+        Some(Rc::new(AstExpression::HashLiteral(HashLiteral {
             token: Token {
                 literal,
                 token_type: token::LBRACE,
             },
             pairs: RefCell::new(pairs),
-        }))
+        })))
         // None
     }
-    pub fn parse_expression_list(&self, end: TokenType) -> Vec<Rc<dyn Expression>> {
+    pub fn parse_expression_list(&self, end: TokenType) -> Vec<Rc<AstExpression>> {
         let mut r = vec![];
         if self.peek_token_is(end) {
             self.next_token();
@@ -606,21 +605,21 @@ impl Parser {
         }
         return r;
     }
-    pub fn parse_index_expression(&self, left: Rc<dyn Expression>) -> Option<Rc<dyn Expression>> {
+    pub fn parse_index_expression(&self, left: Rc<AstExpression>) -> Option<Rc<AstExpression>> {
         let literal = self.cur_token.borrow().literal.clone();
         self.next_token();
         let index = self.parse_expression(LOWEST);
         if !self.expect_peek(token::RBRACKET) {
             return None;
         }
-        return Some(Rc::new(IndexExpression {
+        return Some(Rc::new(AstExpression::IndexExpression(IndexExpression {
             token: Token {
                 literal,
                 token_type: token::LBRACKET,
             },
             left: left.clone(),
             index: index.unwrap(),
-        }));
+        })));
     }
     pub fn expect_peek(&self, token: TokenType) -> bool {
         let r = self.peek_token_is(token);

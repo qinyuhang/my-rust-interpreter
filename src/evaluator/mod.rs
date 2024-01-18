@@ -318,7 +318,7 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
                                 eval(v.upcast(), context.clone()).unwrap(),
                             )
                         })
-                        .collect::<HashMap<Rc<String>, Rc<dyn Object>>>(),
+                        .collect(),
                 ),
             }));
         }
@@ -384,7 +384,7 @@ pub fn extend_function_context(func: &FunctionObject, args: &Vec<Rc<dyn Object>>
 }
 
 pub fn eval_expressions(
-    exps: &Vec<Rc<dyn Expression>>,
+    exps: &Vec<Rc<AstExpression>>,
     context: Rc<Context>,
 ) -> Result<Vec<Rc<dyn Object>>, usize> {
     let exps: Vec<_> = exps
@@ -592,7 +592,7 @@ pub fn eval_minus_prefix_operator_expression(
 }
 
 pub fn eval_program(
-    stmts: Vec<Rc<dyn Statement>>,
+    stmts: Vec<Rc<AstExpression>>,
     context: Option<Rc<Context>>,
 ) -> Option<Rc<dyn Object>> {
     let mut result = None;

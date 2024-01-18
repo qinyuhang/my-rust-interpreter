@@ -3,11 +3,12 @@ use crate::token::*;
 use std::rc::Rc;
 
 #[ast_node(Statement)]
+#[derive(Hash)]
 pub struct LetStatement {
     pub token: Token,
     pub name: Rc<Identifier>,
     //         Option<Rc<dyn Expression>>;
-    pub value: Option<Rc<dyn Expression>>,
+    pub value: Option<Rc<AstExpression>>,
 }
 
 impl TryFrom<Box<&dyn Statement>> for LetStatement {
@@ -34,15 +35,41 @@ impl TryFrom<Box<&dyn Expression>> for LetStatement {
                 return Ok(LetStatement {
                     token: x.token.clone(),
                     name: x.name.clone(),
-                    value: Some(Rc::new(
+                    value: Some(Rc::new(AstExpression::LetStatement(
                         LetStatement::try_from(Box::new(&*x.value.as_ref().unwrap().clone()))
                             .unwrap(),
-                    )), //x.value.clone(),
+                    ))), //x.value.clone(),
                 });
             } else {
                 return Err(format!(""));
             }
         }
+        Err(format!(""))
+    }
+}
+impl TryFrom<Box<&AstExpression>> for LetStatement {
+    type Error = String;
+    fn try_from(value: Box<&AstExpression>) -> Result<Self, Self::Error> {
+        if let AstExpression::IfExpression(value) = *value {
+            let x = (value).as_any();
+            if x.is::<LetStatement>() {
+                let x = x.downcast_ref::<LetStatement>();
+                if x.is_some() {
+                    let x = x.unwrap();
+                    return Ok(LetStatement {
+                        token: x.token.clone(),
+                        name: x.name.clone(),
+                        value: Some(Rc::new(AstExpression::LetStatement(
+                            LetStatement::try_from(Box::new(&*x.value.as_ref().unwrap().clone()))
+                                .unwrap(),
+                        ))), //x.value.clone(),
+                    });
+                } else {
+                    return Err(format!(""));
+                }
+            }
+        }
+
         Err(format!(""))
     }
 }

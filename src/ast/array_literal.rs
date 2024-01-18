@@ -3,9 +3,10 @@ use crate::token::*;
 use std::rc::Rc;
 
 #[ast_node(Expression)]
+#[derive(Hash)]
 pub struct ArrayLiteral {
     pub token: Token,
-    pub elements: Vec<Rc<dyn Expression>>,
+    pub elements: Vec<Rc<AstExpression>>,
 }
 
 impl std::fmt::Display for ArrayLiteral {
@@ -24,7 +25,7 @@ impl std::fmt::Display for ArrayLiteral {
 
 #[cfg(test)]
 mod test {
-    use crate::{ArrayLiteral, IntegerLiteral, Token, LBRACKET};
+    use crate::*;
     use std::rc::Rc;
 
     #[test]
@@ -36,8 +37,12 @@ mod test {
                 literal: "[".into(),
             },
             elements: vec![
-                Rc::new(IntegerLiteral::try_from("1".to_string()).unwrap()),
-                Rc::new(IntegerLiteral::try_from("2".to_string()).unwrap()),
+                Rc::new(AstExpression::IntegerLiteral(
+                    IntegerLiteral::try_from("1".to_string()).unwrap(),
+                )),
+                Rc::new(AstExpression::IntegerLiteral(
+                    IntegerLiteral::try_from("2".to_string()).unwrap(),
+                )),
             ],
         };
         // dbg!(&i);

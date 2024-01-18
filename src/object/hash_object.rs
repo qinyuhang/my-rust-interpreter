@@ -7,7 +7,7 @@ use std::rc::Rc;
 
 #[object(HASH_OBJECT)]
 pub struct HashObject {
-    pub pairs: RefCell<HashMap<Rc<String>, Rc<dyn Object>>>,
+    pub pairs: RefCell<HashMap<Rc<AstExpression>, Rc<dyn Object>>>,
 }
 
 impl ObjectInspect for HashObject {

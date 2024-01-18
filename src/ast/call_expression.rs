@@ -1,10 +1,11 @@
 use {crate::ast::*, crate::token::*, std::rc::Rc};
 
 #[ast_node(Expression)]
+#[derive(Hash)]
 pub struct CallExpression {
     pub token: Token,
-    pub function: Option<Rc<dyn Expression>>,
-    pub arguments: Option<Vec<Rc<dyn Expression>>>,
+    pub function: Option<Rc<AstExpression>>,
+    pub arguments: Option<Vec<Rc<AstExpression>>>,
 }
 
 impl std::fmt::Display for CallExpression {

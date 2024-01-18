@@ -3,14 +3,16 @@ use crate::token::*;
 use std::rc::Rc;
 
 #[ast_node(Expression)]
+// #[derive(PartialEq, Eq, Hash)]
+#[derive(Hash)]
 pub struct IfExpression {
     pub token: Token,
-    pub condition: Rc<dyn Expression>,
+    pub condition: Rc<AstExpression>,
 
     // FIXME: BlockStatement
-    pub consequence: Option<Rc<dyn Statement /* BlockStatement */>>,
+    pub consequence: Option<Rc<AstExpression /* BlockStatement */>>,
     // FIXME: BlockStatement
-    pub alternative: Option<Rc<dyn Statement /* BlockStatement */>>,
+    pub alternative: Option<Rc<AstExpression /* BlockStatement */>>,
 }
 
 impl std::fmt::Display for IfExpression {
@@ -38,5 +40,26 @@ impl TryFrom<Box<&dyn Expression>> for IfExpression {
             return Ok(value.clone());
         }
         Err(format!("error cast object {:?}", value))
+    }
+}
+impl TryFrom<Box<&AstExpression>> for IfExpression {
+    type Error = String;
+
+    fn try_from(value: Box<&AstExpression>) -> Result<Self, Self::Error> {
+        return match *value {
+            AstExpression::IfExpression(value) => {
+                if let Some(value) = value.as_any().downcast_ref::<IfExpression>() {
+                    return Ok(value.clone());
+                }
+                Err(format!("error cast object {:?}", value))
+            }
+            AstExpression::ExpressionStatement(value) => {
+                if let Some(value) = value.expression.clone() {
+                    return Self::try_from(Box::new(&value.as_ref().clone()));
+                }
+                Err(format!("error cast object {:?}", value))
+            }
+            _ => Err(format!("error cast object {:?}", value)),
+        };
     }
 }

@@ -3,10 +3,11 @@ use crate::token::*;
 use std::rc::Rc;
 
 #[ast_node(Statement)]
+#[derive(Hash)]
 pub struct BlockStatement {
     pub token: Token, // { token
     // FIXME: change Rc RefCell
-    pub statement: Vec<Rc<dyn Statement>>,
+    pub statement: Vec<Rc<AstExpression>>,
 }
 
 impl std::fmt::Display for BlockStatement {

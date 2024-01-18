@@ -3,11 +3,12 @@ use crate::token::*;
 use std::rc::Rc;
 
 #[ast_node(Expression)]
+#[derive(Hash)]
 pub struct FunctionLiteral {
     pub token: Token,
     pub parameters: Option<Vec<Rc<Identifier>>>,
     // blockStatement
-    pub body: Option<Rc<dyn Statement>>,
+    pub body: Option<Rc<AstExpression>>,
     // function name
     pub name: Option<Rc<Identifier>>,
     // pub body: Option<BlockStatement>,

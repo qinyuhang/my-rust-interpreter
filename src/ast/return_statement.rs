@@ -4,15 +4,26 @@ use crate::token::Token;
 use std::rc::Rc;
 
 #[ast_node(Statement)]
+#[derive(Hash)]
 pub struct ReturnStatement {
     pub token: Token,
-    pub return_value: Option<Rc<dyn Expression>>,
+    pub return_value: Option<Rc<AstExpression>>,
 }
 
 impl TryFrom<Box<&dyn Statement>> for ReturnStatement {
     type Error = String;
     fn try_from(value: Box<&dyn Statement>) -> Result<Self, Self::Error> {
         if let Some(v) = value.as_any().downcast_ref::<Self>() {
+            return Ok((*v).clone());
+        }
+        Err(format!("error cast object {:?}", value))
+    }
+}
+
+impl TryFrom<Box<&AstExpression>> for ReturnStatement {
+    type Error = String;
+    fn try_from(value: Box<&AstExpression>) -> Result<Self, Self::Error> {
+        if let AstExpression::ReturnStatement(v) = *value {
             return Ok((*v).clone());
         }
         Err(format!("error cast object {:?}", value))

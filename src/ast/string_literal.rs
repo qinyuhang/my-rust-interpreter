@@ -3,6 +3,8 @@ use crate::token::*;
 use std::rc::Rc;
 
 #[ast_node(Expression)]
+#[derive(Hash)]
+// #[derive(PartialEq, Eq, Hash)]
 pub struct StringLiteral {
     pub token: Token,
     pub value: Rc<String>,

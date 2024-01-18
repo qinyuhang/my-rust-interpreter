@@ -479,6 +479,7 @@ mod test {
             ("{}", f!(Hash, HashMap::new())),
             (r#"{"one": 1}"#, f!(Hash, HashMap::new())),
             (r#"{"one": 1, "two": 1 + 1}"#, f!(Hash, HashMap::new())),
+            (r#"{"on" + "e": 1, "two": 1 + 1}"#, f!(Hash, HashMap::new())),
         ];
         cases.iter().for_each(|(case, _out)| {
             test_eval(case);
@@ -527,6 +528,7 @@ mod test {
                 // // println!("{:?}", err.unwrap());
                 // assert_eq!(err.unwrap().message, st.to_string());
             }
+            FinalResult::Hash(h) => {}
             FinalResult::Nil => {
                 test_null_object(&evaluated);
             }

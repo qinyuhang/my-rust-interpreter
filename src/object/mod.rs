@@ -55,3 +55,16 @@ pub const STRING_OBJECT: &str = "STRING_OBJECT";
 pub const BUILTIN_OBJECT: &str = "BUILTIN";
 pub const ARRAY_OBJECT: &str = "ARRAY_OBJECT";
 pub const HASH_OBJECT: &str = "HASH_OBJECT";
+
+// #[derive(Eq, PartialEq, Hash, Debug, Clone)]
+pub enum ObjectEnum {
+    ArrayObject(ArrayObject),
+    Boolean(Boolean),
+    ErrorObject(ErrorObject),
+    FunctionObject(FunctionObject),
+    HashObject(HashObject),
+    Integer(Integer),
+    Null(Null),
+    ReturnValue(ReturnValue),
+    StringObject(StringObject),
+}

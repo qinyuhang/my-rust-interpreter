@@ -30,13 +30,13 @@ mod test {
                 literal: "1".into(),
             },
             operator: "-".into(),
-            right: Some(Rc::new(IntegerLiteral {
+            right: Some(Rc::new(AstExpression::IntegerLiteral(IntegerLiteral {
                 token: Token {
                     token_type: INT,
                     literal: "1".into(),
                 },
                 value: 1,
-            })),
+            }))),
         };
         assert_eq!(format!("{}", pe), "(-1)");
     }

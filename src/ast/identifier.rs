@@ -2,7 +2,8 @@ use crate::ast::{Node, *};
 use crate::token::*;
 
 #[ast_node(Expression)]
-#[derive(Hash, Eq, PartialEq)]
+// #[derive(Hash, Eq, PartialEq)]
+#[derive(Hash)]
 pub struct Identifier {
     pub token: Token,
 
@@ -46,6 +47,27 @@ impl std::fmt::Display for Identifier {
 
 #[allow(unused)]
 pub(crate) fn test_identifier_expression(exp: Box<&dyn Statement>, value: String) -> bool {
+    let stm = ExpressionStatement::try_from(exp);
+
+    assert!(stm.is_ok());
+
+    let stm = stm.unwrap();
+
+    let id = Identifier::try_from(Box::new(&stm));
+
+    assert!(id.is_ok());
+
+    let id = id.unwrap();
+
+    assert_eq!(id.value, value);
+
+    assert_eq!(id.token_literal(), value);
+
+    true
+}
+
+#[allow(unused)]
+pub(crate) fn test_identifier_enum(exp: Box<&AstExpression>, value: String) -> bool {
     let stm = ExpressionStatement::try_from(exp);
 
     assert!(stm.is_ok());

@@ -7,6 +7,8 @@ use crate::ast::{Expression, Node, *};
 use crate::token::*;
 
 #[ast_node(Expression)]
+// #[derive(PartialEq, Eq, Hash)]
+#[derive(Hash)]
 pub struct IntegerLiteral {
     pub token: Token,
     pub value: i64,
@@ -84,6 +86,33 @@ impl TryFrom<Box<&dyn Expression>> for IntegerLiteral {
         // }
         println!("{}", format!("Cannot cast {:?} into IntegerLiteral", value));
         Err(format!("Cannot cast {:?} into IntegerLiteral", value))
+    }
+}
+
+impl TryFrom<Box<&AstExpression>> for IntegerLiteral {
+    type Error = String;
+    fn try_from(value: Box<&AstExpression>) -> Result<Self, Self::Error> {
+        return match *value {
+            AstExpression::IntegerLiteral(value) => {
+                let x = value.as_any();
+                if x.is::<Self>() {
+                    // println!("x is IntegerLiteral {:?}", x);
+                    let x = x.downcast_ref::<Self>().unwrap();
+                    return Ok(IntegerLiteral {
+                        token: x.token.clone(),
+                        value: x.value,
+                    });
+                }
+                Err(format!("Cannot cast {:?} into IntegerLiteral", value))
+            }
+            AstExpression::ExpressionStatement(value) => {
+                if let Some(value) = value.expression.clone() {
+                    return Self::try_from(Box::new(&value.as_ref().clone()));
+                }
+                Err(format!("error cast object {:?}", value))
+            }
+            _ => Err(format!("Cannot cast {:?} into IntegerLiteral", value)),
+        };
     }
 }
 
