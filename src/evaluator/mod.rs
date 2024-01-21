@@ -121,6 +121,15 @@ thread_local! {
                 }
             })}),
         ),
+        (
+            "puts",
+            Rc::new(BuiltinObject { func: Rc::new(|args: Vec<Rc<dyn Object>>| {
+                for arg in args.iter() {
+                    println!("{}", arg.inspect());
+                }
+                None
+            })}),
+        )
     ].iter().cloned().collect::<HashMap<&'static str, Rc<dyn Object>>>()); // Rc::new(HashMap::new());
 }
 
