@@ -298,6 +298,17 @@ mod test {
         let x = evaluated.as_any();
         assert!(x.is::<Boolean>());
         assert!(x.downcast_ref::<Boolean>().unwrap().value);
+
+        let input = r#""hello" - "world""#;
+        let evaluated = test_eval(input);
+        assert!(evaluated.is_some());
+        let evaluated = evaluated.unwrap();
+        let x = evaluated.as_any();
+        assert!(x.is::<ErrorObject>());
+        assert_eq!(
+            x.downcast_ref::<ErrorObject>().unwrap().message,
+            "unknown operator: STRING_OBJECT - STRING_OBJECT"
+        );
     }
 
     #[test]
@@ -484,6 +495,26 @@ mod test {
         cases.iter().for_each(|(case, _out)| {
             test_eval(case);
             // handle_test(case, out);
+        });
+    }
+
+    #[test]
+    fn test_hash_index() {
+        let cases = vec![
+            // (r#"{"one": 1}["one"]"#, f!(Int, 1)),
+            // (r#"{"foo": 5}["bar"]"#, f!(Nil)),
+            // (r#"let key = "foo"; {"foo": 5}[key]"#, f!(Int, 5)),
+            // (r#"{}["foo"]"#, f!(Nil)),
+            // (r#"{5:5}[5]"#, f!(Int, 5)),
+            // (r#"{true: 5}[true]"#, f!(Int, 5)),
+            // (r#"{false: 5}[false]"#, f!(Int, 5)),
+            (
+                r#"{"name": 5}[fn(x) {x} ]"#,
+                f!(Err, "unusable as hash key: FUNCTION_OBJECT"),
+            ),
+        ];
+        cases.iter().for_each(|(case, out)| {
+            handle_test(case, out);
         });
     }
 

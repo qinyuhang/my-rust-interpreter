@@ -2,6 +2,7 @@ pub use crate::object::*;
 use ast_macro::object;
 
 #[object(BOOLEAN_OBJECT)]
+#[derive(Hash, Eq, PartialEq)]
 pub struct Boolean {
     pub value: bool,
 }

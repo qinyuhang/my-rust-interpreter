@@ -5,6 +5,7 @@ pub mod builtin;
 pub mod context;
 pub mod error_object;
 pub mod function_object;
+pub mod hash_key;
 pub mod hash_object;
 pub mod integer;
 pub mod null;
@@ -17,6 +18,7 @@ pub use builtin::*;
 pub use context::*;
 pub use error_object::*;
 pub use function_object::*;
+pub use hash_key::*;
 pub use hash_object::*;
 pub use integer::*;
 pub use null::*;
@@ -57,14 +59,14 @@ pub const ARRAY_OBJECT: &str = "ARRAY_OBJECT";
 pub const HASH_OBJECT: &str = "HASH_OBJECT";
 
 // #[derive(Eq, PartialEq, Hash, Debug, Clone)]
-pub enum ObjectEnum {
-    ArrayObject(ArrayObject),
-    Boolean(Boolean),
-    ErrorObject(ErrorObject),
-    FunctionObject(FunctionObject),
-    HashObject(HashObject),
-    Integer(Integer),
-    Null(Null),
-    ReturnValue(ReturnValue),
-    StringObject(StringObject),
-}
+// pub enum ObjectEnum {
+//     ArrayObject(ArrayObject),
+//     Boolean(Boolean),
+//     ErrorObject(ErrorObject),
+//     FunctionObject(FunctionObject),
+//     HashObject(HashObject),
+//     Integer(Integer),
+//     Null(Null),
+//     ReturnValue(ReturnValue),
+//     StringObject(StringObject),
+// }

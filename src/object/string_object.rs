@@ -3,6 +3,7 @@ use ast_macro::object;
 pub use std::rc::Rc;
 
 #[object(STRING_OBJECT)]
+#[derive(Hash, Eq, PartialEq)]
 pub struct StringObject {
     pub value: Rc<String>,
 }

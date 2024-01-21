@@ -3,6 +3,7 @@ use ast_macro::object;
 pub use std::rc::Rc;
 
 #[object(INTEGER_OBJECT)]
+#[derive(Hash, Eq, PartialEq)]
 pub struct Integer {
     pub value: i64,
 }

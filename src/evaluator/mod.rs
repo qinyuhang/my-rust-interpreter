@@ -314,7 +314,10 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
                         .map(|(k, v)| {
                             (
                                 // FIXME: error Object handling
-                                k.clone(),
+                                Rc::new(
+                                    HashKey::try_from(eval(k.upcast(), context.clone()).unwrap())
+                                        .unwrap(),
+                                ),
                                 eval(v.upcast(), context.clone()).unwrap(),
                             )
                         })
@@ -349,8 +352,32 @@ pub fn eval_index_expression(
 ) -> Option<Rc<dyn Object>> {
     return match (left.object_type(), index.object_type()) {
         (ARRAY_OBJECT, INTEGER_OBJECT) => eval_array_index_expression(left, index),
+        (HASH_OBJECT, _) => eval_hash_index_expression(left, index),
         _ => None,
     };
+}
+
+pub fn eval_hash_index_expression(
+    left: Rc<dyn Object>,
+    index: Rc<dyn Object>,
+) -> Option<Rc<dyn Object>> {
+    if let Some(hm) = left.as_any().downcast_ref::<HashObject>() {
+        if let Ok(hk) = HashKey::try_from(index.clone()) {
+            dbg!(&hm);
+            if let Some(value) = hm.pairs.borrow().get(&hk) {
+                return Some(value.clone());
+            }
+            // if let Some(key) = eval(index.upcast(), Rc::new(Context::new())) {
+            //     if let Some(val) = hm.pairs.borrow().get(&key.hash_key()) {
+            //         return Some(val.clone());
+            //     }
+            // }
+        }
+        return Some(Rc::new(ErrorObject {
+            message: format!("unusable as hash key: {}", index.clone().object_type()),
+        }));
+    }
+    Some(NULLOBJ.with(|n| n.clone()))
 }
 
 pub fn eval_array_index_expression(
@@ -428,8 +455,7 @@ pub fn eval_infix_expression(
 ) -> Option<Rc<dyn Object>> {
     match (left.as_ref(), right.as_ref()) {
         (Some(l), Some(r))
-            if (left.as_ref().unwrap().as_any()).is::<Integer>()
-                && (right.as_ref().unwrap().as_any()).is::<Integer>() =>
+            if l.object_type() == INTEGER_OBJECT && r.object_type() == INTEGER_OBJECT =>
         {
             let l = l.as_any().downcast_ref::<Integer>().unwrap();
             let r = r.as_any().downcast_ref::<Integer>().unwrap();
@@ -471,23 +497,16 @@ pub fn eval_infix_expression(
             }
         }
         (Some(l), Some(r))
-            if (left.as_ref().unwrap().as_any()).is::<Boolean>()
-                && (right.as_ref().unwrap().as_any()).is::<Boolean>() =>
+            if l.object_type() == BOOLEAN_OBJECT && r.object_type() == BOOLEAN_OBJECT =>
         {
             let l = l.as_any().downcast_ref::<Boolean>().unwrap();
             let r = r.as_any().downcast_ref::<Boolean>().unwrap();
             // Some(Rc::new(Integer { value: val }))
+            let t = TRUEOBJ.with(|val| val.clone());
+            let f = FALSEOBJ.with(|val| val.clone());
             match operator {
-                "==" => Some(if l.value == r.value {
-                    TRUEOBJ.with(|val| val.clone())
-                } else {
-                    FALSEOBJ.with(|val| val.clone())
-                }),
-                "!=" => Some(if l.value != r.value {
-                    TRUEOBJ.with(|val| val.clone())
-                } else {
-                    FALSEOBJ.with(|val| val.clone())
-                }),
+                "==" => Some(if l.value == r.value { t } else { f }),
+                "!=" => Some(if l.value != r.value { t } else { f }),
                 _ => Some(Rc::new(ErrorObject {
                     message: format!(
                         "unknown operator: {} {} {}",
@@ -499,22 +518,15 @@ pub fn eval_infix_expression(
             }
         }
         (Some(l), Some(r))
-            if (left.as_ref().unwrap().as_any()).is::<StringObject>()
-                && (right.as_ref().unwrap().as_any()).is::<StringObject>() =>
+            if l.object_type() == STRING_OBJECT && r.object_type() == STRING_OBJECT =>
         {
             let l = l.as_any().downcast_ref::<StringObject>().unwrap();
             let r = r.as_any().downcast_ref::<StringObject>().unwrap();
+            let t = TRUEOBJ.with(|val| val.clone());
+            let f = FALSEOBJ.with(|val| val.clone());
             match operator {
-                "==" => Some(if l.value == r.value {
-                    TRUEOBJ.with(|val| val.clone())
-                } else {
-                    FALSEOBJ.with(|val| val.clone())
-                }),
-                "!=" => Some(if l.value != r.value {
-                    TRUEOBJ.with(|val| val.clone())
-                } else {
-                    FALSEOBJ.with(|val| val.clone())
-                }),
+                "==" => Some(if l.value == r.value { t } else { f }),
+                "!=" => Some(if l.value != r.value { t } else { f }),
                 "+" => Some(Rc::new(StringObject {
                     value: Rc::new(format!("{}{}", l.value, r.value)),
                 })),

@@ -1,4 +1,5 @@
 use crate::object::*;
+use crate::object::*;
 use crate::*;
 use ast_macro::object;
 use std::cell::RefCell;
@@ -7,7 +8,7 @@ use std::rc::Rc;
 
 #[object(HASH_OBJECT)]
 pub struct HashObject {
-    pub pairs: RefCell<HashMap<Rc<AstExpression>, Rc<dyn Object>>>,
+    pub pairs: RefCell<HashMap<Rc<HashKey>, Rc<dyn Object>>>,
 }
 
 impl ObjectInspect for HashObject {
