@@ -8,7 +8,16 @@ edition = "2021"
 [dependencies]
 "ast_macro" = { path = "./crates/ast_macro" }
 "lang_parser" = { path = "./crates/lang_parser" }
+"lang_compiler" = { path = "./crates/lang_compiler" }
+"lang_vm" = { path = "./crates/lang_vm" }
 "interpreter" = { path = "./crates/interpreter" }
+clap = { version = "4.4.18", features = ["derive"] }
 
 [workspace]
-members = ["./crates/ast_macro", "./crates/lang_parser", "./crates/interpreter"]
+members = [
+    "./crates/ast_macro",
+    "./crates/lang_parser",
+    "./crates/interpreter",
+    "./crates/lang_compiler",
+    "./crates/lang_vm"
+]
