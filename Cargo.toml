@@ -7,6 +7,8 @@ edition = "2021"
 
 [dependencies]
 "ast_macro" = { path = "./crates/ast_macro" }
+"lang_parser" = { path = "./crates/lang_parser" }
+"interpreter" = { path = "./crates/interpreter" }
 
 [workspace]
-members = ["./crates/ast_macro"]
+members = ["./crates/ast_macro", "./crates/lang_parser", "./crates/interpreter"]

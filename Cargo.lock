@@ -11,10 +11,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "interpreter"
+version = "0.1.0"
+dependencies = [
+ "ast_macro",
+ "lang_parser",
+]
+
+[[package]]
+name = "lang_parser"
+version = "0.1.0"
+dependencies = [
+ "ast_macro",
+]
+
+[[package]]
 name = "my-rust-interpreter"
 version = "0.1.0"
 dependencies = [
  "ast_macro",
+ "interpreter",
+ "lang_parser",
 ]
 
 [[package]]

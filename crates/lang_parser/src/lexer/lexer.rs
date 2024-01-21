@@ -15,7 +15,7 @@ pub struct Lexer {
 }
 
 /// ```
-/// use my_rust_interpreter::lexer::Lexer;
+/// use lang_parser::lexer::Lexer;
 /// let input = r#"let a = 1;"#;
 /// let l = Lexer::new(input);
 /// l.next_token();

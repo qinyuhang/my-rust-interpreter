@@ -71,6 +71,7 @@ impl std::fmt::Display for StringLiteral {
 mod test {
     use crate::ast::string_literal::StringLiteral;
     use crate::*;
+    use std::rc::Rc;
 
     #[test]
     fn test_int_literal_print() {

@@ -1,5 +1,5 @@
 use crate::ast::*;
-use crate::{Object, ObjectInspect, Token};
+use crate::token::Token;
 use ast_macro::*;
 use std::any::Any;
 use std::cell::RefCell;
@@ -16,14 +16,31 @@ pub struct HashLiteral {
 
 impl std::hash::Hash for HashLiteral {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        todo!()
+        // 对 token 进行哈希化
+        self.token.hash(state);
+
+        // 获取 pairs 的借用
+        let pairs = self.pairs.borrow();
+
+        // 对键值对的数量进行哈希化，以确保不同数量的键值对产生不同的哈希值
+        pairs.len().hash(state);
+
+        // 对每个键值对进行迭代并进行哈希化
+        for (key, value) in pairs.iter() {
+            // 由于 Rc<T> 本身不能被哈希化，我们需要解引用并获取其内部值
+            // 注意：这里假设 AstExpression 已经实现了 Hash
+            (**key).hash(state);
+            (**value).hash(state);
+        }
     }
 
     fn hash_slice<H: Hasher>(data: &[Self], state: &mut H)
     where
         Self: Sized,
     {
-        todo!()
+        data.iter().for_each(|s| {
+            HashLiteral::hash(s, state)
+        })
     }
 }
 

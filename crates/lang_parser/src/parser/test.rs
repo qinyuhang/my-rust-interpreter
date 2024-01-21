@@ -67,7 +67,7 @@ let foobar = 838383;
         if err_count == expect_error_count {
             return;
         }
-        println!("parser has {} errors", err_count);
+        println!("lang_parser has {} errors", err_count);
     }
 
     #[test]

@@ -176,7 +176,7 @@ impl Parser {
                     return;
                 }
                 let pd = pc.clone();
-                // println!("register infix parser for {:?}", token);
+                // println!("register infix lang_parser for {:?}", token);
                 pc.register_infix(token, Rc::new(move |left| pd.parse_infix_expression(left)));
             });
         });

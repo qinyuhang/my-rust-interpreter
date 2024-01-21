@@ -2,6 +2,7 @@ use crate::object::*;
 use crate::*;
 use ast_macro::object;
 use std::rc::Rc;
+use lang_parser::*;
 
 #[object(FUNCTION_OBJECT)]
 pub struct FunctionObject {
@@ -37,6 +38,7 @@ impl TryFrom<Rc<dyn Object>> for FunctionObject {
 #[cfg(test)]
 mod test {
     use crate::*;
+    use lang_parser::*;
     #[test]
     fn test_function() {
         let input = r#"fn() {}"#;

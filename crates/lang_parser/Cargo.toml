@@ -1,0 +1,10 @@
+[package]
+name = "lang_parser"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+"ast_macro" = { path = "../ast_macro" }

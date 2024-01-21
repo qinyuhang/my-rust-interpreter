@@ -2,6 +2,7 @@
 mod test {
     use crate::*;
     use std::collections::HashMap;
+    use lang_parser::*;
 
     #[allow(dead_code)]
     enum FinalResult {
@@ -153,9 +154,9 @@ mod test {
             ("return 5 * 2; 9;", f!(Int, 10)),
             ("9; return 2 * 5; 9;", f!(Int, 10)),
             (
-                r#"if (10 > 1) { 
+                r#"if (10 > 1) {
                        if (10 > 1) {  return 10;  }
-                       return 1; 
+                       return 1;
                    }"#,
                 f!(Int, 10),
             ),
