@@ -1,8 +1,8 @@
 use crate::object::*;
 use crate::*;
 use ast_macro::object;
-use std::rc::Rc;
 use lang_parser::*;
+use std::rc::Rc;
 
 #[object(FUNCTION_OBJECT)]
 pub struct FunctionObject {

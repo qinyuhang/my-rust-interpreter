@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod test {
     use crate::*;
-    use std::collections::HashMap;
     use lang_parser::*;
+    use std::collections::HashMap;
 
     #[allow(dead_code)]
     enum FinalResult {
@@ -502,17 +502,32 @@ mod test {
     #[test]
     fn test_hash_index() {
         let cases = vec![
-            // (r#"{"one": 1}["one"]"#, f!(Int, 1)),
-            // (r#"{"foo": 5}["bar"]"#, f!(Nil)),
-            // (r#"let key = "foo"; {"foo": 5}[key]"#, f!(Int, 5)),
-            // (r#"{}["foo"]"#, f!(Nil)),
-            // (r#"{5:5}[5]"#, f!(Int, 5)),
-            // (r#"{true: 5}[true]"#, f!(Int, 5)),
-            // (r#"{false: 5}[false]"#, f!(Int, 5)),
+            (r#"{"one": 1}["one"]"#, f!(Int, 1)),
+            (r#"{"foo": 5}["bar"]"#, f!(Nil)),
+            (r#"let key = "foo"; {"foo": 5}[key]"#, f!(Int, 5)),
+            (r#"{}["foo"]"#, f!(Nil)),
+            (r#"{5:5}[5]"#, f!(Int, 5)),
+            (r#"{true: 5}[true]"#, f!(Int, 5)),
+            (r#"{false: 5}[false]"#, f!(Int, 5)),
             (
                 r#"{"name": 5}[fn(x) {x} ]"#,
                 f!(Err, "unusable as hash key: FUNCTION_OBJECT"),
             ),
+        ];
+        cases.iter().for_each(|(case, out)| {
+            handle_test(case, out);
+        });
+    }
+
+    #[test]
+    fn test_add_return_value() {
+        let cases = vec![
+            (r#"fn() { true }() == true;"#, f!(Bool, true)),
+            (r#"fn() { 5 }() == 5;"#, f!(Bool, true)),
+            (r#"fn() { 5 }() + 5;"#, f!(Int, 10)),
+            (r#"fn() { 5 }() - 5;"#, f!(Int, 0)),
+            (r#"fn() { 5 }() * 5;"#, f!(Int, 25)),
+            (r#"fn() { 5 }() / 5;"#, f!(Int, 1)),
         ];
         cases.iter().for_each(|(case, out)| {
             handle_test(case, out);

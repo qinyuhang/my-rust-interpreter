@@ -59,6 +59,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "byteorder"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
+
+[[package]]
 name = "clap"
 version = "4.4.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -123,6 +129,10 @@ name = "lang_compiler"
 version = "0.1.0"
 dependencies = [
  "ast_macro",
+ "byteorder",
+ "interpreter",
+ "lang_parser",
+ "lang_vm",
 ]
 
 [[package]]
@@ -137,6 +147,9 @@ name = "lang_vm"
 version = "0.1.0"
 dependencies = [
  "ast_macro",
+ "byteorder",
+ "interpreter",
+ "lang_parser",
 ]
 
 [[package]]

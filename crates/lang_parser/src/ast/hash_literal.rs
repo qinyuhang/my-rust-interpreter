@@ -38,9 +38,7 @@ impl std::hash::Hash for HashLiteral {
     where
         Self: Sized,
     {
-        data.iter().for_each(|s| {
-            HashLiteral::hash(s, state)
-        })
+        data.iter().for_each(|s| HashLiteral::hash(s, state))
     }
 }
 

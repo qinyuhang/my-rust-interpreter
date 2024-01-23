@@ -55,7 +55,7 @@ pub fn start() {
             continue;
         }
         let pr = pr.unwrap();
-        println!("{}", &pr);
+        // println!("{}", &pr);
         if let Some(r) = eval(&pr, context.clone()).as_ref() {
             println!("{}", r);
         }
@@ -94,6 +94,25 @@ pub fn start() {
     // }
 }
 
+pub fn run(program: String) {
+    let mut input = program.clone();
+    let context = Rc::new(Context::new());
+    let lex = Lexer::new(input.clone());
+    let p = Parser::new(lex.clone());
+    let pr = p.parse_program();
+    assert!(pr.is_some());
+    if p.errors().borrow().len() != 0 {
+        println!("{}\n", SYMBOL);
+        print_parser_errors(p.errors().borrow().as_ref());
+        input.clear();
+        return;
+    }
+    let pr = pr.unwrap();
+    // dbg!("{}", &pr);
+    if let Some(r) = eval(&pr, context.clone()).as_ref() {
+        println!("{}", r);
+    }
+}
 pub fn print_parser_errors(errors: &Vec<String>) {
     errors.iter().for_each(|err| {
         println!("\t{}", err);

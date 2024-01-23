@@ -1,9 +1,9 @@
 use crate::object::*;
+use lang_parser::*;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::vec::Vec;
-use lang_parser::*;
 
 mod test;
 
@@ -373,6 +373,7 @@ pub fn eval_hash_index_expression(
             if let Some(value) = hm.pairs.borrow().get(&hk) {
                 return Some(value.clone());
             }
+            return Some(NULLOBJ.with(|n| n.clone()));
             // if let Some(key) = eval(index.upcast(), Rc::new(Context::new())) {
             //     if let Some(val) = hm.pairs.borrow().get(&key.hash_key()) {
             //         return Some(val.clone());
@@ -383,7 +384,9 @@ pub fn eval_hash_index_expression(
             message: format!("unusable as hash key: {}", index.clone().object_type()),
         }));
     }
-    Some(NULLOBJ.with(|n| n.clone()))
+    return Some(Rc::new(ErrorObject {
+        message: format!("not support hash index operation: {}[{}]", left.clone().object_type(), index.clone().object_type()),
+    }));
 }
 
 pub fn eval_array_index_expression(
@@ -545,6 +548,14 @@ pub fn eval_infix_expression(
                     ),
                 })),
             }
+        }
+        (Some(l), Some(r)) if l.object_type() == RETURN_VALUE_OBJECT => {
+            let l = l.as_any().downcast_ref::<ReturnValue>().unwrap();
+            return eval_infix_expression(operator, Some(l.value.clone()), Some(r.clone()));
+        },
+        (Some(l), Some(r)) if r.object_type() == RETURN_VALUE_OBJECT => {
+            let r = r.as_any().downcast_ref::<ReturnValue>().unwrap();
+            return eval_infix_expression(operator, Some(l.clone()), Some(r.value.clone()));
         }
         (Some(a), Some(b)) => Some(Rc::new(ErrorObject {
             message: format!(
