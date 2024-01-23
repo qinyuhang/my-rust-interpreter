@@ -1,7 +1,8 @@
 use crate::object::*;
 use crate::*;
+use ::ast::*;
+use ::parser::*;
 use ast_macro::object;
-use lang_parser::*;
 use std::rc::Rc;
 
 #[object(FUNCTION_OBJECT)]
@@ -38,7 +39,9 @@ impl TryFrom<Rc<dyn Object>> for FunctionObject {
 #[cfg(test)]
 mod test {
     use crate::*;
-    use lang_parser::*;
+    use ::lexer::*;
+    use ::parser::*;
+    use ::token::*;
     #[test]
     fn test_function() {
         let input = r#"fn() {}"#;

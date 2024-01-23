@@ -1,9 +1,11 @@
 use crate::object::*;
-use lang_parser::*;
+use ::ast::*;
+use ::parser::*;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::vec::Vec;
+use token::Token;
 
 mod test;
 
@@ -385,7 +387,11 @@ pub fn eval_hash_index_expression(
         }));
     }
     return Some(Rc::new(ErrorObject {
-        message: format!("not support hash index operation: {}[{}]", left.clone().object_type(), index.clone().object_type()),
+        message: format!(
+            "not support hash index operation: {}[{}]",
+            left.clone().object_type(),
+            index.clone().object_type()
+        ),
     }));
 }
 
@@ -552,7 +558,7 @@ pub fn eval_infix_expression(
         (Some(l), Some(r)) if l.object_type() == RETURN_VALUE_OBJECT => {
             let l = l.as_any().downcast_ref::<ReturnValue>().unwrap();
             return eval_infix_expression(operator, Some(l.value.clone()), Some(r.clone()));
-        },
+        }
         (Some(l), Some(r)) if r.object_type() == RETURN_VALUE_OBJECT => {
             let r = r.as_any().downcast_ref::<ReturnValue>().unwrap();
             return eval_infix_expression(operator, Some(l.clone()), Some(r.value.clone()));

@@ -51,6 +51,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "ast"
+version = "0.1.0"
+dependencies = [
+ "ast",
+ "ast_macro",
+ "lexer",
+ "parser",
+ "token",
+]
+
+[[package]]
 name = "ast_macro"
 version = "0.1.0"
 dependencies = [
@@ -105,10 +116,35 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "702fc72eb24e5a1e48ce58027a675bc24edd52096d5397d4aea7c6dd9eca0bd1"
 
 [[package]]
+name = "code"
+version = "0.1.0"
+dependencies = [
+ "ast",
+ "ast_macro",
+ "byteorder",
+ "interpreter",
+ "parser",
+]
+
+[[package]]
 name = "colorchoice"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "acbf1af155f9b9ef647e42cdc158db4b64a1b61f743629225fde6f3e0be2a7c7"
+
+[[package]]
+name = "compiler"
+version = "0.1.0"
+dependencies = [
+ "ast",
+ "ast_macro",
+ "byteorder",
+ "code",
+ "interpreter",
+ "lexer",
+ "parser",
+ "vm",
+]
 
 [[package]]
 name = "heck"
@@ -120,48 +156,46 @@ checksum = "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
 name = "interpreter"
 version = "0.1.0"
 dependencies = [
+ "ast",
  "ast_macro",
- "lang_parser",
+ "lexer",
+ "parser",
+ "token",
 ]
 
 [[package]]
-name = "lang_compiler"
+name = "lexer"
 version = "0.1.0"
 dependencies = [
  "ast_macro",
- "byteorder",
- "interpreter",
- "lang_parser",
- "lang_vm",
-]
-
-[[package]]
-name = "lang_parser"
-version = "0.1.0"
-dependencies = [
- "ast_macro",
-]
-
-[[package]]
-name = "lang_vm"
-version = "0.1.0"
-dependencies = [
- "ast_macro",
- "byteorder",
- "interpreter",
- "lang_parser",
+ "token",
 ]
 
 [[package]]
 name = "my-rust-interpreter"
 version = "0.1.0"
 dependencies = [
+ "ast",
  "ast_macro",
  "clap",
+ "code",
+ "compiler",
  "interpreter",
- "lang_compiler",
- "lang_parser",
- "lang_vm",
+ "lexer",
+ "parser",
+ "token",
+ "vm",
+]
+
+[[package]]
+name = "parser"
+version = "0.1.0"
+dependencies = [
+ "ast",
+ "ast_macro",
+ "lexer",
+ "parser",
+ "token",
 ]
 
 [[package]]
@@ -200,6 +234,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "token"
+version = "0.1.0"
+dependencies = [
+ "ast_macro",
+]
+
+[[package]]
 name = "unicode-ident"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -210,6 +251,16 @@ name = "utf8parse"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "711b9620af191e0cdc7468a8d14e709c3dcdb115b36f838e601583af800a370a"
+
+[[package]]
+name = "vm"
+version = "0.1.0"
+dependencies = [
+ "ast_macro",
+ "byteorder",
+ "interpreter",
+ "parser",
+]
 
 [[package]]
 name = "windows-sys"

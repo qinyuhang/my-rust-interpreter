@@ -6,18 +6,25 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+"ast" = { path = "./crates/ast" }
 "ast_macro" = { path = "./crates/ast_macro" }
-"lang_parser" = { path = "./crates/lang_parser" }
-"lang_compiler" = { path = "./crates/lang_compiler" }
-"lang_vm" = { path = "./crates/lang_vm" }
+"code" = { path = "./crates/code" }
+"compiler" = { path = "./crates/compiler" }
 "interpreter" = { path = "./crates/interpreter" }
+"lexer" = { path = "./crates/lexer" }
+"parser" = { path = "./crates/parser" }
+"token" = { path = "./crates/token" }
+"vm" = { path = "./crates/vm" }
 clap = { version = "4.4.18", features = ["derive"] }
 
 [workspace]
 members = [
+    "./crates/ast",
     "./crates/ast_macro",
-    "./crates/lang_parser",
+    "./crates/code",
+    "./crates/compiler",
     "./crates/interpreter",
-    "./crates/lang_compiler",
-    "./crates/lang_vm"
+    "./crates/parser",
+    "./crates/token",
+    "./crates/vm",
 ]

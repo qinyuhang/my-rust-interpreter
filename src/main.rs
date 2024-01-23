@@ -5,7 +5,7 @@
 // `mki` will start repl
 // `mik compile -i <file>.mok -o <out_file>.mokb` will compile <file>.mok to <out_file>.mokb
 use clap::{Parser, Subcommand};
-pub use my_rust_interpreter::repl;
+use interpreter::{run, start};
 use std::path::PathBuf;
 
 #[derive(Subcommand)]
@@ -33,23 +33,22 @@ fn main() {
         Some(Commands::Run { file }) => {
             // dbg!("{}", file);
             if let Ok(file) = std::fs::read_to_string(file) {
-                repl::run(file);
+                run(file);
             } else {
                 eprintln!("file not found {:?}", file);
             }
         }
         Some(Commands::Compile { file, out }) => {
-          if let Ok(_file) = std::fs::read_to_string(file) {
-            // repl::run(file);
-          } else {
-            eprintln!("file not found {:?}", file);
-          }
+            if let Ok(_file) = std::fs::read_to_string(file) {
+                // repl::run(file);
+            } else {
+                eprintln!("file not found {:?}", file);
+            }
         }
         _ => {
             // let cargo_file = include_str!("../Cargo.toml");
             // println!("Hello, world! {}", cargo_file);
-            repl::start();
+            start();
         }
     };
-
 }

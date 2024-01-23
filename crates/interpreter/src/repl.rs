@@ -1,5 +1,6 @@
 use crate::*;
-use lang_parser::*;
+use ::lexer::*;
+use ::parser::*;
 
 use std::cell::RefCell;
 use std::io;

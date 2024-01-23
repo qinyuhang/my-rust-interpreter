@@ -1,5 +1,5 @@
 use crate::object::*;
-use lang_parser::Identifier;
+use ::ast::*;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -46,7 +46,10 @@ impl Context {
 #[cfg(test)]
 mod test {
     use crate::*;
-    use lang_parser::*;
+    use ::ast::*;
+    use ::ast::*;
+    use ::parser::*;
+    use ::token::*;
 
     #[test]
     fn test_new_context() {

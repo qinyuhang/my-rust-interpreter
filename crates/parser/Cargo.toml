@@ -1,5 +1,5 @@
 [package]
-name = "interpreter"
+name = "parser"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,6 +9,9 @@ edition = "2021"
 [dependencies]
 "ast" = { path = "../ast" }
 "ast_macro" = { path = "../ast_macro" }
-"parser" = { path = "../parser" }
 "lexer" = { path = "../lexer" }
 "token" = { path = "../token" }
+
+[dev-dependencies]
+"lexer" = { path = "../lexer" }
+"parser" = { path = "../parser" }

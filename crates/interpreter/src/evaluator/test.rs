@@ -1,7 +1,10 @@
 #[cfg(test)]
 mod test {
     use crate::*;
-    use lang_parser::*;
+    use ::ast::*;
+    use ::lexer::*;
+    use ::parser::*;
+    use ::token::*;
     use std::collections::HashMap;
 
     #[allow(dead_code)]

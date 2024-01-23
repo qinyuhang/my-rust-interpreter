@@ -1,6 +1,6 @@
-pub mod evaluator;
-pub mod object;
-pub mod repl;
+mod evaluator;
+mod object;
+mod repl;
 
 #[allow(unused_imports)]
 pub use evaluator::*;
