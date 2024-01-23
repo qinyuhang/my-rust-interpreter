@@ -48,7 +48,7 @@ impl TryFrom<Box<&ExpressionStatement>> for IntegerLiteral {
     type Error = String;
 
     fn try_from(value: Box<&ExpressionStatement>) -> Result<Self, Self::Error> {
-        println!("the try from: {:?}", value);
+        // println!("the try from: {:?}", value);
         if value.token.token_type == INT {
             return Ok(IntegerLiteral {
                 token: value.token.clone(),
@@ -67,7 +67,7 @@ impl TryFrom<Box<&ExpressionStatement>> for IntegerLiteral {
 impl TryFrom<Box<&dyn Expression>> for IntegerLiteral {
     type Error = String;
     fn try_from(value: Box<&dyn Expression>) -> Result<Self, Self::Error> {
-        println!("wtf wtf: {:?}", value);
+        // println!("wtf wtf: {:?}", value);
         let x = value.as_any();
         if x.is::<Self>() {
             // println!("x is IntegerLiteral {:?}", x);
@@ -82,7 +82,7 @@ impl TryFrom<Box<&dyn Expression>> for IntegerLiteral {
         //     let x = x.downcast_ref::<PrefixExpression>().unwrap();
         //     if x.operator == "-" || x.operator == "+" {}
         // }
-        println!("{}", format!("Cannot cast {:?} into IntegerLiteral", value));
+        // println!("{}", format!("Cannot cast {:?} into IntegerLiteral", value));
         Err(format!("Cannot cast {:?} into IntegerLiteral", value))
     }
 }

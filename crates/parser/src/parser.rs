@@ -200,7 +200,7 @@ impl Parser {
             let stmt = self.parse_statement();
             if stmt.is_some() {
                 let stmt = stmt.unwrap();
-                println!("get push: {:?}", stmt);
+                // println!("get push: {:?}", stmt);
                 stm.push(stmt);
             }
             self.next_token();
@@ -288,7 +288,7 @@ impl Parser {
     fn parse_expression_statement(&self) -> Option<Rc<AstExpression>> {
         let token = (*self.cur_token.borrow()).clone();
         if token.literal == ";" {
-            println!("parse_expression_statement")
+            // println!("parse_expression_statement")
         }
         let stm = ExpressionStatement {
             token,

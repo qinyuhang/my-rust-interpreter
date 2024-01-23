@@ -56,7 +56,7 @@ mod test {
         let l = Lexer::new(input);
         let p = Parser::new(l);
         let pr = p.parse_program();
-        println!("{}", pr.as_ref().unwrap().to_string());
+        // println!("{}", pr.as_ref().unwrap().to_string());
         assert_eq!(pr.as_ref().unwrap().to_string(), input);
         // let fl = FunctionLiteral {
         //     token: Rc::new(RefCell::new(Token {

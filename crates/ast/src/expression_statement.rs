@@ -13,7 +13,7 @@ pub struct ExpressionStatement {
 impl TryFrom<Box<&dyn Statement>> for ExpressionStatement {
     type Error = String;
     fn try_from(value: Box<&dyn Statement>) -> Result<Self, Self::Error> {
-        println!("cast Statement to Expression: {:?}", value.as_any());
+        // println!("cast Statement to Expression: {:?}", value.as_any());
         if let Some(v) = value.as_any().downcast_ref::<Self>() {
             let mut ex = None;
             if v.expression.is_some() {
@@ -107,7 +107,7 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
         }
         if v_any.is::<IntegerLiteral>() {
             did_match = true;
-            println!("\n\n v_any is IntLiteral: {:?}\n\n", v_any);
+            // println!("\n\n v_any is IntLiteral: {:?}\n\n", v_any);
             if let Some(v) = value.as_any().downcast_ref::<IntegerLiteral>() {
                 ex = Some(Rc::new(AstExpression::IntegerLiteral(IntegerLiteral {
                     token: v.token.clone(),
@@ -134,7 +134,7 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
         }
         if v_any.is::<InfixExpression>() {
             did_match = true;
-            println!("\n\nv_any is InfixExpression\n\n");
+            // println!("\n\nv_any is InfixExpression\n\n");
             if let Some(val) = value.as_any().downcast_ref::<InfixExpression>() {
                 token = val.token.clone();
                 ex = Some(Rc::new(AstExpression::InfixExpression(val.clone())));
@@ -206,7 +206,7 @@ mod test {
             },
             expression: None,
         };
-        println!("{}", e);
+        // println!("{}", e);
         assert_eq!(e.to_string(), "")
     }
 }

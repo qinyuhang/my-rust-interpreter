@@ -588,7 +588,7 @@ mod test {
     #[allow(unused)]
     fn test_null_object(obj: &Option<Rc<dyn Object>>) {
         assert!(obj.is_some());
-        println!("test null object: {}", obj.as_ref().unwrap());
+        // println!("test null object: {}", obj.as_ref().unwrap());
         let x = obj.as_ref().unwrap().as_any();
         assert!(x.downcast_ref::<Null>().is_some());
     }
@@ -614,7 +614,7 @@ mod test {
 
     #[allow(unused)]
     fn test_integer_object(obj: Option<Rc<dyn Object>>, expected: i64) -> bool {
-        println!("test_integer_object {:?}", obj);
+        // println!("test_integer_object {:?}", obj);
         let i = Integer::try_from(obj.unwrap());
         assert!(i.is_ok());
         let i = i.unwrap();

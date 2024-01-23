@@ -18,7 +18,7 @@ impl TryFrom<Box<&dyn Expression>> for InfixExpression {
     fn try_from(value: Box<&dyn Expression>) -> Result<Self, Self::Error> {
         let x = value.as_any();
         if x.is::<InfixExpression>() {
-            println!("Object is InfixExpression {:?}", value);
+            // println!("Object is InfixExpression {:?}", value);
             let x = x.downcast_ref::<InfixExpression>().unwrap();
             return Ok(InfixExpression {
                 token: x.token.clone(),

@@ -18,7 +18,7 @@ impl TryFrom<Box<&dyn Expression>> for PrefixExpression {
     fn try_from(value: Box<&dyn Expression>) -> Result<Self, Self::Error> {
         let x = value.as_any();
         if x.is::<PrefixExpression>() {
-            println!("Object is PrefixExpression {:?}", value);
+            // println!("Object is PrefixExpression {:?}", value);
             let x = x.downcast_ref::<PrefixExpression>().unwrap();
             return Ok(PrefixExpression {
                 token: x.token.clone(),

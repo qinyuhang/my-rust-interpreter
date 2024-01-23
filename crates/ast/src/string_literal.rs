@@ -28,7 +28,7 @@ impl TryFrom<Box<&ExpressionStatement>> for StringLiteral {
     type Error = String;
 
     fn try_from(value: Box<&ExpressionStatement>) -> Result<Self, Self::Error> {
-        println!("the try from: {:?}", value);
+        // println!("the try from: {:?}", value);
         if value.token.token_type == STRING {
             return Ok(Self {
                 token: value.token.clone(),
@@ -47,7 +47,7 @@ impl TryFrom<Box<&ExpressionStatement>> for StringLiteral {
 impl TryFrom<Box<&dyn Expression>> for StringLiteral {
     type Error = String;
     fn try_from(value: Box<&dyn Expression>) -> Result<Self, Self::Error> {
-        println!("wtf wtf: {:?}", value);
+        // println!("wtf wtf: {:?}", value);
         let x = value.as_any();
         if x.is::<Self>() {
             // println!("x is IntegerLiteral {:?}", x);

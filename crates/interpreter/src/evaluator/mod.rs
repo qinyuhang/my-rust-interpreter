@@ -138,7 +138,7 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
     // Program
     // ExpressionStatement
     // IntegerLiteral
-    println!("eval: {}", node);
+    // println!("eval: {}", node);
     if n.is::<Program>() {
         if let Some(n) = n.downcast_ref::<Program>() {
             return eval_program(n.statement.clone(), Some(context.clone()));
@@ -224,7 +224,7 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
         }
     }
     if n.is::<BlockStatement>() {
-        println!("eval block Statement");
+        // println!("eval block Statement");
         if let Some(n) = n.downcast_ref::<BlockStatement>() {
             return eval_block_statement(n.clone(), context.clone());
         }
@@ -450,7 +450,7 @@ pub fn eval_if_expression(ex: &IfExpression, context: Rc<Context>) -> Option<Rc<
 }
 
 pub fn is_truthy(obj: Option<Rc<dyn Object>>) -> bool {
-    println!("is_truthy: {:?}", obj);
+    // println!("is_truthy: {:?}", obj);
     obj.map_or(false, |val| {
         let v_a = val.as_any();
         if v_a.is::<Null>() {
@@ -637,7 +637,7 @@ pub fn eval_program(
         // converter Statement to Node
         // rust not support convert sub-trait-object to parent-trait-object
         // so here using a upcast function to convert Statement/Expression to Node trait
-        println!("try eval st: {:?}", st);
+        // println!("try eval st: {:?}", st);
         result = eval(st.upcast(), context.clone());
         // if
         if let Some(r) = result.as_ref() {
