@@ -8,3 +8,6 @@ edition = "2021"
 
 [dependencies]
 "ast_macro" = { path = "../ast_macro" }
+"byteorder" = "*"
+"lang_parser" = { path = "../lang_parser" }
+"interpreter" = { path = "../interpreter" }

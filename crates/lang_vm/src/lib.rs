@@ -1,3 +1,3 @@
-mod code;
+pub mod code;
 
 pub struct VM {}
