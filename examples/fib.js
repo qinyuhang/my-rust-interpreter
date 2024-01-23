@@ -10,4 +10,5 @@ let fib = (n) => {
     }
 };
 
-fib(22);
+let r = fib(22);
+console.log(r);

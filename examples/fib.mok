@@ -10,4 +10,5 @@ let fib = fn(n) {
     }
 };
 
-fib(22);
+let r = fib(22);
+puts(r);

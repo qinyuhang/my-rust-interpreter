@@ -522,7 +522,7 @@ impl Parser {
         Some(identifiers)
     }
     pub fn parse_call_expression(&self, f: Rc<AstExpression>) -> Option<Rc<AstExpression>> {
-        println!("\n\nparse_call_expression\n\n{:?}", "args");
+        // println!("\n\nparse_call_expression\n\n{:?}", "args");
 
         let token = (*self.cur_token.borrow()).clone();
         let args = self.parse_expression_list(RPAREN);

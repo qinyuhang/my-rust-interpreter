@@ -24,8 +24,23 @@ jobs:
         with:
           command: build
           args: --release --all-features
+      - name: cargo build examples
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --examples
       - name: cargo run
         uses: actions-rs/cargo@v1
         with:
           command: run
           args: --release --all-features -- run ./examples/fib.mok
+      - name: bench
+        run: |
+          echo "test node js"
+          /usr/bin/time node examples/fib.js &&
+          echo "-----------------"
+          echo "test my interpreter"
+          /usr/bin/time ./target/release/my-rust-interpreter run ./examples/fib.mok &&
+          echo "-----------------"
+          echo "test rust native"
+          /usr/bin/time ./target/release/examples/fib
