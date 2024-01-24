@@ -20,11 +20,11 @@ impl TryFrom<&str> for BooleanLiteral {
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
             "true" => Ok(BooleanLiteral {
-                token: Token::from("true"),
+                token: ToBeToken::from_t(TRUE),
                 value: true,
             }),
             "false" => Ok(BooleanLiteral {
-                token: Token::from("false"),
+                token: ToBeToken::from_t(FALSE),
                 value: false,
             }),
             _ => Err("can't cast {} into BoolLiteral".into()),

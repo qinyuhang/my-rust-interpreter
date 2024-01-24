@@ -20,6 +20,98 @@ impl Default for Token {
     }
 }
 
+
+pub struct ToBeToken {
+    token_type: Option<TokenType>,
+    literal: Option<String>,
+}
+
+impl ToBeToken {
+    pub fn from_t(t: TokenType) -> Token {
+        Token {
+            token_type: t,
+            literal: t.to_lowercase().to_string(),
+        }
+    }
+
+    pub fn from_tt(t: TokenType) -> Self {
+        Self {
+            token_type: Some(t),
+            literal: None,
+        }
+    }
+}
+
+impl From<ToBeToken> for Token {
+    fn from(value: ToBeToken) -> Self {
+        // token_type & literal 是一样的
+        if let Some(ref l) = value.literal {
+            let t = match l.as_str() {
+                ASSIGN => Some(ASSIGN),
+                PLUS => Some(PLUS),
+                MINUS => Some(MINUS),
+                BANG => Some(BANG),
+                ASTERISK => Some(ASTERISK),
+                SLASH => Some(SLASH),
+                BITAND => Some(BITAND),
+                BITXOR => Some(BITXOR),
+                BITOR => Some(BITOR),
+                POW => Some(POW),
+                LOGICOR => Some(LOGICOR),
+                LOGICAND => Some(LOGICAND),
+
+                LT => Some(LT),
+                GT => Some(GT),
+
+                COMMA => Some(COMMA),
+                SEMICOLON => Some(SEMICOLON),
+
+                LPAREN => Some(LPAREN),
+                RPAREN => Some(RPAREN),
+                LBRACE => Some(LBRACE),
+                RBRACE => Some(RBRACE),
+                LBRACKET => Some(LBRACKET),
+                RBRACKET => Some(RBRACKET),
+
+                FUNCTION => Some(FUNCTION),
+                LET => Some(LET),
+                TRUE => Some(TRUE),
+                FALSE => Some(FALSE),
+                IF => Some(IF),
+                ELSE => Some(ELSE),
+                RETURN => Some(RETURN),
+
+                EQ => Some(EQ),
+                NOT_EQ => Some(NOT_EQ),
+                STRING => Some(STRING),
+                COLON => Some(COLON),
+                _ => None,
+            };
+            if let Some(t) = t {
+                return Self {
+                    token_type: t,
+                    literal: t.to_lowercase().to_string(),
+                };
+            }
+        }
+        // token_type 和 literal 不一样的
+        if let Some(t) = value.token_type {
+            if let Some(r) = match t {
+                INT => value.literal.clone(),
+                IDENT => value.literal.clone(),
+                STRING => value.literal.clone(),
+                _ => None,
+            } {
+                return Self {
+                    token_type: t,
+                    literal: r,
+                };
+            }
+        }
+        Default::default()
+    }
+}
+
 pub const ILLEGAL: TokenType = "ILLEGAL";
 pub const EOF: TokenType = "EOF";
 

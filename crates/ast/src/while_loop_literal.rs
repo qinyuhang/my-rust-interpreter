@@ -38,11 +38,11 @@ mod test {
         let exp = WhileLoopLiteral {
             token: Default::default(),
             condition: Rc::new(AstExpression::BooleanLiteral(BooleanLiteral {
-                token: Token::from(TRUE),
+                token: ToBeToken::from_t(TRUE),
                 value: true,
             })),
             body: Some(Rc::new(AstExpression::BooleanLiteral(BooleanLiteral {
-                token: Token::from(TRUE),
+                token: ToBeToken::from_t(TRUE),
                 value: true,
             }))),
         };
