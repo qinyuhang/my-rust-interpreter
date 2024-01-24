@@ -19,12 +19,13 @@ clap = { version = "4.4.18", features = ["derive"] }
 
 [workspace]
 members = [
-    "./crates/ast",
-    "./crates/ast_macro",
-    "./crates/code",
-    "./crates/compiler",
-    "./crates/interpreter",
-    "./crates/parser",
-    "./crates/token",
-    "./crates/vm",
+    "crates/ast",
+    "crates/ast_macro",
+    "crates/code",
+    "crates/compiler",
+    "crates/interpreter",
+    "crates/parser",
+    "crates/token",
+    "crates/vm",
+    "crates/lsp",
 ]

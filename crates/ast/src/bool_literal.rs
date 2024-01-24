@@ -14,7 +14,23 @@ pub struct BooleanLiteral {
 //         write!(f, "{}", self.token.literal.clone())
 //     }
 // }
+impl TryFrom<&str> for BooleanLiteral {
+    type Error = String;
 
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "true" => Ok(BooleanLiteral {
+                token: Token::from("true"),
+                value: true,
+            }),
+            "false" => Ok(BooleanLiteral {
+                token: Token::from("false"),
+                value: false,
+            }),
+            _ => Err("can't cast {} into BoolLiteral".into()),
+        }
+    }
+}
 impl TryFrom<Box<&dyn Expression>> for BooleanLiteral {
     type Error = String;
 

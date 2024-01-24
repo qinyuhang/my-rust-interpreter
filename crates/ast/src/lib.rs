@@ -24,6 +24,7 @@ mod prefix_expression;
 mod program;
 mod return_statement;
 mod string_literal;
+mod while_loop_literal;
 
 pub use array_literal::*;
 pub use block_statement::*;
@@ -42,6 +43,7 @@ pub use prefix_expression::*;
 pub use program::*;
 pub use return_statement::*;
 pub use string_literal::*;
+pub use while_loop_literal::*;
 
 pub trait Node: Debug + Display {
     fn token_literal(&self) -> String;
