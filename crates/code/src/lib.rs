@@ -1,6 +1,5 @@
-use ast::*;
 use byteorder::{BigEndian, ByteOrder};
-use interpreter::*;
+
 use std::rc::Rc;
 
 pub type Instructions = Vec<u8>;

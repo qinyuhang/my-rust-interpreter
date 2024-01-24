@@ -1,7 +1,5 @@
 use crate::object::*;
-use crate::*;
 use ::ast::*;
-use ::parser::*;
 use ast_macro::object;
 use std::rc::Rc;
 
@@ -38,9 +36,7 @@ impl TryFrom<Rc<dyn Object>> for FunctionObject {
 
 #[cfg(test)]
 mod test {
-    use crate::*;
     use ::lexer::*;
-    use ::parser::*;
     use ::token::*;
     #[test]
     fn test_function() {

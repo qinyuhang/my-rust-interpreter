@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod test {
     use crate::lexer::Lexer;
-    use ::token::*;
 
     #[test]
     fn canary_test() {

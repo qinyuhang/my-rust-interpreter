@@ -4,7 +4,6 @@ mod test {
     use ::ast::*;
     use ::lexer::*;
     use ::parser::*;
-    use ::token::*;
     use std::collections::HashMap;
 
     #[allow(dead_code)]
@@ -42,6 +41,7 @@ mod test {
         };
     }
 
+    #[allow(unused_macros)]
     macro_rules! my_hash {
         () => {};
     }

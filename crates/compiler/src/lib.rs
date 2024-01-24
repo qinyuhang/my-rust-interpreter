@@ -1,7 +1,7 @@
 mod test;
 
 use ::ast::*;
-use ::parser::*;
+// use ::parser::*;
 use code;
 use interpreter::*;
 use std::rc::Rc;
@@ -24,7 +24,7 @@ impl Compiler {
         }
     }
 
-    pub fn compile(&self, node: &dyn Node) -> Result<String, String> {
+    pub fn compile(&self, _node: &dyn Node) -> Result<String, String> {
         Ok("".into())
     }
 

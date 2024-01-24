@@ -47,7 +47,7 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
         //
         let mut ex = None;
         let mut did_match = false;
-        let mut token: Token = Token {
+        let mut tk: Token = Token {
             token_type: EOF,
             literal: "".into(),
         };
@@ -67,10 +67,10 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
                             .ok();
                     }
                 };
-                token = v.token.clone();
+                tk = v.token.clone();
 
                 return Ok(ExpressionStatement {
-                    token: v.token.clone(),
+                    token: tk,
                     expression: ex,
                 });
             }
@@ -78,7 +78,7 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
         if v_any.is::<Identifier>() {
             did_match = true;
             if let Some(v) = value.as_any().downcast_ref::<Identifier>() {
-                token = v.token.clone();
+                tk = v.token.clone();
                 ex = Some(Rc::new(AstExpression::Identifier(Identifier {
                     token: v.token.clone(),
                     value: v.value.clone(),
@@ -88,7 +88,7 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
         if v_any.is::<LetStatement>() {
             did_match = true;
             if let Some(v) = value.as_any().downcast_ref::<LetStatement>() {
-                token = v.token.clone();
+                tk = v.token.clone();
                 ex = Some(Rc::new(AstExpression::LetStatement(LetStatement {
                     token: v.token.clone(),
                     name: v.name.clone(),
@@ -113,7 +113,7 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
                     token: v.token.clone(),
                     value: v.value,
                 })));
-                token = v.token.clone();
+                tk = v.token.clone();
                 // return Ok(IntegerLiteral { token: v.token ,value: v.value});
             }
         }
@@ -128,7 +128,7 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
                     // FIXME: right
                     right: v.right.clone(),
                 })));
-                token = v.token.clone();
+                tk = v.token.clone();
                 // return Ok(IntegerLiteral { token: v.token ,value: v.value});
             }
         }
@@ -136,21 +136,21 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
             did_match = true;
             // println!("\n\nv_any is InfixExpression\n\n");
             if let Some(val) = value.as_any().downcast_ref::<InfixExpression>() {
-                token = val.token.clone();
+                tk = val.token.clone();
                 ex = Some(Rc::new(AstExpression::InfixExpression(val.clone())));
             }
         }
         if v_any.is::<BooleanLiteral>() {
             did_match = true;
             if let Some(val) = value.as_any().downcast_ref::<BooleanLiteral>() {
-                token = val.token.clone();
+                tk = val.token.clone();
                 ex = Some(Rc::new(AstExpression::BooleanLiteral(val.clone())));
             }
         }
         if v_any.is::<IfExpression>() {
             did_match = true;
             if let Some(val) = value.as_any().downcast_ref::<IfExpression>() {
-                token = val.token.clone();
+                tk = val.token.clone();
                 ex = Some(Rc::new(AstExpression::IfExpression(val.clone())));
             }
         }
@@ -158,14 +158,14 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
             did_match = true;
             if let Some(val) = value.as_any().downcast_ref::<FunctionLiteral>() {
                 // FIXME: 以后都去掉 Rc<RefCell<
-                token = val.token.clone();
+                tk = val.token.clone();
                 ex = Some(Rc::new(AstExpression::FunctionLiteral(val.clone())));
             }
         }
         if did_match {
-            assert_ne!(token.token_type, EOF);
+            assert_ne!(tk.token_type, EOF);
             Ok(ExpressionStatement {
-                token: token,
+                token: tk,
                 expression: ex,
             })
         } else {

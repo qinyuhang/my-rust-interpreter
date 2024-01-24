@@ -1,6 +1,4 @@
 use crate::object::*;
-use crate::object::*;
-use crate::*;
 use ast_macro::object;
 use std::cell::RefCell;
 use std::collections::HashMap;

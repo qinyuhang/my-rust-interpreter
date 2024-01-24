@@ -1,10 +1,10 @@
 #[cfg(test)]
 mod test {
-    use super::*;
+
     use crate::*;
 
     #[test]
-    fn lang_vm_canary_test() {
+    fn lang_code_canary_test() {
         assert_eq!(1, 1);
     }
 

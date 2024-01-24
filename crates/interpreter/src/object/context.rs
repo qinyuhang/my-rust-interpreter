@@ -47,8 +47,6 @@ impl Context {
 mod test {
     use crate::*;
     use ::ast::*;
-    use ::ast::*;
-    use ::parser::*;
     use ::token::*;
 
     #[test]

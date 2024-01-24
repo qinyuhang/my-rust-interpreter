@@ -1,6 +1,4 @@
-use ast_macro::object;
 use my_rust_interpreter::*;
-use std::any::Any;
 
 // #[object(BOOLEAN_OBJECT)]
 #[derive(Hash, Debug)]

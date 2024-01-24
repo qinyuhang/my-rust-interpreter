@@ -38,7 +38,7 @@ fn main() {
                 eprintln!("file not found {:?}", file);
             }
         }
-        Some(Commands::Compile { file, out }) => {
+        Some(Commands::Compile { file, out: _ }) => {
             if let Ok(_file) = std::fs::read_to_string(file) {
                 // repl::run(file);
             } else {

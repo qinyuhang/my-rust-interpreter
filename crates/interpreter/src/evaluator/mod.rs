@@ -1,11 +1,9 @@
 use crate::object::*;
 use ::ast::*;
-use ::parser::*;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::vec::Vec;
-use token::Token;
 
 mod test;
 

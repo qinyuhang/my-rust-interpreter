@@ -1,6 +1,5 @@
 use crate::*;
 use ::token::*;
-use ast_macro::*;
 use std::any::Any;
 use std::cell::RefCell;
 use std::collections::HashMap;
