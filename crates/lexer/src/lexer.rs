@@ -146,7 +146,11 @@ impl Lexer {
                     // let idf = self.read_identifier();
                     should_read_one_more = false;
                     token_type = token::INT;
-                    self.read_number()
+                    let (r, is_float) = self.read_number();
+                    if is_float {
+                        token_type = token::FLOAT;
+                    }
+                    r
                 } else {
                     token_type = token::ILLEGAL;
                     self.ch.borrow().clone().into()
@@ -195,7 +199,8 @@ impl Lexer {
             .map(|c| c.clone().to_string())
             .collect::<String>()
     }
-    pub fn read_number(&self) -> String {
+    pub fn read_number(&self) -> (String, bool) {
+        let mut did_read_dot = false;
         let position = self.position.get();
         let is_read_hex =
             *self.ch.borrow() == '0' && (self.peek_char() == "x" || self.peek_char() == "X");
@@ -203,15 +208,22 @@ impl Lexer {
             || is_not_decimal_symbol(*self.ch.borrow())
             || (is_read_hex && is_hex(*self.ch.borrow()))
             || (*self.ch.borrow()) == '_'
+            || is_dot(*self.ch.borrow())
         {
+            if is_dot(*self.ch.borrow()) {
+                did_read_dot = true;
+            }
             self.read_char();
         }
-        self.input_chars[position..self.position.get()]
-            .iter()
-            .map(|c| c.clone().to_string())
-            // 不知道这里去掉之后是否合适？
-            .filter(|val| val != "_")
-            .collect::<String>()
+        (
+            self.input_chars[position..self.position.get()]
+                .iter()
+                .map(|c| c.clone().to_string())
+                // 不知道这里去掉之后是否合适？
+                .filter(|val| val != "_")
+                .collect::<String>(),
+            did_read_dot,
+        )
     }
     pub fn skip_white_space(&self) {
         while *self.ch.borrow() == ' '

@@ -17,6 +17,10 @@ pub fn is_digits(ch: char) -> bool {
     '0' <= ch && ch <= '9'
 }
 
+pub fn is_dot(ch: char) -> bool {
+    ch == '.'
+}
+
 pub fn is_hex(ch: char) -> bool {
     '0' <= ch && ch <= '9' || 'a' <= ch && ch <= 'f' || 'A' <= ch && ch <= 'F'
 }
