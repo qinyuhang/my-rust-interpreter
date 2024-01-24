@@ -20,7 +20,6 @@ impl Default for Token {
     }
 }
 
-
 pub struct ToBeToken {
     token_type: Option<TokenType>,
     literal: Option<String>,
@@ -117,6 +116,7 @@ pub const EOF: TokenType = "EOF";
 
 pub const IDENT: TokenType = "IDENT";
 pub const INT: TokenType = "INT";
+pub const FLOAT: TokenType = "FLOAT";
 
 pub const ASSIGN: TokenType = "=";
 pub const PLUS: TokenType = "+";
@@ -156,10 +156,20 @@ pub const EQ: TokenType = "==";
 pub const NOT_EQ: TokenType = "!=";
 pub const STRING: TokenType = "STRING";
 pub const COLON: TokenType = ":";
+pub const WHILE: TokenType = "WHILE";
+pub const FOR: TokenType = "FOR";
+pub const DO: TokenType = "DO";
+pub const SWITCH: TokenType = "SWITCH";
+pub const CASE: TokenType = "CASE";
+pub const BREAK: TokenType = "BREAK";
+pub const DEFAULT: TokenType = "DEFAULT";
+pub const PLUSEQ: TokenType = "+=";
+pub const MINEQ: TokenType = "-=";
+pub const INCREASE: TokenType = "++";
+pub const DECREASE: TokenType = "--";
 
-// pub const KEYWORDS: HashMap<String, TokenType> = HashMap::new();
-pub fn lookup_ident(ident: &String) -> TokenType {
-    let keywords: HashMap<String, TokenType> = HashMap::from([
+thread_local! {
+    static KEYWORDS: HashMap<String, TokenType> = HashMap::from([
         ("let".into(), LET),
         ("fn".into(), FUNCTION),
         ("true".into(), TRUE),
@@ -167,9 +177,17 @@ pub fn lookup_ident(ident: &String) -> TokenType {
         ("if".into(), IF),
         ("else".into(), ELSE),
         ("return".into(), RETURN),
-    ]);
-
-    if let Some(&t) = keywords.get(ident) {
+        ("while".into(), WHILE),
+        ("for".into(), FOR),
+        ("do".into(), DO),
+        ("switch".into(), SWITCH),
+        ("case".into(), CASE),
+        ("break".into(), BREAK),
+        ("default".into(), DEFAULT),
+    ])
+}
+pub fn lookup_ident(ident: &String) -> TokenType {
+    if let Some(&t) = KEYWORDS.with(|k| k.clone()).get(ident) {
         return t;
     }
     IDENT

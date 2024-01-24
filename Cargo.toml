@@ -27,5 +27,4 @@ members = [
     "crates/parser",
     "crates/token",
     "crates/vm",
-    "crates/lsp",
 ]

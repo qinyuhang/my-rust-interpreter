@@ -385,6 +385,143 @@ if ( 5 < 10 ) {
             assert_eq!(p_token.literal, test.1);
         });
     }
+    #[test]
+    fn test_for_loop_literal() {
+        let input = r#"for(let a = 0; a < 1; a+=1) { puts(a); }"#;
+        let tests = vec![
+            (token::FOR, "for"),
+            (token::LPAREN, "("),
+            (token::LET, "let"),
+            (token::IDENT, "a"),
+            (token::ASSIGN, "="),
+            (token::INT, "0"),
+            (token::SEMICOLON, ";"),
+            (token::IDENT, "a"),
+            (token::LT, "<"),
+            (token::INT, "1"),
+            (token::SEMICOLON, ";"),
+            (token::IDENT, "a"),
+            (token::PLUSEQ, "+="),
+            (token::INT, "1"),
+            (token::RPAREN, ")"),
+            (token::LBRACE, "{"),
+            (token::IDENT, "puts"),
+            (token::LPAREN, "("),
+            (token::IDENT, "a"),
+            (token::RPAREN, ")"),
+            (token::SEMICOLON, ";"),
+            (token::RBRACE, "}"),
+            (token::EOF, "\0"),
+        ];
+
+        let lex = Lexer::new(input);
+
+        tests.iter().for_each(|test| {
+            let p_token = lex.next_token();
+            // println!("Running Test: {:?}, lexer.next_token: {:?}", test, p_token);
+            assert_eq!(p_token.token_type, test.0);
+            assert_eq!(p_token.literal, test.1);
+        });
+    }
+
+    #[test]
+    fn test_while_loop_literal() {
+        let input = r#"while (a == 1) { puts(a); }"#;
+        let tests = vec![
+            (token::WHILE, "while"),
+            (token::LPAREN, "("),
+            (token::IDENT, "a"),
+            (token::EQ, "=="),
+            (token::INT, "1"),
+            (token::RPAREN, ")"),
+            (token::LBRACE, "{"),
+            (token::IDENT, "puts"),
+            (token::LPAREN, "("),
+            (token::IDENT, "a"),
+            (token::RPAREN, ")"),
+            (token::SEMICOLON, ";"),
+            (token::RBRACE, "}"),
+            (token::EOF, "\0"),
+        ];
+
+        let lex = Lexer::new(input);
+
+        tests.iter().for_each(|test| {
+            let p_token = lex.next_token();
+            // println!("Running Test: {:?}, lexer.next_token: {:?}", test, p_token);
+            assert_eq!(p_token.token_type, test.0);
+            assert_eq!(p_token.literal, test.1);
+        });
+    }
+
+    #[test]
+    fn test_do_while_loop_literal() {
+        let input = r#"do { puts(a); } while (a == 1);"#;
+        let tests = vec![
+            (token::DO, "do"),
+            (token::LBRACE, "{"),
+            (token::IDENT, "puts"),
+            (token::LPAREN, "("),
+            (token::IDENT, "a"),
+            (token::RPAREN, ")"),
+            (token::SEMICOLON, ";"),
+            (token::RBRACE, "}"),
+            (token::WHILE, "while"),
+            (token::LPAREN, "("),
+            (token::IDENT, "a"),
+            (token::EQ, "=="),
+            (token::INT, "1"),
+            (token::RPAREN, ")"),
+            (token::SEMICOLON, ";"),
+            (token::EOF, "\0"),
+        ];
+
+        let lex = Lexer::new(input);
+
+        tests.iter().for_each(|test| {
+            let p_token = lex.next_token();
+            // println!("Running Test: {:?}, lexer.next_token: {:?}", test, p_token);
+            assert_eq!(p_token.token_type, test.0);
+            assert_eq!(p_token.literal, test.1);
+        });
+    }
+
+    #[test]
+    fn test_switch_case_literal() {
+        let input = r#"switch (a) { case: puts(a); break; default: break; };"#;
+        let tests = vec![
+            (token::SWITCH, "switch"),
+            (token::LPAREN, "("),
+            (token::IDENT, "a"),
+            (token::RPAREN, ")"),
+            (token::LBRACE, "{"),
+            (token::CASE, "case"),
+            (token::COLON, ":"),
+            (token::IDENT, "puts"),
+            (token::LPAREN, "("),
+            (token::IDENT, "a"),
+            (token::RPAREN, ")"),
+            (token::SEMICOLON, ";"),
+            (token::BREAK, "break"),
+            (token::SEMICOLON, ";"),
+            (token::DEFAULT, "default"),
+            (token::COLON, ":"),
+            (token::BREAK, "break"),
+            (token::SEMICOLON, ";"),
+            (token::RBRACE, "}"),
+            (token::SEMICOLON, ";"),
+            (token::EOF, "\0"),
+        ];
+
+        let lex = Lexer::new(input);
+
+        tests.iter().for_each(|test| {
+            let p_token = lex.next_token();
+            // println!("Running Test: {:?}, lexer.next_token: {:?}", test, p_token);
+            assert_eq!(p_token.token_type, test.0);
+            assert_eq!(p_token.literal, test.1);
+        });
+    }
     //     #[test]
     //     fn test_unicode() {
     //         let input = r#"let abcd = 1;

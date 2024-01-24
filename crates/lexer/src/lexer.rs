@@ -51,8 +51,28 @@ impl Lexer {
             '{' => token::LBRACE,
             '}' => token::RBRACE,
             ',' => token::COMMA,
-            '+' => token::PLUS,
-            '-' => token::MINUS,
+            '+' => match self.peek_char().as_str() {
+                "=" => {
+                    self.read_char();
+                    token::PLUSEQ
+                }
+                "+" => {
+                    self.read_char();
+                    token::INCREASE
+                }
+                _ => token::PLUS,
+            },
+            '-' => match self.peek_char().as_str() {
+                "=" => {
+                    self.read_char();
+                    token::MINEQ
+                }
+                "-" => {
+                    self.read_char();
+                    token::DECREASE
+                }
+                _ => token::MINUS,
+            },
             '!' => {
                 if self.peek_char() == "=" {
                     self.read_char();
@@ -108,6 +128,10 @@ impl Lexer {
             token::STRING => self.read_string(),
             token::LBRACKET => "[".into(),
             token::RBRACKET => "]".into(),
+            token::PLUSEQ => "+=".into(),
+            token::INCREASE => "++".into(),
+            token::MINEQ => "-=".into(),
+            token::DECREASE => "--".into(),
             token::IDENT => {
                 if is_letter(*self.ch.borrow()) {
                     should_read_one_more = false;
