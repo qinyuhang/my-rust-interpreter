@@ -124,6 +124,7 @@ dependencies = [
  "byteorder",
  "interpreter",
  "parser",
+ "testing",
 ]
 
 [[package]]
@@ -160,6 +161,7 @@ dependencies = [
  "ast_macro",
  "lexer",
  "parser",
+ "testing",
  "token",
 ]
 
@@ -183,6 +185,7 @@ dependencies = [
  "interpreter",
  "lexer",
  "parser",
+ "testing",
  "token",
  "vm",
 ]
@@ -232,6 +235,10 @@ dependencies = [
  "quote",
  "unicode-ident",
 ]
+
+[[package]]
+name = "testing"
+version = "0.1.0"
 
 [[package]]
 name = "token"

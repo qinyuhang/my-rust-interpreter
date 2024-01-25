@@ -13,6 +13,7 @@ edition = "2021"
 "interpreter" = { path = "./crates/interpreter" }
 "lexer" = { path = "./crates/lexer" }
 "parser" = { path = "./crates/parser" }
+"testing" = { path = "./crates/testing" }
 "token" = { path = "./crates/token" }
 "vm" = { path = "./crates/vm" }
 clap = { version = "4.4.18", features = ["derive"] }
@@ -25,6 +26,7 @@ members = [
     "crates/compiler",
     "crates/interpreter",
     "crates/parser",
+    "crates/testing",
     "crates/token",
     "crates/vm",
 ]

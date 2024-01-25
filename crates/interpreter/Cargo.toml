@@ -12,3 +12,4 @@ edition = "2021"
 "parser" = { path = "../parser" }
 "lexer" = { path = "../lexer" }
 "token" = { path = "../token" }
+"testing" = { path = "../testing" }

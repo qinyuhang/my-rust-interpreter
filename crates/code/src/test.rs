@@ -1,7 +1,9 @@
 #[cfg(test)]
 mod test {
-
     use crate::*;
+    use ::interpreter::testing_object::*;
+    use ::testing::*;
+    use interpreter::Object;
 
     #[test]
     fn lang_code_canary_test() {
@@ -19,6 +21,31 @@ mod test {
             let instruction = make(op, operands.clone());
             assert_eq!(instruction, expected.clone());
         });
+    }
+
+    #[test]
+    fn test_concat_work() {
+        let a = vec![1, 2];
+        let b = vec![3, 4];
+        assert_eq!(concat_instructions(vec![a, b]), vec![1, 2, 3, 4])
+    }
+
+    fn handle_constants(expected: Vec<TestingResult>, actual: Vec<Rc<dyn Object>>) {
+        assert_eq!(expected.len(), actual.len());
+        expected
+            .iter()
+            .zip(actual.iter())
+            .for_each(|(e, a)| match e {
+                TestingResult::Int(uu) => {
+                    test_integer_object(Some(a.clone()), *uu);
+                }
+                _ => {}
+            })
+    }
+
+    fn concat_instructions(s: Vec<Instructions>) -> Instructions {
+        s.iter()
+            .fold(vec![], |acc, val| [acc, val.clone()].concat())
     }
 
     #[allow(unused)]
