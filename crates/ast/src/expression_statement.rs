@@ -172,6 +172,13 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
                 ex = Some(Rc::new(AstExpression::FunctionLiteral(val.clone())));
             }
         }
+        if v_any.is::<WhileLoopLiteral>() {
+            did_match = true;
+            if let Some(val) = value.as_any().downcast_ref::<WhileLoopLiteral>() {
+                tk = val.token.clone();
+                ex = Some(Rc::new(AstExpression::WhileLoopLiteral(val.clone())));
+            }
+        }
         if did_match {
             assert_ne!(tk.token_type, EOF);
             Ok(ExpressionStatement {

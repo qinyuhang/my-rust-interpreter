@@ -775,4 +775,20 @@ let mf = fn(x, y) { return x + y; };"#;
             assert!(pr.is_some());
         });
     }
+
+    #[test]
+    fn test_while_loop_literal() {
+        let cases = vec![(r#"while (true) { true }"#)];
+        cases.iter().for_each(|&input| {
+            let l = Lexer::new(input);
+
+            let p = Parser::new(l);
+
+            let pr = p.parse_program();
+
+            assert!(pr.is_some());
+
+            dbg!(pr.unwrap());
+        });
+    }
 }

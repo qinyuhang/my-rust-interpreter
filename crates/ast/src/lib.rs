@@ -90,6 +90,7 @@ pub enum AstExpression {
     // Program(Program),
     ReturnStatement(ReturnStatement),
     StringLiteral(StringLiteral),
+    WhileLoopLiteral(WhileLoopLiteral),
 }
 
 impl std::fmt::Display for AstExpression {
@@ -116,6 +117,7 @@ impl std::fmt::Display for AstExpression {
                 // AstExpression::Program(a)=> format!("{}", a),
                 AstExpression::ReturnStatement(a) => format!("{}", a),
                 AstExpression::StringLiteral(a) => format!("{}", a),
+                AstExpression::WhileLoopLiteral(a) => format!("{}", a),
             }
         )
     }
@@ -142,6 +144,7 @@ impl AstExpression {
             // AstExpression::Program(a)=> a,
             AstExpression::ReturnStatement(a) => a,
             AstExpression::StringLiteral(a) => a,
+            AstExpression::WhileLoopLiteral(a) => a,
         }
     }
 
@@ -165,6 +168,7 @@ impl AstExpression {
             // AstExpression::Program(a)=> a,
             AstExpression::ReturnStatement(a) => a,
             AstExpression::StringLiteral(a) => a,
+            AstExpression::WhileLoopLiteral(a) => a,
         }
     }
 
@@ -188,6 +192,7 @@ impl AstExpression {
             // AstExpression::Program(a)=> a,
             AstExpression::ReturnStatement(a) => a,
             AstExpression::StringLiteral(a) => a,
+            AstExpression::WhileLoopLiteral(a) => a,
         }
     }
 }

@@ -155,6 +155,9 @@ impl Parser {
         pc.register_prefix(STRING, Rc::new(move || pd.parse_string_literal()));
 
         let pd = pc.clone();
+        pc.register_prefix(WHILE, Rc::new(move || pd.parse_while_loop_literal()));
+
+        let pd = pc.clone();
         pc.register_prefix(LBRACKET, Rc::new(move || pd.parse_array_literal()));
         let pd = pc.clone();
         pc.register_prefix(LBRACE, Rc::new(move || pd.parse_hash_literal()));
@@ -552,6 +555,42 @@ impl Parser {
         } else {
             None
         }
+    }
+
+    // just like parse_function_parameters, this function will consume some token
+    pub fn parse_while_loop_literal(&self) -> Option<Rc<AstExpression>> {
+        let literal = self.cur_token.borrow().literal.clone();
+        let token = (*self.cur_token.borrow()).clone();
+        if !self.expect_peek(LPAREN) {
+            return None;
+        }
+        // dbg!(&literal);
+
+        // parse expression as condition
+        let condition = self.parse_expression(LOWEST);
+
+        if condition.is_none() {
+            return None;
+        }
+
+        // peek `{`
+        if !self.expect_peek(LBRACE) {
+            return None;
+        }
+
+        // parse block statement
+        let body = self.parse_block_statement();
+        // peek `}`
+        if !self.expect_peek(RBRACE) {
+            return None;
+        }
+        // dbg!(&condition);
+        // dbg!(&body);
+        Some(Rc::new(AstExpression::WhileLoopLiteral(WhileLoopLiteral {
+            token,
+            condition: condition.unwrap(),
+            body,
+        })))
     }
     pub fn parse_array_literal(&self) -> Option<Rc<AstExpression>> {
         // let mut list = vec![];
