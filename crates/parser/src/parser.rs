@@ -126,6 +126,9 @@ impl Parser {
         pc.register_prefix(INT, Rc::new(move || pd.parse_integer_literal()));
 
         let pd = pc.clone();
+        pc.register_prefix(FLOAT, Rc::new(move || pd.parse_float_literal()));
+
+        let pd = pc.clone();
         pc.register_prefix(BANG, Rc::new(move || pd.parse_prefix_expression()));
         let pd = pc.clone();
         pc.register_prefix(MINUS, Rc::new(move || pd.parse_prefix_expression()));
@@ -342,6 +345,15 @@ impl Parser {
         }
         // IntegerLiteral::try_from(self.cur_token.borrow().Literal.clone())
         //     .map_or_else(|_| None, move |v| Some(Rc::new(v)))
+    }
+
+    pub fn parse_float_literal(&self) -> Option<Rc<AstExpression>> {
+        let literal = self.cur_token.borrow().literal.clone();
+        if let Ok(v) = FloatLiteral::try_from(literal) {
+            Some(Rc::new(AstExpression::FloatLiteral(v)))
+        } else {
+            None
+        }
     }
 
     pub fn parse_prefix_expression(&self) -> Option<Rc<AstExpression>> {

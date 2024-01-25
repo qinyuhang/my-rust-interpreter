@@ -191,6 +191,44 @@ return 500;
     }
 
     #[test]
+    fn test_float_expression() {
+        let input = "3.1415926";
+        let lex = Lexer::new(input);
+        let p = Parser::new(lex);
+        // println!("{p}");
+        let pr = p.parse_program();
+        test_parser_errors(&p, None);
+
+        assert!(pr.is_some());
+
+        let pr = pr.unwrap();
+
+        assert_eq!(pr.statement.len(), input.lines().count());
+
+        // println!("{:?}", pr.statement);
+
+        let stm = ExpressionStatement::try_from(Box::new(&*pr.statement[0].clone()));
+
+        assert!(stm.is_ok());
+
+        let stm = stm.unwrap();
+
+        // println!("\n\nwtf: {:?}\n\n", stm);
+
+        assert!(stm.expression.is_some());
+
+        let il = FloatLiteral::try_from(Box::new(&*stm.expression.unwrap()));
+
+        assert!(il.is_ok());
+
+        let il = il.unwrap();
+
+        assert_eq!(il.value.0, 3.1415926);
+        assert_eq!(il.token_literal(), "3.1415926");
+        assert_eq!(il.token.literal, "3.1415926");
+        assert_eq!(il.token.token_type, FLOAT);
+    }
+    #[test]
     fn test_int_statement() {
         let input = "let a = 5;";
         let lex = Lexer::new(input);

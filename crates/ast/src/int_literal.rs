@@ -96,7 +96,7 @@ impl TryFrom<Box<&AstExpression>> for IntegerLiteral {
                 if x.is::<Self>() {
                     // println!("x is IntegerLiteral {:?}", x);
                     let x = x.downcast_ref::<Self>().unwrap();
-                    return Ok(IntegerLiteral {
+                    return Ok(Self {
                         token: x.token.clone(),
                         value: x.value,
                     });

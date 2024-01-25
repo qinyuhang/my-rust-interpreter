@@ -36,8 +36,11 @@ mod test {
             .iter()
             .zip(actual.iter())
             .for_each(|(e, a)| match e {
-                TestingResult::Int(uu) => {
-                    test_integer_object(Some(a.clone()), *uu);
+                TestingResult::Int(v) => {
+                    test_integer_object(Some(a.clone()), *v);
+                }
+                TestingResult::Bool(v) => {
+                    test_boolean_object(Some(a.clone()), *v);
                 }
                 _ => {}
             })

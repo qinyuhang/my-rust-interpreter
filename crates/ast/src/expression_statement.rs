@@ -117,6 +117,16 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
                 // return Ok(IntegerLiteral { token: v.token ,value: v.value});
             }
         }
+        if v_any.is::<FloatLiteral>() {
+            did_match = true;
+            if let Some(v) = value.as_any().downcast_ref::<FloatLiteral>() {
+                ex = Some(Rc::new(AstExpression::FloatLiteral(FloatLiteral {
+                    token: v.token.clone(),
+                    value: v.value,
+                })));
+                tk = v.token.clone();
+            }
+        }
         if v_any.is::<PrefixExpression>() {
             did_match = true;
             // println!("\n\nv_any is PrefixExpression\n\n");
