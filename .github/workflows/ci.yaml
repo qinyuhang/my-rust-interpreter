@@ -36,6 +36,7 @@ jobs:
           args: --release --all-features -- run ./examples/fib.mok
       - name: bench
         run: |
+          echo "-----------------"
           echo "test node js"
           /usr/bin/time node examples/fib.js &&
           echo "-----------------"

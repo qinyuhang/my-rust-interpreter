@@ -10,5 +10,5 @@ let fib = (n) => {
     }
 };
 
-let r = fib(22);
+let r = fib(30);
 console.log(r);
