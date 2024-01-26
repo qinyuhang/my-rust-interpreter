@@ -590,6 +590,59 @@ pub fn eval_infix_expression(
                 })),
             }
         }
+        (Some(l), Some(r))
+            if (l.object_type() == FLOAT_OBJECT && r.object_type() == INTEGER_OBJECT)
+                || (r.object_type() == FLOAT_OBJECT && l.object_type() == INTEGER_OBJECT) =>
+        {
+            let ll = l.clone();
+            let rr = r.clone();
+
+            let l = vec![
+                l.as_any().downcast_ref::<FloatObject>().map(|v| v.value.0),
+                ll.as_any()
+                    .downcast_ref::<Integer>()
+                    .map(|v| v.value as f64),
+            ];
+
+            let l = l.iter().find(|v| v.is_some()).unwrap().unwrap();
+
+            // bug if l.as_any().downcast_ref::<Integer>() will get None
+            let r = vec![
+                r.as_any().downcast_ref::<FloatObject>().map(|v| v.value.0),
+                rr.as_any()
+                    .downcast_ref::<Integer>()
+                    .map(|v| v.value as f64),
+            ];
+
+            let r = r.iter().find(|v| v.is_some()).unwrap().unwrap();
+
+            let t = TRUEOBJ.with(|val| val.clone());
+            let f = FALSEOBJ.with(|val| val.clone());
+            match operator {
+                "==" => Some(if l == r { t } else { f }),
+                "!=" => Some(if l != r { t } else { f }),
+                "+" => Some(Rc::new(FloatObject {
+                    value: WrapF64(l + r),
+                })),
+                "-" => Some(Rc::new(FloatObject {
+                    value: WrapF64(l - r),
+                })),
+                "*" => Some(Rc::new(FloatObject {
+                    value: WrapF64(l * r),
+                })),
+                "/" => Some(Rc::new(FloatObject {
+                    value: WrapF64(l / r),
+                })),
+                _ => Some(Rc::new(ErrorObject {
+                    message: format!(
+                        "unknown operator: {} {} {}",
+                        ll.object_type(),
+                        operator,
+                        rr.object_type()
+                    ),
+                })),
+            }
+        }
         (Some(l), Some(r)) if l.object_type() == RETURN_VALUE_OBJECT => {
             let l = l.as_any().downcast_ref::<ReturnValue>().unwrap();
             return eval_infix_expression(operator, Some(l.value.clone()), Some(r.clone()));

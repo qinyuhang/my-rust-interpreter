@@ -559,9 +559,10 @@ mod test {
             (r#"3.0 - 5.1"#, testing_result!(Float, 3.0 - 5.1)),
             (r#"3.0 * 5.1"#, testing_result!(Float, 3.0 * 5.1)),
             (r#"3.0 / 5.1"#, testing_result!(Float, 3.0 / 5.1)),
-            // (r#"fn() { 5 }() - 5;"#, testing_result!(Int, 0)),
-            // (r#"fn() { 5 }() * 5;"#, testing_result!(Int, 25)),
-            // (r#"fn() { 5 }() / 5;"#, testing_result!(Int, 1)),
+            (r#"3 + 5.1"#, testing_result!(Float, 3f64 + 5.1)),
+            (r#"3 - 5.1"#, testing_result!(Float, 3f64 - 5.1)),
+            (r#"3 * 5.1"#, testing_result!(Float, 3f64 * 5.1)),
+            (r#"3 / 5.1"#, testing_result!(Float, 3f64 / 5.1)),
         ];
         cases.iter().for_each(|(case, out)| {
             handle_test_object(case, out);

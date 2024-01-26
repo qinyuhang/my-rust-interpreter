@@ -53,6 +53,38 @@ impl Div for WrapF64 {
         Self(self.0 / rhs.0)
     }
 }
+impl Add<i64> for WrapF64 {
+    type Output = Self;
+
+    fn add(self, rhs: i64) -> Self::Output {
+        Self(self.0 + rhs as f64)
+    }
+}
+
+impl Sub<i64> for WrapF64 {
+    type Output = Self;
+
+    fn sub(self, rhs: i64) -> Self::Output {
+        Self(self.0 - rhs as f64)
+    }
+}
+
+impl Mul<i64> for WrapF64 {
+    type Output = Self;
+
+    fn mul(self, rhs: i64) -> Self::Output {
+        Self(self.0 * rhs as f64)
+    }
+}
+
+impl Div<i64> for WrapF64 {
+    type Output = Self;
+
+    fn div(self, rhs: i64) -> Self::Output {
+        Self(self.0 / rhs as f64)
+    }
+}
+
 impl std::fmt::Display for WrapF64 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
