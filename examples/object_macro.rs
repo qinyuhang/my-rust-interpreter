@@ -1,5 +1,5 @@
 use my_rust_interpreter::*;
-
+use std::rc::Rc;
 // #[object(BOOLEAN_OBJECT)]
 #[derive(Hash, Debug)]
 struct A {

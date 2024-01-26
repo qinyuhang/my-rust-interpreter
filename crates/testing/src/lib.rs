@@ -4,6 +4,7 @@ use std::rc::Rc;
 pub enum TestingResult {
     STRING(String),
     Int(i64),
+    Float(f64),
     Bool(bool),
     Vec(Vec<i64>),
     Err(String),
@@ -18,6 +19,9 @@ macro_rules! testing_result {
     };
     (Int, $e:expr) => {
         TestingResult::Int($e)
+    };
+    (Float, $e:expr) => {
+        TestingResult::Float($e)
     };
     (Bool, $e:expr) => {
         TestingResult::Bool($e)

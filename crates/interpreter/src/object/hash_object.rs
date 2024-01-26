@@ -1,10 +1,11 @@
 use crate::object::*;
-use ast_macro::object;
+use ast_macro::{object, object_with_try_from};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
 #[object(HASH_OBJECT)]
+#[object_with_try_from(HASH_OBJECT)]
 pub struct HashObject {
     pub pairs: RefCell<HashMap<Rc<HashKey>, Rc<dyn Object>>>,
 }

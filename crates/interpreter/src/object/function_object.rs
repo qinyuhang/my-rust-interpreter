@@ -1,9 +1,10 @@
 use crate::object::*;
 use ::ast::*;
-use ast_macro::object;
+use ast_macro::{object, object_with_try_from};
 use std::rc::Rc;
 
 #[object(FUNCTION_OBJECT)]
+#[object_with_try_from(FUNCTION_OBJECT)]
 pub struct FunctionObject {
     pub context: Rc<Context>,
 
@@ -17,20 +18,6 @@ pub struct FunctionObject {
 impl ObjectInspect for FunctionObject {
     fn _inspect(&self) -> String {
         format!("fn ({}) {{ {} }}", 1, 2)
-    }
-}
-
-impl TryFrom<Rc<dyn Object>> for FunctionObject {
-    type Error = String;
-
-    fn try_from(_value: Rc<dyn Object>) -> Result<Self, Self::Error> {
-        // let val = value.as_any();
-        // if val.is::<Integer>() {
-        //     if let Some(v) = val.downcast_ref::<Integer>() {
-        //         return Ok((*v).clone());
-        //     }
-        // }
-        Err("Str".into())
     }
 }
 

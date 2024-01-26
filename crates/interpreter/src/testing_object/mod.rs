@@ -29,6 +29,14 @@ pub fn test_integer_object(obj: Option<Rc<dyn Object>>, expected: i64) -> bool {
     true
 }
 
+pub fn test_float_object(obj: Option<Rc<dyn Object>>, expected: f64) -> bool {
+    let i = FloatObject::try_from(obj.unwrap());
+    assert!(i.is_ok());
+    let i = i.unwrap();
+    assert_eq!(i.value.0, expected);
+    true
+}
+
 pub fn test_boolean_object(obj: Option<Rc<dyn Object>>, expected: bool) -> bool {
     let i = Boolean::try_from(obj.unwrap());
     assert!(i.is_ok());
@@ -72,6 +80,9 @@ pub fn handle_test_object(case: &str, out: &TestingResult) {
         }
         TestingResult::Int(i) => {
             test_integer_object(evaluated, *i);
+        }
+        TestingResult::Float(f) => {
+            test_float_object(evaluated, *f);
         }
         TestingResult::Bool(b) => {
             test_boolean_object(evaluated, *b);

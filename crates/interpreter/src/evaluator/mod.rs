@@ -153,6 +153,11 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
             return Some(Rc::new(Integer { value: n.value }));
         }
     }
+    if n.is::<FloatLiteral>() {
+        if let Some(n) = n.downcast_ref::<FloatLiteral>() {
+            return Some(Rc::new(FloatObject { value: n.value }));
+        }
+    }
     if n.is::<BooleanLiteral>() {
         if let Some(n) = n.downcast_ref::<BooleanLiteral>() {
             return Some(if n.value {
@@ -542,6 +547,38 @@ pub fn eval_infix_expression(
                 "!=" => Some(if l.value != r.value { t } else { f }),
                 "+" => Some(Rc::new(StringObject {
                     value: Rc::new(format!("{}{}", l.value, r.value)),
+                })),
+                _ => Some(Rc::new(ErrorObject {
+                    message: format!(
+                        "unknown operator: {} {} {}",
+                        l.object_type(),
+                        operator,
+                        r.object_type()
+                    ),
+                })),
+            }
+        }
+        (Some(l), Some(r))
+            if l.object_type() == FLOAT_OBJECT && r.object_type() == FLOAT_OBJECT =>
+        {
+            let l = l.as_any().downcast_ref::<FloatObject>().unwrap();
+            let r = r.as_any().downcast_ref::<FloatObject>().unwrap();
+            let t = TRUEOBJ.with(|val| val.clone());
+            let f = FALSEOBJ.with(|val| val.clone());
+            match operator {
+                "==" => Some(if l.value == r.value { t } else { f }),
+                "!=" => Some(if l.value != r.value { t } else { f }),
+                "+" => Some(Rc::new(FloatObject {
+                    value: l.value + r.value,
+                })),
+                "-" => Some(Rc::new(FloatObject {
+                    value: l.value - r.value,
+                })),
+                "*" => Some(Rc::new(FloatObject {
+                    value: l.value * r.value,
+                })),
+                "/" => Some(Rc::new(FloatObject {
+                    value: l.value / r.value,
                 })),
                 _ => Some(Rc::new(ErrorObject {
                     message: format!(

@@ -4,6 +4,7 @@ pub mod boolean;
 pub mod builtin;
 pub mod context;
 pub mod error_object;
+pub mod float_object;
 pub mod function_object;
 pub mod hash_key;
 pub mod hash_object;
@@ -17,6 +18,7 @@ pub use boolean::*;
 pub use builtin::*;
 pub use context::*;
 pub use error_object::*;
+pub use float_object::*;
 pub use function_object::*;
 pub use hash_key::*;
 pub use hash_object::*;
@@ -24,6 +26,7 @@ pub use integer::*;
 pub use null::*;
 pub use return_value::*;
 pub use string_object::*;
+
 pub type ObjectType = &'static str;
 
 pub trait ObjectWithoutInspect {
@@ -49,6 +52,7 @@ pub trait Object: Debug + std::fmt::Display + ObjectInspect + ObjectWithoutInspe
 
 pub const BOOLEAN_OBJECT: &str = "BOOLEAN";
 pub const INTEGER_OBJECT: &str = "INTEGER";
+pub const FLOAT_OBJECT: &str = "FLOAT";
 pub const NULL_OBJECT: &str = "NULL";
 pub const RETURN_VALUE_OBJECT: &str = "RETURN_VALUE";
 pub const ERROR_OBJECT: &str = "ERROR_OBJECT";

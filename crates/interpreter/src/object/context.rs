@@ -48,6 +48,7 @@ mod test {
     use crate::*;
     use ::ast::*;
     use ::token::*;
+    use std::rc::Rc;
 
     #[test]
     fn test_new_context() {

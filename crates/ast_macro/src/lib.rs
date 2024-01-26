@@ -128,6 +128,26 @@ pub fn object(args: TokenStream, input: TokenStream) -> TokenStream {
     TokenStream::from(s)
 }
 
+#[proc_macro_attribute]
+pub fn object_with_try_from(args: TokenStream, input: TokenStream) -> TokenStream {
+    let ipt = syn::parse_macro_input!(input as syn::DeriveInput);
+    let name = &ipt.ident;
+    let attr_args = syn::parse_macro_input!(args as syn::Ident);
+    let s = quote! {
+        #ipt
+        impl TryFrom<Rc<dyn Object>> for #name {
+            type Error = String;
+
+            fn try_from(value: Rc<dyn Object>) -> Result<Self, Self::Error> {
+                if let Some(v) = value.as_any().downcast_ref::<#name>() {
+                    return Ok((*v).clone());
+                }
+                Err(format!("cannot convert {} into {}", &value, #attr_args))
+            }
+        }
+    };
+    TokenStream::from(s)
+}
 // #[proc_macro]
 // macro_rules! hashmap {
 //     ($( $key: expr => $val: expr ),*) => {{
