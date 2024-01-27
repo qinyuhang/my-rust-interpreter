@@ -40,8 +40,24 @@ jobs:
           echo "test node js"
           /usr/bin/time node examples/fib.js &&
           echo "-----------------"
-          echo "test my interpreter"
+          echo "test my interpreter hot run"
           /usr/bin/time ./target/release/my-rust-interpreter run ./examples/fib.mok &&
           echo "-----------------"
+          echo "test my interpreter compiled run"
+          /usr/bin/time ./target/release/examples/fib_interpreter &&
+          echo "-----------------"
           echo "test rust native"
-          /usr/bin/time ./target/release/examples/fib
+          /usr/bin/time ./target/release/examples/fib &&
+          echo "-----------------"
+          echo "test node js fib using loop"
+          /usr/bin/time node examples/fib_loop.js &&
+          echo "-----------------"
+          echo "test my interpreter hot run using loop"
+          /usr/bin/time ./target/release/my-rust-interpreter run ./examples/fib_loop.mok &&
+          echo "-----------------"
+          echo "test my interpreter compiled run using loop"
+          /usr/bin/time ./target/release/examples/fib_loop_interpreter &&
+          echo "-----------------"
+          echo "test rust native using loop"
+          /usr/bin/time ./target/release/examples/fib_loop &&
+          echo "DONE"

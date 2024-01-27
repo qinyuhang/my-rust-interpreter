@@ -63,14 +63,14 @@ let foobar = 838383;
         let expect_error_count = expect_error_count.unwrap_or(0);
         if err_count != expect_error_count {
             errors.borrow().iter().for_each(|e| {
-                println!("Get parse error: {}", e);
+                eprintln!("Get parse error: {}", e);
             })
         }
         assert_eq!(err_count, expect_error_count);
         if err_count == expect_error_count {
             return;
         }
-        println!("lang_parser has {} errors", err_count);
+        eprintln!("lang_parser has {} errors", err_count);
     }
 
     #[test]
@@ -819,6 +819,14 @@ let mf = fn(x, y) { return x + y; };"#;
             (r#"while (a > 1) { break; }"#),
             (r#"while (a > 1) { a += 1; }"#),
             (r#"while (a > 1) { a = a + 1; }"#),
+            (r#"while (true) { true };"#),
+            (r#"while (a > 1) { break; };"#),
+            (r#"while (a > 1) { a += 1; };"#),
+            (r#"while (a > 1) { a = a + 1; };"#),
+            (r#"while (true) { true }; return 1;"#),
+            (r#"while (a > 1) { break; }; return 1;"#),
+            (r#"while (a > 1) { a += 1; }; return 1;"#),
+            (r#"while (a > 1) { a = a + 1; }; return 1;"#),
         ];
         cases.iter().for_each(|&input| {
             let l = Lexer::new(input);

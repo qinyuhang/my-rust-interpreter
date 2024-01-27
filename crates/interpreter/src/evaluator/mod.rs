@@ -390,7 +390,7 @@ pub fn eval_hash_index_expression(
 ) -> Option<Rc<dyn Object>> {
     if let Some(hm) = left.as_any().downcast_ref::<HashObject>() {
         if let Ok(hk) = HashKey::try_from(index.clone()) {
-            dbg!(&hm);
+            // dbg!(&hm);
             if let Some(value) = hm.pairs.borrow().get(&hk) {
                 return Some(value.clone());
             }

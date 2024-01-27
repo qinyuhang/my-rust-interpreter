@@ -598,8 +598,6 @@ impl Parser {
             return None;
         }
 
-        println!("{}", condition.as_ref().unwrap());
-
         // peek `{`
         if !self.expect_peek(LBRACE) {
             return None;

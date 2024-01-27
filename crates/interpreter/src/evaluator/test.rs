@@ -86,6 +86,7 @@ mod test {
             ("if (1 > 2) { 10 }", testing_result!(Nil)),
             ("if (1 > 2) { 10 } else { 20 }", testing_result!(Int, 20)),
             ("if (1 < 2) { 10 } else { 20 }", testing_result!(Int, 10)),
+            ("if (1 > 2) { 10 }; 20", testing_result!(Int, 20)),
         ];
 
         tests.iter().for_each(|(input, value)| {
@@ -643,7 +644,17 @@ mod test {
                 r#"let a = 0; while (a < 1) { break; }; a;"#,
                 testing_result!(Int, 0),
             ),
-            // (r#"3.0 + 5.1"#, testing_result!(Float, 8.1)),
+            (
+                r#"
+let a = 0;
+let b = fn() {
+  while (a < 5) { a += 1; };
+  return a;
+};
+b();
+            "#,
+                testing_result!(Int, 5),
+            ),
             // (r#"3.0 - 5.1"#, testing_result!(Float, 3.0 - 5.1)),
             // (r#"3.0 * 5.1"#, testing_result!(Float, 3.0 * 5.1)),
             // (r#"3.0 / 5.1"#, testing_result!(Float, 3.0 / 5.1)),

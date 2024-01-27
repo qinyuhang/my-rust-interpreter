@@ -116,6 +116,6 @@ pub fn run(program: String) {
 }
 pub fn print_parser_errors(errors: &Vec<String>) {
     errors.iter().for_each(|err| {
-        println!("\t{}", err);
+        eprintln!("\t{}", err);
     });
 }

@@ -278,7 +278,7 @@ if ( 5 < 10 ) {
         let mut count = 0;
         while tk.token_type != token::EOF {
             count += 1;
-            println!("{:?}", tk);
+            // println!("{:?}", tk);
             tk = lex.next_token();
         }
         assert_eq!(count, 6);
@@ -293,7 +293,7 @@ if ( 5 < 10 ) {
         let mut count = 0;
         while tk.token_type != token::EOF {
             count += 1;
-            println!("{:?}", tk);
+            // println!("{:?}", tk);
             tk = lex.next_token();
         }
         assert_eq!(count, 3);
