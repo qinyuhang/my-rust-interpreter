@@ -12,6 +12,6 @@ edition = "2021"
 "byteorder" = "*"
 "parser" = { path = "../parser" }
 "interpreter" = { path = "../interpreter" }
-"vm" = { path = "../vm" }
 "code" = { path = "../code" }
 "lexer" = { path = "../lexer" }
+"object" = { path = "../object" }

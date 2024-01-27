@@ -1,4 +1,4 @@
-use crate::object::*;
+use crate::*;
 use ast_macro::object;
 use std::rc::Rc;
 

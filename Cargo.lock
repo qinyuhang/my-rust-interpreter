@@ -123,6 +123,7 @@ dependencies = [
  "ast_macro",
  "byteorder",
  "interpreter",
+ "object",
  "parser",
  "testing",
 ]
@@ -143,8 +144,8 @@ dependencies = [
  "code",
  "interpreter",
  "lexer",
+ "object",
  "parser",
- "vm",
 ]
 
 [[package]]
@@ -160,6 +161,7 @@ dependencies = [
  "ast",
  "ast_macro",
  "lexer",
+ "object",
  "parser",
  "testing",
  "token",
@@ -184,10 +186,23 @@ dependencies = [
  "compiler",
  "interpreter",
  "lexer",
+ "object",
  "parser",
  "testing",
  "token",
  "vm",
+]
+
+[[package]]
+name = "object"
+version = "0.1.0"
+dependencies = [
+ "ast",
+ "ast_macro",
+ "lexer",
+ "parser",
+ "testing",
+ "token",
 ]
 
 [[package]]
@@ -263,10 +278,15 @@ checksum = "711b9620af191e0cdc7468a8d14e709c3dcdb115b36f838e601583af800a370a"
 name = "vm"
 version = "0.1.0"
 dependencies = [
+ "ast",
  "ast_macro",
  "byteorder",
+ "compiler",
  "interpreter",
+ "lexer",
+ "object",
  "parser",
+ "testing",
 ]
 
 [[package]]

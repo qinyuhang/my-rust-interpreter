@@ -1,4 +1,4 @@
-use my_rust_interpreter::*;
+use ::object::ObjectInspect;
 use std::rc::Rc;
 // #[object(BOOLEAN_OBJECT)]
 #[derive(Hash, Debug)]

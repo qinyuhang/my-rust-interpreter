@@ -1,17 +1,17 @@
 use std::{any::Any, fmt::Debug};
-pub mod array_object;
-pub mod boolean;
-pub mod builtin;
-pub mod context;
-pub mod error_object;
-pub mod float_object;
-pub mod function_object;
-pub mod hash_key;
-pub mod hash_object;
-pub mod integer;
-pub mod null;
-pub mod return_value;
-pub mod string_object;
+mod array_object;
+mod boolean;
+mod builtin;
+mod context;
+mod error_object;
+mod float_object;
+mod function_object;
+mod hash_key;
+mod hash_object;
+mod integer;
+mod null;
+mod return_value;
+mod string_object;
 
 pub use array_object::*;
 pub use boolean::*;
@@ -61,6 +61,7 @@ pub const STRING_OBJECT: &str = "STRING_OBJECT";
 pub const BUILTIN_OBJECT: &str = "BUILTIN";
 pub const ARRAY_OBJECT: &str = "ARRAY_OBJECT";
 pub const HASH_OBJECT: &str = "HASH_OBJECT";
+pub const WHILE_OBJECT: &str = "WHILE_OBJECT";
 
 // #[derive(Eq, PartialEq, Hash, Debug, Clone)]
 // pub enum ObjectEnum {

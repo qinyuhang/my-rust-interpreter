@@ -2,8 +2,8 @@
 mod test {
     use crate::*;
     use ::interpreter::testing_object::*;
+    use ::object::Object;
     use ::testing::*;
-    use interpreter::Object;
 
     #[test]
     fn lang_code_canary_test() {

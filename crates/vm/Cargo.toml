@@ -8,6 +8,13 @@ edition = "2021"
 
 [dependencies]
 "ast_macro" = { path = "../ast_macro" }
+"ast" = { path = "../ast" }
+"lexer" = { path = "../lexer" }
+"object" = { path = "../object" }
 "byteorder" = "*"
 "parser" = { path = "../parser" }
+"compiler" = { path = "../compiler" }
+
+[dev-dependencies]
 "interpreter" = { path = "../interpreter" }
+"testing" = { path = "../testing" }

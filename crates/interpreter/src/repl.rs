@@ -1,5 +1,6 @@
 use crate::*;
 use ::lexer::*;
+use ::object::*;
 use ::parser::*;
 
 use std::cell::RefCell;

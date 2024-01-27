@@ -1,4 +1,4 @@
-use crate::object::*;
+use crate::*;
 use ast_macro::{object, object_with_try_from};
 use std::rc::Rc;
 

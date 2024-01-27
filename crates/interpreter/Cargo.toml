@@ -11,5 +11,6 @@ edition = "2021"
 "ast_macro" = { path = "../ast_macro" }
 "parser" = { path = "../parser" }
 "lexer" = { path = "../lexer" }
+"object" = { path = "../object" }
 "token" = { path = "../token" }
 "testing" = { path = "../testing" }

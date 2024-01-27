@@ -1,4 +1,4 @@
-use crate::object::*;
+use crate::*;
 use ::ast::*;
 use std::cell::RefCell;
 use std::collections::HashMap;

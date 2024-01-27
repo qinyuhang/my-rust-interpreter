@@ -12,6 +12,7 @@ edition = "2021"
 "compiler" = { path = "./crates/compiler" }
 "interpreter" = { path = "./crates/interpreter" }
 "lexer" = { path = "./crates/lexer" }
+"object" = { path = "./crates/object" }
 "parser" = { path = "./crates/parser" }
 "testing" = { path = "./crates/testing" }
 "token" = { path = "./crates/token" }
@@ -25,6 +26,8 @@ members = [
     "crates/code",
     "crates/compiler",
     "crates/interpreter",
+    "crates/lexer",
+    "crates/object",
     "crates/parser",
     "crates/testing",
     "crates/token",

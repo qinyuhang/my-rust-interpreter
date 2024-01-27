@@ -1,18 +1,14 @@
 [package]
-name = "code"
+name = "object"
 version = "0.1.0"
 edition = "2021"
 
-[lib]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 "ast" = { path = "../ast" }
 "ast_macro" = { path = "../ast_macro" }
-"byteorder" = "*"
 "parser" = { path = "../parser" }
-"interpreter" = { path = "../interpreter" }
-
-[dev-dependencies]
+"lexer" = { path = "../lexer" }
+"token" = { path = "../token" }
 "testing" = { path = "../testing" }
-"object" = { path = "../object" }

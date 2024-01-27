@@ -2,6 +2,7 @@ use crate::*;
 use ::testing::*;
 use ast::Program;
 use lexer::Lexer;
+use object::*;
 use parser::Parser;
 use std::rc::Rc;
 
