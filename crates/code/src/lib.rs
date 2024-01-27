@@ -1,15 +1,63 @@
 use byteorder::{BigEndian, ByteOrder};
+use std::fmt::Formatter;
 
 use std::rc::Rc;
 
 pub type Instructions = Vec<u8>;
 // pub type OpCode = u8;
 
+// helper fns to display Instructions
+pub fn format_display_instructions(instructions: &Instructions) -> String {
+    let mut i = 0;
+    let mut str = String::new();
+    while i < instructions.len() {
+        let def = Definition::look_up(&OpCode::from(instructions[i]));
+        if def.is_none() {
+            str.push_str("err");
+            continue;
+        }
+        let def = def.unwrap();
+        let (operands, read) = read_operands(def.clone(), &instructions[i + 1..]);
+        str.push_str(&format!(
+            "{:04} {}\n",
+            i,
+            format_one_instruction(def.clone(), &operands)
+        ));
+        i += (1 + (read as usize))
+    }
+    str
+}
+
+pub fn format_one_instruction(def: Rc<Definition>, operands: &Vec<u16>) -> String {
+    let op_count = def.operand_widths.len();
+    assert_eq!(op_count, operands.len(), "ERR");
+    return match op_count {
+        1 => format!("{} {}", def.name, operands[0]),
+        _ => "".into(),
+    };
+}
+
 #[derive(Clone, Copy)]
 #[repr(u8)]
 pub enum OpCode {
     OpConstant = 0u8,
     X,
+}
+
+impl From<u8> for OpCode {
+    fn from(value: u8) -> Self {
+        match value {
+            0 => OpCode::OpConstant,
+            // ... 其他枚举值的匹配
+            _ => panic!("Invalid OpCode value: {}", value),
+        }
+    }
+}
+
+impl std::fmt::Display for OpCode {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", *self as u8)
+    }
 }
 
 pub struct Definition {
@@ -57,6 +105,26 @@ pub fn make(op: &OpCode, operands: Vec<u16>) -> Vec<u8> {
         }
     }
     instruction
+}
+
+// slice to improve performance
+pub fn read_operands(def: Rc<Definition>, ins: &[u8]) -> (/* operands */ Vec<u16>, /* read */ u8) {
+    let mut operands = vec![0; def.operand_widths.len()];
+    let mut offset = 0;
+    for (i, &width) in def.operand_widths.iter().enumerate() {
+        match width {
+            2 => {
+                operands[i] = read_uint16(&ins);
+                offset += width;
+            }
+            _ => {}
+        }
+    }
+    (operands, offset)
+}
+
+fn read_uint16(instructions: &[u8]) -> u16 {
+    BigEndian::read_u16(instructions)
 }
 
 mod test;

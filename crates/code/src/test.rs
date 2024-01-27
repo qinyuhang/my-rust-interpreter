@@ -30,6 +30,47 @@ mod test {
         assert_eq!(concat_instructions(vec![a, b]), vec![1, 2, 3, 4])
     }
 
+    #[test]
+    fn test_proper_format_instructions() {
+        let cases = vec![
+            make(&OpCode::OpConstant, vec![1]),
+            make(&OpCode::OpConstant, vec![2]),
+            make(&OpCode::OpConstant, vec![65535]),
+        ];
+
+        let expected = r#"0000 OpConst 1
+0003 OpConst 2
+0006 OpConst 65535
+"#;
+
+        let c = concat_instructions(cases);
+        assert_eq!(expected, format_display_instructions(&c));
+    }
+
+    #[test]
+    fn test_read_operands() {
+        let cases = vec![(OpCode::OpConstant, vec![65535], 2)];
+        cases.iter().for_each(|(op, operands, bytes_read)| {
+            let ins = make(op, operands.clone());
+            let z = Definition::look_up(op);
+            assert!(z.is_some(), "{}", format!("definition not found: {}", op));
+
+            let (operands_read, n) = read_operands(z.unwrap(), &ins[1..]);
+            assert_eq!(
+                n,
+                *bytes_read,
+                "{}",
+                format!("n wrong. want={}, got={}", bytes_read, n)
+            );
+            operands
+                .iter()
+                .zip(operands_read.iter())
+                .for_each(|(ex, a)| {
+                    assert_eq!(*ex, *a, "{}", format!(""));
+                })
+        });
+    }
+    fn handle_operands() {}
     fn handle_constants(expected: Vec<TestingResult>, actual: Vec<Rc<dyn Object>>) {
         assert_eq!(expected.len(), actual.len());
         expected
@@ -43,6 +84,17 @@ mod test {
                     test_boolean_object(Some(a.clone()), *v);
                 }
                 _ => {}
+            })
+    }
+
+    fn handle_instructions(expected: Vec<Instructions>, actual: Instructions) {
+        let concat_instructions_result = concat_instructions(expected);
+        assert_eq!(concat_instructions_result.len(), actual.len());
+        concat_instructions_result
+            .iter()
+            .zip(actual.iter())
+            .for_each(|(e, a)| {
+                assert_eq!(*e, *a);
             })
     }
 

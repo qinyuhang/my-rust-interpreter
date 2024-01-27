@@ -432,6 +432,7 @@ pub fn eval_array_index_expression(
         _ => Some(NULLOBJ.with(|n| n.clone())),
     };
 }
+
 //
 pub fn extend_function_context(func: &FunctionObject, args: &Vec<Rc<dyn Object>>) -> Rc<Context> {
     let context = Context::extend(func.context.clone());
