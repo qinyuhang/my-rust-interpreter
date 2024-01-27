@@ -116,6 +116,17 @@ pub fn ast_node_with_try_from(args: TokenStream, input: TokenStream) -> TokenStr
                     let x = x.downcast_ref::<Self>().unwrap();
                     return Ok(x.clone());
                 }
+                if x.is::<ExpressionStatement>() {
+                    if let Some(ExpressionStatement {
+                        expression: Some(expression),
+                        ..
+                    }) = x.downcast_ref::<ExpressionStatement>()
+                    {
+                        if let Ok(r) = Self::try_from(Box::new((*expression).clone().get_expression())) {
+                            return Ok(r);
+                        }
+                    }
+                }
                 Err(format!("Cannot cast {:?} to {}", value, "#name"))
             }
         }

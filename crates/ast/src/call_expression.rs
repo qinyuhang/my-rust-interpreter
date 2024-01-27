@@ -2,6 +2,7 @@ use ::token::*;
 use {crate::*, std::rc::Rc};
 
 #[ast_node(Expression)]
+#[ast_node_with_try_from(Expression)]
 #[derive(Hash)]
 pub struct CallExpression {
     pub token: Token,

@@ -5,6 +5,7 @@ use std::rc::Rc;
 use token::Token;
 
 #[ast_node(Expression)]
+#[ast_node_with_try_from(Expression)]
 #[derive(Hash)]
 pub struct WhileLoopLiteral {
     pub token: Token,

@@ -4,31 +4,13 @@ use ::token::*;
 use std::rc::Rc;
 
 #[ast_node(Expression)]
+#[ast_node_with_try_from(Expression)]
 #[derive(Hash)]
 pub struct InfixExpression {
     pub token: Token,
     pub operator: String,
     pub left: Option<Rc<AstExpression>>,
     pub right: Option<Rc<AstExpression>>,
-}
-
-impl TryFrom<Box<&dyn Expression>> for InfixExpression {
-    type Error = String;
-
-    fn try_from(value: Box<&dyn Expression>) -> Result<Self, Self::Error> {
-        let x = value.as_any();
-        if x.is::<InfixExpression>() {
-            // println!("Object is InfixExpression {:?}", value);
-            let x = x.downcast_ref::<InfixExpression>().unwrap();
-            return Ok(InfixExpression {
-                token: x.token.clone(),
-                operator: x.operator.clone(),
-                right: x.right.clone(),
-                left: x.left.clone(),
-            });
-        }
-        Err(format!("Cannot cast {:?} to InfixExpression", value))
-    }
 }
 
 impl TryFrom<Box<&AstExpression>> for InfixExpression {

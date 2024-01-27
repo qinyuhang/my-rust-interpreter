@@ -5,6 +5,7 @@ use crate::*;
 use ::token::*;
 
 #[ast_node(Expression)]
+#[ast_node_with_try_from(Expression)]
 // #[derive(PartialEq, Eq, Hash)]
 #[derive(Hash)]
 pub struct IntegerLiteral {
@@ -61,29 +62,6 @@ impl TryFrom<Box<&ExpressionStatement>> for IntegerLiteral {
             });
         }
         Err(format!("error cast object {:?}", value))
-    }
-}
-
-impl TryFrom<Box<&dyn Expression>> for IntegerLiteral {
-    type Error = String;
-    fn try_from(value: Box<&dyn Expression>) -> Result<Self, Self::Error> {
-        // println!("wtf wtf: {:?}", value);
-        let x = value.as_any();
-        if x.is::<Self>() {
-            // println!("x is IntegerLiteral {:?}", x);
-            let x = x.downcast_ref::<Self>().unwrap();
-            return Ok(IntegerLiteral {
-                token: x.token.clone(),
-                value: x.value,
-            });
-        }
-        // FIXME: PrefixExpression 可以转换成 IntegerLiteral 吗？
-        // if x.is::<PrefixExpression>() {
-        //     let x = x.downcast_ref::<PrefixExpression>().unwrap();
-        //     if x.operator == "-" || x.operator == "+" {}
-        // }
-        // println!("{}", format!("Cannot cast {:?} into IntegerLiteral", value));
-        Err(format!("Cannot cast {:?} into IntegerLiteral", value))
     }
 }
 

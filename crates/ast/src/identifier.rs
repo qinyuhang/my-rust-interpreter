@@ -2,28 +2,13 @@ use crate::*;
 use ::token::*;
 
 #[ast_node(Expression)]
+#[ast_node_with_try_from(Expression)]
 // #[derive(Hash, Eq, PartialEq)]
 #[derive(Hash)]
 pub struct Identifier {
     pub token: Token,
 
     pub value: String,
-}
-
-impl TryFrom<Box<&dyn Expression>> for Identifier {
-    type Error = String;
-
-    fn try_from(value: Box<&dyn Expression>) -> Result<Self, Self::Error> {
-        if let Some(value) = value.as_any().downcast_ref::<ExpressionStatement>() {
-            if value.token.token_type == IDENT {
-                return Ok(Identifier {
-                    token: value.token.clone(),
-                    value: value.token.literal.clone(),
-                });
-            }
-        }
-        Err(format!("error cast object {:?}", value))
-    }
 }
 
 impl TryFrom<Box<&ExpressionStatement>> for Identifier {

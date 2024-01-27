@@ -3,6 +3,7 @@ use ::token::*;
 use std::rc::Rc;
 
 #[ast_node(Expression)]
+#[ast_node_with_try_from(Expression)]
 // #[derive(PartialEq, Eq, Hash)]
 #[derive(Hash)]
 pub struct IfExpression {
@@ -32,16 +33,7 @@ impl std::fmt::Display for IfExpression {
         )
     }
 }
-impl TryFrom<Box<&dyn Expression>> for IfExpression {
-    type Error = String;
 
-    fn try_from(value: Box<&dyn Expression>) -> Result<Self, Self::Error> {
-        if let Some(value) = value.as_any().downcast_ref::<IfExpression>() {
-            return Ok(value.clone());
-        }
-        Err(format!("error cast object {:?}", value))
-    }
-}
 impl TryFrom<Box<&AstExpression>> for IfExpression {
     type Error = String;
 

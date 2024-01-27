@@ -7,6 +7,7 @@ use std::hash::Hasher;
 use std::rc::Rc;
 
 #[ast_node(Expression)]
+#[ast_node_with_try_from(Expression)]
 pub struct HashLiteral {
     pub token: Token,
     // due to HashMap cannot be Eq PartialEq Hash, so we are unable to put Rc<dyn Expression> to key

@@ -4,6 +4,7 @@ use ::token::*;
 use std::rc::Rc;
 
 #[ast_node(Statement)]
+#[ast_node_with_try_from(Expression)]
 #[derive(Hash)]
 pub struct ReturnStatement {
     pub token: Token,

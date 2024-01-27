@@ -3,6 +3,7 @@ use ::token::*;
 use std::rc::Rc;
 
 #[ast_node(Expression)]
+#[ast_node_with_try_from(Expression)]
 #[derive(Hash)]
 // #[derive(PartialEq, Eq, Hash)]
 pub struct StringLiteral {
@@ -41,23 +42,6 @@ impl TryFrom<Box<&ExpressionStatement>> for StringLiteral {
             });
         }
         Err(format!("error cast object {:?}", value))
-    }
-}
-
-impl TryFrom<Box<&dyn Expression>> for StringLiteral {
-    type Error = String;
-    fn try_from(value: Box<&dyn Expression>) -> Result<Self, Self::Error> {
-        // println!("wtf wtf: {:?}", value);
-        let x = value.as_any();
-        if x.is::<Self>() {
-            // println!("x is IntegerLiteral {:?}", x);
-            let x = x.downcast_ref::<Self>().unwrap();
-            return Ok(Self {
-                token: x.token.clone(),
-                value: x.value.clone(),
-            });
-        }
-        Err(format!("Cannot cast {:?} into StringLiteral", value))
     }
 }
 

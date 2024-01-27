@@ -23,7 +23,7 @@ pub fn format_display_instructions(instructions: &Instructions) -> String {
             i,
             format_one_instruction(def.clone(), &operands)
         ));
-        i += (1 + (read as usize))
+        i += 1 + (read as usize);
     }
     str
 }

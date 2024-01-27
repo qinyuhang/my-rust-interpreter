@@ -3,6 +3,7 @@ use std::any::Any;
 use token::Token;
 
 #[ast_node(Expression)]
+#[ast_node_with_try_from(Expression)]
 #[derive(Hash)]
 pub struct Break {
     pub token: Token,

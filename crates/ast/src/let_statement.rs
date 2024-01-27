@@ -3,6 +3,7 @@ use ::token::*;
 use std::rc::Rc;
 
 #[ast_node(Statement)]
+#[ast_node_with_try_from(Expression)]
 #[derive(Hash)]
 pub struct LetStatement {
     pub token: Token,
@@ -24,29 +25,7 @@ impl TryFrom<Box<&dyn Statement>> for LetStatement {
         Err(format!("error cast object {:?}", value))
     }
 }
-impl TryFrom<Box<&dyn Expression>> for LetStatement {
-    type Error = String;
-    fn try_from(value: Box<&dyn Expression>) -> Result<Self, Self::Error> {
-        let x = (value).as_any();
-        if x.is::<LetStatement>() {
-            let x = x.downcast_ref::<LetStatement>();
-            if x.is_some() {
-                let x = x.unwrap();
-                return Ok(LetStatement {
-                    token: x.token.clone(),
-                    name: x.name.clone(),
-                    value: Some(Rc::new(AstExpression::LetStatement(
-                        LetStatement::try_from(Box::new(&*x.value.as_ref().unwrap().clone()))
-                            .unwrap(),
-                    ))), //x.value.clone(),
-                });
-            } else {
-                return Err(format!(""));
-            }
-        }
-        Err(format!(""))
-    }
-}
+
 impl TryFrom<Box<&AstExpression>> for LetStatement {
     type Error = String;
     fn try_from(value: Box<&AstExpression>) -> Result<Self, Self::Error> {

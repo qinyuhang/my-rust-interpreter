@@ -3,6 +3,7 @@ use ::token::*;
 use std::rc::Rc;
 
 #[ast_node(Expression)]
+#[ast_node_with_try_from(Expression)]
 #[derive(Hash)]
 pub struct FunctionLiteral {
     pub token: Token,
