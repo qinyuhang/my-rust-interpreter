@@ -3,6 +3,7 @@ use ::token::*;
 use std::any::Any;
 
 #[ast_node(Expression)]
+#[ast_node_with_try_from(Expression)]
 #[derive(Hash)]
 pub struct BooleanLiteral {
     pub token: Token,
@@ -29,22 +30,6 @@ impl TryFrom<&str> for BooleanLiteral {
             }),
             _ => Err("can't cast {} into BoolLiteral".into()),
         }
-    }
-}
-impl TryFrom<Box<&dyn Expression>> for BooleanLiteral {
-    type Error = String;
-
-    fn try_from(value: Box<&dyn Expression>) -> Result<Self, Self::Error> {
-        let v_any = value.as_any();
-        if v_any.is::<Self>() {
-            if let Some(val) = v_any.downcast_ref::<Self>() {
-                return Ok(Self {
-                    token: val.token.clone(),
-                    value: val.value,
-                });
-            }
-        }
-        Err(format!("Cannot cast {:?} to BooleanLiteral", value))
     }
 }
 

@@ -538,6 +538,77 @@ if ( 5 < 10 ) {
             assert_eq!(p_token.literal, test.1);
         });
     }
+
+    #[test]
+    fn test_update_literal() {
+        let input = r#"let a = 0; a += 1; a -= 2; a *= 3; a /= 4;"#;
+        let tests = vec![
+            (token::LET, "let"),
+            (token::IDENT, "a"),
+            (token::ASSIGN, "="),
+            (token::INT, "0"),
+            (token::SEMICOLON, ";"),
+            //
+            (token::IDENT, "a"),
+            (token::PLUSEQ, "+="),
+            (token::INT, "1"),
+            (token::SEMICOLON, ";"),
+            //
+            (token::IDENT, "a"),
+            (token::MINEQ, "-="),
+            (token::INT, "2"),
+            (token::SEMICOLON, ";"),
+            //
+            (token::IDENT, "a"),
+            (token::MULEQ, "*="),
+            (token::INT, "3"),
+            (token::SEMICOLON, ";"),
+            //
+            (token::IDENT, "a"),
+            (token::DIVEQ, "/="),
+            (token::INT, "4"),
+            (token::SEMICOLON, ";"),
+            //
+            (token::EOF, "\0"),
+        ];
+
+        let lex = Lexer::new(input);
+
+        tests.iter().for_each(|test| {
+            let p_token = lex.next_token();
+            // println!("Running Test: {:?}, lexer.next_token: {:?}", test, p_token);
+            assert_eq!(p_token.token_type, test.0);
+            assert_eq!(p_token.literal, test.1);
+        });
+    }
+
+    #[test]
+    fn test_assign_literal() {
+        let input = r#"let a = 0; a = 1;"#;
+        let tests = vec![
+            (token::LET, "let"),
+            (token::IDENT, "a"),
+            (token::ASSIGN, "="),
+            (token::INT, "0"),
+            (token::SEMICOLON, ";"),
+            //
+            (token::IDENT, "a"),
+            (token::ASSIGN, "="),
+            (token::INT, "1"),
+            (token::SEMICOLON, ";"),
+            //
+            (token::EOF, "\0"),
+        ];
+
+        let lex = Lexer::new(input);
+
+        tests.iter().for_each(|test| {
+            let p_token = lex.next_token();
+            // println!("Running Test: {:?}, lexer.next_token: {:?}", test, p_token);
+            assert_eq!(p_token.token_type, test.0);
+            assert_eq!(p_token.literal, test.1);
+        });
+    }
     //     #[test]
     //     fn test_unicode() {
     //         let input = r#"let abcd = 1;

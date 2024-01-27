@@ -105,8 +105,20 @@ impl Lexer {
                     token::BITAND
                 }
             }
-            '/' => token::SLASH,
-            '*' => token::ASTERISK,
+            '/' => match self.peek_char().as_str() {
+                "=" => {
+                    self.read_char();
+                    token::DIVEQ
+                }
+                _ => token::SLASH,
+            },
+            '*' => match self.peek_char().as_str() {
+                "=" => {
+                    self.read_char();
+                    token::MULEQ
+                }
+                _ => token::ASTERISK,
+            },
             '<' => token::LT,
             '>' => token::GT,
             '"' => {
@@ -132,6 +144,8 @@ impl Lexer {
             token::INCREASE => "++".into(),
             token::MINEQ => "-=".into(),
             token::DECREASE => "--".into(),
+            token::MULEQ => "*=".into(),
+            token::DIVEQ => "/=".into(),
             token::IDENT => {
                 if is_letter(*self.ch.borrow()) {
                     should_read_one_more = false;

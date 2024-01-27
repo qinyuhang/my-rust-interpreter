@@ -337,12 +337,28 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
             }));
         }
     }
+    if n.is::<WhileLoopLiteral>() {
+        if let Some(w) = n.downcast_ref::<WhileLoopLiteral>() {
+            return eval_while_loop(w, context.clone());
+        }
+    }
+    if n.is::<UpdateExpression>() {
+        if let Some(u) = n.downcast_ref::<UpdateExpression>() {
+            return eval_update_expression(u, context.clone());
+        }
+    }
+    if n.is::<AssignExpression>() {
+        if let Some(w) = n.downcast_ref::<AssignExpression>() {
+            return eval_assign_expression(w, context.clone());
+        }
+    }
     None
 }
 
 pub fn is_error(object: &Rc<dyn Object>) -> bool {
     object.object_type() == ERROR_OBJECT
 }
+
 pub fn apply_function(func: Rc<dyn Object>, args: Vec<Rc<dyn Object>>) -> Option<Rc<dyn Object>> {
     if let Some(f) = func.as_any().downcast_ref::<FunctionObject>() {
         let extended_context = extend_function_context(f, &args);
@@ -450,6 +466,76 @@ pub fn eval_if_expression(ex: &IfExpression, context: Rc<Context>) -> Option<Rc<
     } else {
         return Some(NULLOBJ.with(|val| val.clone()));
     }
+}
+
+pub fn eval_while_loop(ex: &WhileLoopLiteral, context: Rc<Context>) -> Option<Rc<dyn Object>> {
+    let mut r = None;
+    'outer: while is_truthy(eval(ex.condition.upcast(), context.clone())) {
+        if let Some(body) = &ex.body {
+            // dbg!(&body);
+            match body.clone().as_ref() {
+                AstExpression::BlockStatement(blk) => {
+                    'inner: for st in blk.statement.iter() {
+                        // dbg!(&st.clone().as_ref());
+                        match st.clone().as_ref() {
+                            AstExpression::Break(b) => {
+                                // dbg!(&st);
+                                break 'outer;
+                            }
+                            other => r = eval(other.get_expression().upcast(), context.clone()),
+                        }
+                    }
+                    // break 'outer;
+                }
+                _ => return None,
+            }
+        }
+    }
+    r
+}
+
+pub fn eval_update_expression(
+    ex: &UpdateExpression,
+    context: Rc<Context>,
+) -> Option<Rc<dyn Object>> {
+    if let UpdateExpression {
+        name: Some(name),
+        right: Some(right),
+        operator,
+        ..
+    } = ex
+    {
+        let op = match operator.as_str() {
+            "+=" => "+",
+            "-=" => "-",
+            "*=" => "*",
+            "/=" => "/",
+            &_ => operator,
+        };
+        let origin = eval(name.upcast(), context.clone());
+        let right = eval(right.upcast(), context.clone());
+        if let Some(after) = eval_infix_expression(op, origin, right) {
+            context.clone().update(name.clone(), after);
+        }
+    }
+    None
+}
+
+pub fn eval_assign_expression(
+    ex: &AssignExpression,
+    context: Rc<Context>,
+) -> Option<Rc<dyn Object>> {
+    if let AssignExpression {
+        name: Some(name),
+        right: Some(right),
+        ..
+    } = ex
+    {
+        if let Some(r) = eval(right.upcast(), context.clone()) {
+            context.update(name.clone(), r);
+        }
+    };
+    None
 }
 
 pub fn is_truthy(obj: Option<Rc<dyn Object>>) -> bool {
@@ -660,7 +746,12 @@ pub fn eval_infix_expression(
             ),
         })),
         _ => Some(Rc::new(ErrorObject {
-            message: format!("{:?} {} {:?}", left.as_ref(), operator, right.as_ref()),
+            message: format!(
+                "unsupported infix expression: {:?} {} {:?}",
+                left.as_ref(),
+                operator,
+                right.as_ref()
+            ),
         })),
     }
 }

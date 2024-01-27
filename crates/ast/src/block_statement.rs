@@ -3,6 +3,7 @@ use ::token::*;
 use std::rc::Rc;
 
 #[ast_node(Statement)]
+#[ast_node_with_try_from(Expression)]
 #[derive(Hash)]
 pub struct BlockStatement {
     pub token: Token, // { token
@@ -19,17 +20,6 @@ impl std::fmt::Display for BlockStatement {
                 .iter()
                 .fold("".into(), |acc, x| format!("{}{}", acc, x))
         )
-    }
-}
-
-impl TryFrom<Box<&dyn Expression>> for BlockStatement {
-    type Error = String;
-
-    fn try_from(value: Box<&dyn Expression>) -> Result<Self, Self::Error> {
-        if let Some(val) = value.as_any().downcast_ref::<Self>() {
-            return Ok(val.clone());
-        }
-        Err(format!("error cast object {:?}", value))
     }
 }
 

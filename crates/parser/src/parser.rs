@@ -1,4 +1,3 @@
-use crate::ExpressionConst::LOWEST;
 use crate::InfixParseFn;
 use crate::PrefixParseFn;
 use ::lexer::*;
@@ -14,33 +13,26 @@ use std::rc::Rc;
 /// 或者 5 * 2 + abc(1) 应该先运算函数再运算乘法最后运算加法
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Ord, PartialOrd)]
 pub enum ExpressionConst {
-    LOWEST = 1,
-    // what is this?
-    EQUALS,
-    // =
-    LESSGREATER,
-    // > or <
-    SUM,
-    // +
-    PRODUCT,
-    // "*
-    PREFIX,
-    // -X or !X
-    BITOP,
-    // ^ or | or &
-    LOGICOP,
-    // && or ||
-    POW,
-    // ^^
-    CALL,  // function
-    INDEX, // a[1]
+    LOWEST = 0, // what is this?
+    ASSIGN,
+    EQUALS,      // ==
+    LESSGREATER, // > or <
+    SUM,         // +
+    PRODUCT,     // "*
+    PREFIX,      // -X or !X
+    BITOP,       // ^ or | or &
+    LOGICOP,     // && or ||
+    POW,         // ^^
+    CALL,        // function
+    INDEX,       // a[1]
 }
 
 impl From<isize> for ExpressionConst {
     fn from(value: isize) -> Self {
         match value {
-            1 => ExpressionConst::LOWEST,      // what is this?
-            2 => ExpressionConst::EQUALS,      // =
+            0 => ExpressionConst::LOWEST,      // what is this?
+            1 => ExpressionConst::ASSIGN,      // =
+            2 => ExpressionConst::EQUALS,      // ==
             3 => ExpressionConst::LESSGREATER, // > or <
             4 => ExpressionConst::SUM,         // +
             5 => ExpressionConst::PRODUCT,     // "*
@@ -59,13 +51,26 @@ impl From<isize> for ExpressionConst {
 thread_local! {
     #[allow(unused)]
     pub static PRECEDENCES: HashMap<TokenType, ExpressionConst> = HashMap::from([
+        (ASSIGN, ExpressionConst::ASSIGN),
+
         (EQ, ExpressionConst::EQUALS),
         (NOT_EQ, ExpressionConst::EQUALS),
+
         (LT, ExpressionConst::LESSGREATER),
         (GT, ExpressionConst::LESSGREATER),
+
         (PLUS, ExpressionConst::SUM),
         (MINUS, ExpressionConst::SUM),
-        (SLASH, ExpressionConst::PRODUCT),
+
+        (PLUSEQ, ExpressionConst::SUM),
+        (MINEQ, ExpressionConst::SUM),
+
+
+        (SLASH, ExpressionConst::PRODUCT), // /
+        (ASTERISK, ExpressionConst::PRODUCT), // *
+
+        (MULEQ, ExpressionConst::PRODUCT),
+        (DIVEQ, ExpressionConst::PRODUCT),
 
         (BITAND, ExpressionConst::BITOP),
         (BITOR, ExpressionConst::BITOP),
@@ -76,7 +81,6 @@ thread_local! {
 
         (POW, ExpressionConst::POW),
 
-        (ASTERISK, ExpressionConst::PRODUCT),
         (LPAREN, ExpressionConst::CALL),
         (LBRACKET, ExpressionConst::INDEX),
     ]);
@@ -168,6 +172,21 @@ impl Parser {
         let pd = pc.clone();
         pc.register_infix(LBRACKET, Rc::new(move |val| pd.parse_index_expression(val)));
 
+        let pd = pc.clone();
+        pc.register_infix(PLUSEQ, Rc::new(move |val| pd.parse_update_expression(val)));
+
+        let pd = pc.clone();
+        pc.register_infix(MINEQ, Rc::new(move |val| pd.parse_update_expression(val)));
+
+        let pd = pc.clone();
+        pc.register_infix(DIVEQ, Rc::new(move |val| pd.parse_update_expression(val)));
+
+        let pd = pc.clone();
+        pc.register_infix(MULEQ, Rc::new(move |val| pd.parse_update_expression(val)));
+
+        let pd = pc.clone();
+        pc.register_infix(ASSIGN, Rc::new(move |val| pd.parse_assign_expression(val)));
+
         // let pd = pc.clone();
         // pc.register_prefix(IF, Rc::new(move || pd.parse_block_statement()));
 
@@ -175,15 +194,17 @@ impl Parser {
             // println!("before register infix_parse: {:?}", ps);
             #[allow(unused_variables)]
             ps.iter().for_each(|(&token, ec)| {
-                if token == LPAREN {
-                    return;
+                match token {
+                    LPAREN | LBRACKET | PLUSEQ | MINEQ | ASSIGN | MULEQ | DIVEQ => {}
+                    _ => {
+                        let pd = pc.clone();
+                        // println!("register infix lang_parser for {:?}", token);
+                        pc.register_infix(
+                            token,
+                            Rc::new(move |left| pd.parse_infix_expression(left)),
+                        );
+                    }
                 }
-                if token == LBRACKET {
-                    return;
-                }
-                let pd = pc.clone();
-                // println!("register infix lang_parser for {:?}", token);
-                pc.register_infix(token, Rc::new(move |left| pd.parse_infix_expression(left)));
             });
         });
 
@@ -221,6 +242,13 @@ impl Parser {
         match cur_type {
             LET => self.parse_let_statement(),
             RETURN => self.parse_return_statement(),
+            BREAK => {
+                let cur_token = (*self.cur_token.borrow()).clone();
+                self.next_token();
+                Some(Rc::new(AstExpression::Break(ast::Break {
+                    token: cur_token,
+                })))
+            }
             _ => self.parse_expression_statement(),
         }
     }
@@ -293,9 +321,6 @@ impl Parser {
 
     fn parse_expression_statement(&self) -> Option<Rc<AstExpression>> {
         let token = (*self.cur_token.borrow()).clone();
-        if token.literal == ";" {
-            // println!("parse_expression_statement")
-        }
         let stm = ExpressionStatement {
             token,
             expression: self.parse_expression(ExpressionConst::LOWEST),
@@ -567,23 +592,22 @@ impl Parser {
         // dbg!(&literal);
 
         // parse expression as condition
-        let condition = self.parse_expression(LOWEST);
+        let condition = self.parse_expression(ExpressionConst::LOWEST);
 
         if condition.is_none() {
             return None;
         }
+
+        println!("{}", condition.as_ref().unwrap());
 
         // peek `{`
         if !self.expect_peek(LBRACE) {
             return None;
         }
 
-        // parse block statement
+        // parse block statement && // peek `}`
         let body = self.parse_block_statement();
-        // peek `}`
-        if !self.expect_peek(RBRACE) {
-            return None;
-        }
+
         // dbg!(&condition);
         // dbg!(&body);
         Some(Rc::new(AstExpression::WhileLoopLiteral(WhileLoopLiteral {
@@ -611,12 +635,12 @@ impl Parser {
 
         while !self.peek_token_is(RBRACE) {
             self.next_token();
-            let k = self.parse_expression(LOWEST);
+            let k = self.parse_expression(ExpressionConst::LOWEST);
             if !self.expect_peek(COLON) {
                 return None;
             };
             self.next_token();
-            let v = self.parse_expression(LOWEST);
+            let v = self.parse_expression(ExpressionConst::LOWEST);
             pairs.insert(k.unwrap(), v.unwrap());
 
             if !self.peek_token_is(RBRACE) && !self.expect_peek(COMMA) {
@@ -642,12 +666,12 @@ impl Parser {
             return r;
         }
         self.next_token();
-        r.push(self.parse_expression(LOWEST).unwrap());
+        r.push(self.parse_expression(ExpressionConst::LOWEST).unwrap());
 
         while self.peek_token_is(token::COMMA) {
             self.next_token();
             self.next_token();
-            if let Some(e) = self.parse_expression(LOWEST) {
+            if let Some(e) = self.parse_expression(ExpressionConst::LOWEST) {
                 r.push(e);
             }
         }
@@ -659,7 +683,7 @@ impl Parser {
     pub fn parse_index_expression(&self, left: Rc<AstExpression>) -> Option<Rc<AstExpression>> {
         let literal = self.cur_token.borrow().literal.clone();
         self.next_token();
-        let index = self.parse_expression(LOWEST);
+        let index = self.parse_expression(ExpressionConst::LOWEST);
         if !self.expect_peek(token::RBRACKET) {
             return None;
         }
@@ -671,6 +695,50 @@ impl Parser {
             left: left.clone(),
             index: index.unwrap(),
         })));
+    }
+    pub fn parse_assign_expression(&self, left: Rc<AstExpression>) -> Option<Rc<AstExpression>> {
+        if let AstExpression::Identifier(left) = left.as_ref() {
+            let token = (*self.cur_token.borrow()).clone();
+            let operator = self.cur_token.borrow().literal.clone().into();
+
+            let precedence = self.cur_precedence();
+            self.next_token();
+
+            #[allow(unused_mut)]
+            let mut right = self.parse_expression(precedence);
+            let name = Some(Rc::new(left.clone()));
+
+            let expression = AssignExpression {
+                token,
+                operator,
+                name,
+                right,
+            };
+            return Some(Rc::new(AstExpression::AssignExpression(expression)));
+        };
+        None
+    }
+    pub fn parse_update_expression(&self, left: Rc<AstExpression>) -> Option<Rc<AstExpression>> {
+        if let AstExpression::Identifier(left) = left.as_ref() {
+            let token = (*self.cur_token.borrow()).clone();
+            let operator = self.cur_token.borrow().literal.clone().into();
+
+            let precedence = self.cur_precedence();
+            self.next_token();
+
+            #[allow(unused_mut)]
+            let mut right = self.parse_expression(precedence);
+            let name = Some(Rc::new(left.clone()));
+
+            let expression = UpdateExpression {
+                token,
+                operator,
+                name,
+                right,
+            };
+            return Some(Rc::new(AstExpression::UpdateExpression(expression)));
+        };
+        None
     }
     pub fn expect_peek(&self, token: TokenType) -> bool {
         let r = self.peek_token_is(token);

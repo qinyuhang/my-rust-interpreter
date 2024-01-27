@@ -167,6 +167,8 @@ pub const PLUSEQ: TokenType = "+=";
 pub const MINEQ: TokenType = "-=";
 pub const INCREASE: TokenType = "++";
 pub const DECREASE: TokenType = "--";
+pub const DIVEQ: TokenType = "/=";
+pub const MULEQ: TokenType = "*=";
 
 thread_local! {
     static KEYWORDS: HashMap<String, TokenType> = HashMap::from([

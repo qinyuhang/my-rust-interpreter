@@ -568,4 +568,92 @@ mod test {
             handle_test_object(case, out);
         });
     }
+
+    #[test]
+    fn test_assign() {
+        let cases = vec![
+            (r#"let a = 0; a = 1; a;"#, testing_result!(Int, 1)),
+            (
+                r#"let a = 0; if (true) { a = 1;}; a;"#,
+                testing_result!(Int, 1),
+            ),
+            (
+                r#"let a = 0; let b = fn() { a = 1;}; b(); a;"#,
+                testing_result!(Int, 1),
+            ),
+        ];
+        cases.iter().for_each(|(case, out)| {
+            handle_test_object(case, out);
+        });
+    }
+
+    #[test]
+    fn test_update() {
+        let cases = vec![
+            (r#"let a = 0; a += 1; a;"#, testing_result!(Int, 1)),
+            (
+                r#"let a = 0; if (true) { a += 1;}; a;"#,
+                testing_result!(Int, 1),
+            ),
+            (
+                r#"let a = 0; let b = fn() { a += 1;}; b(); a;"#,
+                testing_result!(Int, 1),
+            ),
+            (r#"let a = 0; a -= 1; a;"#, testing_result!(Int, -1)),
+            (
+                r#"let a = 0; if (true) { a -= 1;}; a;"#,
+                testing_result!(Int, -1),
+            ),
+            (
+                r#"let a = 0; let b = fn() { a -= 1;}; b(); a;"#,
+                testing_result!(Int, -1),
+            ),
+            (r#"let a = 2; a *= 5; a;"#, testing_result!(Int, 10)),
+            (
+                r#"let a = 2; if (true) { a *= 5;}; a;"#,
+                testing_result!(Int, 10),
+            ),
+            (
+                r#"let a = 2; let b = fn() { a *= 5;}; b(); a;"#,
+                testing_result!(Int, 10),
+            ),
+            (r#"let a = 10; a /= 2; a;"#, testing_result!(Int, 5)),
+            (
+                r#"let a = 10; if (true) { a /= 2;}; a;"#,
+                testing_result!(Int, 5),
+            ),
+            (
+                r#"let a = 10; let b = fn() { a /= 2;}; b(); a;"#,
+                testing_result!(Int, 5),
+            ),
+        ];
+        cases.iter().for_each(|(case, out)| {
+            handle_test_object(case, out);
+        });
+    }
+
+    #[test]
+    fn test_while_loop() {
+        let cases = vec![
+            (
+                r#"let a = 0; while (a < 1) { a += 1; break; }; a;"#,
+                testing_result!(Int, 1),
+            ),
+            (
+                r#"let a = 0; while (a < 1) { break; }; a;"#,
+                testing_result!(Int, 0),
+            ),
+            // (r#"3.0 + 5.1"#, testing_result!(Float, 8.1)),
+            // (r#"3.0 - 5.1"#, testing_result!(Float, 3.0 - 5.1)),
+            // (r#"3.0 * 5.1"#, testing_result!(Float, 3.0 * 5.1)),
+            // (r#"3.0 / 5.1"#, testing_result!(Float, 3.0 / 5.1)),
+            // (r#"3 + 5.1"#, testing_result!(Float, 3f64 + 5.1)),
+            // (r#"3 - 5.1"#, testing_result!(Float, 3f64 - 5.1)),
+            // (r#"3 * 5.1"#, testing_result!(Float, 3f64 * 5.1)),
+            // (r#"3 / 5.1"#, testing_result!(Float, 3f64 / 5.1)),
+        ];
+        cases.iter().for_each(|(case, out)| {
+            handle_test_object(case, out);
+        });
+    }
 }

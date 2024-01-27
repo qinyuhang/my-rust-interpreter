@@ -1,4 +1,4 @@
-pub use ast_macro::ast_node;
+pub use ast_macro::{ast_node, ast_node_with_try_from};
 use std::fmt::Formatter;
 use std::{
     any::Any,
@@ -8,8 +8,10 @@ use std::{
 mod test;
 
 mod array_literal;
+mod assign_expression;
 mod block_statement;
 mod bool_literal;
+mod break_expression;
 mod call_expression;
 mod expression_statement;
 mod float_literal;
@@ -25,11 +27,14 @@ mod prefix_expression;
 mod program;
 mod return_statement;
 mod string_literal;
+mod update_expression;
 mod while_loop_literal;
 
 pub use array_literal::*;
+pub use assign_expression::*;
 pub use block_statement::*;
 pub use bool_literal::*;
+pub use break_expression::*;
 pub use call_expression::*;
 pub use expression_statement::*;
 pub use float_literal::*;
@@ -45,6 +50,7 @@ pub use prefix_expression::*;
 pub use program::*;
 pub use return_statement::*;
 pub use string_literal::*;
+pub use update_expression::*;
 pub use while_loop_literal::*;
 
 pub trait Node: Debug + Display {
@@ -91,6 +97,9 @@ pub enum AstExpression {
     ReturnStatement(ReturnStatement),
     StringLiteral(StringLiteral),
     WhileLoopLiteral(WhileLoopLiteral),
+    Break(Break),
+    AssignExpression(AssignExpression),
+    UpdateExpression(update_expression::UpdateExpression),
 }
 
 impl std::fmt::Display for AstExpression {
@@ -118,6 +127,9 @@ impl std::fmt::Display for AstExpression {
                 AstExpression::ReturnStatement(a) => format!("{}", a),
                 AstExpression::StringLiteral(a) => format!("{}", a),
                 AstExpression::WhileLoopLiteral(a) => format!("{}", a),
+                AstExpression::Break(a) => format!("{}", a),
+                AstExpression::AssignExpression(a) => format!("{}", a),
+                AstExpression::UpdateExpression(a) => format!("{}", a),
             }
         )
     }
@@ -145,6 +157,9 @@ impl AstExpression {
             AstExpression::ReturnStatement(a) => a,
             AstExpression::StringLiteral(a) => a,
             AstExpression::WhileLoopLiteral(a) => a,
+            AstExpression::Break(a) => a,
+            AstExpression::AssignExpression(a) => a,
+            AstExpression::UpdateExpression(a) => a,
         }
     }
 
@@ -169,6 +184,9 @@ impl AstExpression {
             AstExpression::ReturnStatement(a) => a,
             AstExpression::StringLiteral(a) => a,
             AstExpression::WhileLoopLiteral(a) => a,
+            AstExpression::Break(a) => a,
+            AstExpression::AssignExpression(a) => a,
+            AstExpression::UpdateExpression(a) => a,
         }
     }
 
@@ -193,6 +211,9 @@ impl AstExpression {
             AstExpression::ReturnStatement(a) => a,
             AstExpression::StringLiteral(a) => a,
             AstExpression::WhileLoopLiteral(a) => a,
+            AstExpression::Break(a) => a,
+            AstExpression::AssignExpression(a) => a,
+            AstExpression::UpdateExpression(a) => a,
         }
     }
 }

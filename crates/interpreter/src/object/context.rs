@@ -35,10 +35,28 @@ impl Context {
         }
         None
     }
+    pub fn get_in_current_scope(&self, name: &Rc<Identifier>) -> Option<Rc<dyn Object>> {
+        if let Some(current) = self.scope.borrow().get(name).cloned() {
+            return Some(current);
+        }
+        None
+    }
     pub fn extend(parent: Rc<Self>) -> Self {
         Context {
             scope: RefCell::new(HashMap::new()),
             parent: Some(parent.clone()),
+        }
+    }
+    pub fn update(&self, name: Rc<Identifier>, val: Rc<dyn Object>) {
+        let is_in_current_scope = self.get_in_current_scope(&name).is_some();
+        if is_in_current_scope {
+            self.set(name.clone(), val.clone());
+        } else {
+            if let Some(ref parent) = self.parent {
+                return parent.update(name.clone(), val.clone());
+            } else {
+                // w? throw error is not declared
+            }
         }
     }
 }

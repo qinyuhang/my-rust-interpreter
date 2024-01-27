@@ -777,8 +777,49 @@ let mf = fn(x, y) { return x + y; };"#;
     }
 
     #[test]
+    fn test_assign() {
+        let cases = vec![(r#"a = 1"#), (r#"let a = 0; a = 1; a;"#)];
+        cases.iter().for_each(|&input| {
+            let l = Lexer::new(input);
+
+            let p = Parser::new(l);
+
+            let pr = p.parse_program();
+
+            assert!(pr.is_some());
+        });
+    }
+
+    #[test]
+    fn test_update() {
+        let cases = vec![
+            (r#"let a = 0; a += 1; a;"#),
+            (r#"let a = 0; a -= 1; a;"#),
+            (r#"let a = 0; a *= 1; a;"#),
+            (r#"let a = 0; a /= 1; a;"#),
+        ];
+        cases.iter().for_each(|&input| {
+            let l = Lexer::new(input);
+
+            let p = Parser::new(l);
+
+            let pr = p.parse_program();
+
+            assert!(pr.is_some());
+
+            dbg!(&pr);
+            println!("{}", pr.unwrap());
+        });
+    }
+
+    #[test]
     fn test_while_loop_literal() {
-        let cases = vec![(r#"while (true) { true }"#)];
+        let cases = vec![
+            (r#"while (true) { true }"#),
+            (r#"while (a > 1) { break; }"#),
+            (r#"while (a > 1) { a += 1; }"#),
+            (r#"while (a > 1) { a = a + 1; }"#),
+        ];
         cases.iter().for_each(|&input| {
             let l = Lexer::new(input);
 
