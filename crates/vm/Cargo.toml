@@ -9,6 +9,7 @@ edition = "2021"
 [dependencies]
 "ast_macro" = { path = "../ast_macro" }
 "ast" = { path = "../ast" }
+"code" = { path = "../code" }
 "lexer" = { path = "../lexer" }
 "object" = { path = "../object" }
 "byteorder" = "*"

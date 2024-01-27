@@ -28,7 +28,7 @@ mod test {
         ];
 
         tests.iter().for_each(|(input, expected)| {
-            handle_test_object(input, expected);
+            handle_test_case(input, expected);
         });
     }
 
@@ -57,7 +57,7 @@ mod test {
         ];
 
         tests.iter().for_each(|(input, expected)| {
-            handle_test_object(input, expected);
+            handle_test_case(input, expected);
         });
     }
 
@@ -73,7 +73,7 @@ mod test {
             // ("!null", f!(Bool, true)),
         ];
         tests.iter().for_each(|(input, expected)| {
-            handle_test_object(input, expected);
+            handle_test_case(input, expected);
         });
     }
 
@@ -91,7 +91,7 @@ mod test {
         ];
 
         tests.iter().for_each(|(input, value)| {
-            handle_test_object(input, value);
+            handle_test_case(input, value);
         })
     }
 
@@ -107,7 +107,7 @@ mod test {
         ];
 
         tests.iter().for_each(|(input, value)| {
-            handle_test_object(input, value);
+            handle_test_case(input, value);
         });
     }
 
@@ -128,7 +128,7 @@ mod test {
         ];
 
         tests.iter().for_each(|(input, expected)| {
-            handle_test_object(input, expected);
+            handle_test_case(input, expected);
         });
     }
 
@@ -175,7 +175,7 @@ mod test {
             ),
         ];
         tests.iter().for_each(|(input, expected)| {
-            handle_test_object(input, expected);
+            handle_test_case(input, expected);
             // assert_eq!(evaluated, expected);
             // if expected.is_none() {
             //     assert!(evaluated.is_none());
@@ -202,7 +202,7 @@ mod test {
             ),
         ];
         tests.iter().for_each(|(input, expected)| {
-            handle_test_object(input, expected);
+            handle_test_case(input, expected);
         });
     }
 
@@ -240,7 +240,7 @@ mod test {
             ),
         ];
         test_cases.iter().for_each(|(case, out)| {
-            handle_test_object(case, out);
+            handle_test_case(case, out);
         });
     }
 
@@ -256,7 +256,7 @@ mod test {
             ),
         ];
         test_cases.iter().for_each(|(case, out)| {
-            handle_test_object(case, out);
+            handle_test_case(case, out);
         });
     }
 
@@ -322,7 +322,7 @@ mod test {
             (r#"len([1])"#, TestingResult::Int(1)),
         ];
         cases.iter().for_each(|(case, out)| {
-            handle_test_object(case, out);
+            handle_test_case(case, out);
         });
     }
 
@@ -343,7 +343,7 @@ mod test {
         ];
 
         cases.iter().for_each(|(case, out)| {
-            handle_test_object(case, out);
+            handle_test_case(case, out);
         });
     }
 
@@ -364,7 +364,7 @@ mod test {
             ("[1,2,3][-1]", TestingResult::Nil),
         ];
         cases.iter().for_each(|(case, out)| {
-            handle_test_object(case, out);
+            handle_test_case(case, out);
         });
     }
     #[test]
@@ -378,7 +378,7 @@ mod test {
             ),
         ];
         cases.iter().for_each(|(case, out)| {
-            handle_test_object(case, out);
+            handle_test_case(case, out);
         });
     }
 
@@ -393,7 +393,7 @@ mod test {
             ),
         ];
         cases.iter().for_each(|(case, out)| {
-            handle_test_object(case, out);
+            handle_test_case(case, out);
         });
     }
 
@@ -409,7 +409,7 @@ mod test {
             ("let a = [1,2,3]; rest(a)", testing_result!(Vec, vec![2, 3])),
         ];
         cases.iter().for_each(|(case, out)| {
-            handle_test_object(case, out);
+            handle_test_case(case, out);
         });
     }
 
@@ -421,7 +421,7 @@ mod test {
             ("let a = []; push(a, 1); a", testing_result!(Vec, vec![1])),
         ];
         cases.iter().for_each(|(case, out)| {
-            handle_test_object(case, out);
+            handle_test_case(case, out);
         });
     }
 
@@ -491,7 +491,7 @@ mod test {
             ),
         ];
         cases.iter().for_each(|(case, out)| {
-            handle_test_object(case, out);
+            handle_test_case(case, out);
         });
     }
 
@@ -534,7 +534,7 @@ mod test {
             ),
         ];
         cases.iter().for_each(|(case, out)| {
-            handle_test_object(case, out);
+            handle_test_case(case, out);
         });
     }
 
@@ -549,7 +549,7 @@ mod test {
             (r#"fn() { 5 }() / 5;"#, testing_result!(Int, 1)),
         ];
         cases.iter().for_each(|(case, out)| {
-            handle_test_object(case, out);
+            handle_test_case(case, out);
         });
     }
 
@@ -567,7 +567,7 @@ mod test {
             (r#"3 / 5.1"#, testing_result!(Float, 3f64 / 5.1)),
         ];
         cases.iter().for_each(|(case, out)| {
-            handle_test_object(case, out);
+            handle_test_case(case, out);
         });
     }
 
@@ -585,7 +585,7 @@ mod test {
             ),
         ];
         cases.iter().for_each(|(case, out)| {
-            handle_test_object(case, out);
+            handle_test_case(case, out);
         });
     }
 
@@ -630,7 +630,7 @@ mod test {
             ),
         ];
         cases.iter().for_each(|(case, out)| {
-            handle_test_object(case, out);
+            handle_test_case(case, out);
         });
     }
 
@@ -665,7 +665,7 @@ b();
             // (r#"3 / 5.1"#, testing_result!(Float, 3f64 / 5.1)),
         ];
         cases.iter().for_each(|(case, out)| {
-            handle_test_object(case, out);
+            handle_test_case(case, out);
         });
     }
 }

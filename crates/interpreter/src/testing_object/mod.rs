@@ -8,16 +8,26 @@ use std::rc::Rc;
 
 pub fn test_string_object(obj: Option<Rc<dyn Object>>, expected: String) -> bool {
     let i = StringObject::try_from(obj.unwrap());
-    assert!(i.is_ok());
+    assert!(
+        i.is_ok(),
+        "test string result expected to be StringObject: {}",
+        i.unwrap_err()
+    );
     let i = i.unwrap();
-    assert_eq!(*i.value, expected);
+    assert_eq!(*i.value, expected, "expect={}, got={}", expected, *i.value);
     true
 }
 pub fn test_error_object(object: Option<Rc<dyn Object>>, expected: String) -> bool {
     let err = ErrorObject::try_from(object.clone().unwrap());
-    assert!(err.is_ok());
+    assert!(err.is_ok(), "{}", err.unwrap_err());
     // println!("{:?}", err.unwrap());
-    assert_eq!(err.unwrap().message, expected.to_string());
+    assert_eq!(
+        err.clone().unwrap().message,
+        expected.to_string(),
+        "expect={}, got={}",
+        expected,
+        err.clone().unwrap().message
+    );
     true
 }
 
@@ -70,11 +80,15 @@ pub fn test_eval(input: &str) -> Option<Rc<dyn Object>> {
     return eval(&pr, Rc::new(context));
 }
 
-pub fn handle_test_object(case: &str, out: &TestingResult) {
+pub fn handle_test_case(case: &str, out: &TestingResult) {
     let input = case;
     let evaluated = test_eval(input);
     assert!(evaluated.is_some());
     dbg!(&evaluated);
+    handle_object(evaluated, out);
+}
+
+pub fn handle_object(evaluated: Option<Rc<dyn Object>>, out: &TestingResult) {
     match out {
         TestingResult::STRING(s) => {
             test_string_object(evaluated, s.to_string());
