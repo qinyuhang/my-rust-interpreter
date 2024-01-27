@@ -34,6 +34,23 @@ jobs:
         with:
           command: run
           args: --release --all-features -- run ./examples/fib.mok
+      - name: count test cases
+        run: |
+          output=$(cargo test --workspace 2>&1)
+          echo "$output"
+          echo "$output" | grep "^test result:" | awk '{
+              passed += $4;
+              failed += $6;
+              ignored += $8;
+              measured += $10;
+              filtered_out += $12;
+          } END {
+              print "passed: ", passed
+              print "failed: ", failed
+              print "ignored: ", ignored
+              print "measured: ", measured
+              print "filtered out: ", filtered_out;
+          }'
       - name: bench
         run: |
           echo "-----------------"
