@@ -75,7 +75,7 @@ mod test {
     }
 
     #[test]
-    fn test_boolean_expressioin() {
+    fn test_boolean_expression() {
         let v = vec![0, 1, 2];
         let cases = vec![
             CompileTestCase {
@@ -94,10 +94,71 @@ mod test {
                     make(&OpCode::OpPop, &v[0..0]),
                 ],
             },
+            CompileTestCase {
+                input: "1 > 2",
+                expected_constants: vec![testing_result!(Int, 1), testing_result!(Int, 2)],
+                expected_instruction: vec![
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpGreaterThan, &v[0..0]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: "1 < 2",
+                expected_constants: vec![testing_result!(Int, 2), testing_result!(Int, 1)],
+                expected_instruction: vec![
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpGreaterThan, &v[0..0]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: "1 == 2",
+                expected_constants: vec![testing_result!(Int, 1), testing_result!(Int, 2)],
+                expected_instruction: vec![
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpEqual, &v[0..0]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: "1 != 2",
+                expected_constants: vec![testing_result!(Int, 1), testing_result!(Int, 2)],
+                expected_instruction: vec![
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpNotEqual, &v[0..0]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: "true == false",
+                expected_constants: vec![],
+                expected_instruction: vec![
+                    make(&OpCode::OpTrue, &v[0..0]),
+                    make(&OpCode::OpFalse, &v[1..1]),
+                    make(&OpCode::OpEqual, &v[0..0]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: "true != false",
+                expected_constants: vec![],
+                expected_instruction: vec![
+                    make(&OpCode::OpTrue, &v[0..0]),
+                    make(&OpCode::OpFalse, &v[1..1]),
+                    make(&OpCode::OpNotEqual, &v[0..0]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
         ];
 
         run_compile_test(cases);
     }
+
     fn run_compile_test(tests: Vec<CompileTestCase>) {
         tests.iter().for_each(
             |CompileTestCase {
@@ -108,11 +169,11 @@ mod test {
                 let lex = Lexer::new(*input);
                 let p = Parser::new(lex);
                 let pr = p.parse_program();
-                assert!(pr.is_some());
+                assert!(pr.is_some(), "parse program failed");
 
                 let compiler = Compiler::new();
                 let r = compiler.compile(&pr.unwrap());
-                assert!(r.is_ok());
+                assert!(r.is_ok(), "compile failed: {}", r.unwrap_err());
                 let bytecode = compiler.bytecode();
                 handle_instructions(
                     expected_instruction.clone(),

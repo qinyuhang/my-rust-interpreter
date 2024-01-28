@@ -15,7 +15,7 @@ edition = "2021"
 "byteorder" = "*"
 "parser" = { path = "../parser" }
 "compiler" = { path = "../compiler" }
+"interpreter" = { path = "../interpreter" }
 
 [dev-dependencies]
-"interpreter" = { path = "../interpreter" }
 "testing" = { path = "../testing" }

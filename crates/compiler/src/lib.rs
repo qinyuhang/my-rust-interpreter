@@ -64,6 +64,19 @@ impl Compiler {
             {
                 let left = left.get_expression();
                 let right = right.get_expression();
+                // flip `x < y` to `y > x`
+                if operator == "<" {
+                    if let Err(e) = self.compile(right.upcast()) {
+                        return Err(e);
+                    }
+                    if let Err(e) = self.compile(left.upcast()) {
+                        return Err(e);
+                    }
+                    EMPTY_V16.with(|v| {
+                        self.emit(OpCode::OpGreaterThan, v);
+                    });
+                    return Ok(());
+                }
                 if let Err(e) = self.compile(left.upcast()) {
                     return Err(e);
                 }
@@ -83,7 +96,16 @@ impl Compiler {
                     "/" => EMPTY_V16.with(|v| {
                         self.emit(OpCode::OpDiv, v);
                     }),
-                    _ => return Err(format!("unsupported operator: {}", operator)),
+                    ">" => EMPTY_V16.with(|v| {
+                        self.emit(OpCode::OpGreaterThan, v);
+                    }),
+                    "==" => EMPTY_V16.with(|v| {
+                        self.emit(OpCode::OpEqual, v);
+                    }),
+                    "!=" => EMPTY_V16.with(|v| {
+                        self.emit(OpCode::OpNotEqual, v);
+                    }),
+                    _ => return Err(format!("unknown operator: {}", operator)),
                 }
             }
         }

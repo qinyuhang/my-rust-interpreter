@@ -63,4 +63,34 @@ mod test {
         ];
         run_vm_test(&cases);
     }
+
+    #[test]
+    fn test_bool() {
+        let cases = vec![
+            ("true", testing_result!(Bool, true)),
+            ("false", testing_result!(Bool, false)),
+            // Int
+            ("1<2", testing_result!(Bool, true)),
+            ("1>2", testing_result!(Bool, false)),
+            ("1<1", testing_result!(Bool, false)),
+            ("1>1", testing_result!(Bool, false)),
+            // Int eq
+            ("1==1", testing_result!(Bool, true)),
+            ("1!=1", testing_result!(Bool, false)),
+            ("1==2", testing_result!(Bool, false)),
+            ("1!=2", testing_result!(Bool, true)),
+            // bool
+            ("true == true", testing_result!(Bool, true)),
+            ("false == false", testing_result!(Bool, true)),
+            ("true == false", testing_result!(Bool, false)),
+            ("true != false", testing_result!(Bool, true)),
+            ("false != true", testing_result!(Bool, true)),
+            // Op
+            ("(1 < 2) == true", testing_result!(Bool, true)),
+            ("(1 < 2) == false", testing_result!(Bool, false)),
+            ("(1 > 2) == true", testing_result!(Bool, false)),
+            ("(1 > 2) == false", testing_result!(Bool, true)),
+        ];
+        run_vm_test(&cases);
+    }
 }

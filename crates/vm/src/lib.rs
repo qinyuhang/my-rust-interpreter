@@ -1,5 +1,6 @@
 use code::{read_uint16, Instructions, OpCode};
 use compiler::ByteCode;
+use interpreter::eval_infix_expression;
 use object::*;
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
@@ -7,6 +8,11 @@ use std::rc::Rc;
 mod test;
 
 pub const STACK_SIZE: usize = 2048usize;
+
+thread_local! {
+    static TRUE: Rc<dyn Object> = Rc::new(Boolean { value : true });
+    static FALSE: Rc<dyn Object> = Rc::new(Boolean { value : false });
+}
 
 pub struct VM {
     pub constants: RefCell<Vec<Rc<dyn Object>>>,
@@ -57,6 +63,15 @@ impl VM {
                 }
                 OpCode::OpPop => {
                     self.pop()?;
+                }
+                OpCode::OpTrue => {
+                    TRUE.with(|v| self.push(v.clone()))?;
+                }
+                OpCode::OpFalse => {
+                    FALSE.with(|v| self.push(v.clone()))?;
+                }
+                OpCode::OpEqual | OpCode::OpNotEqual | OpCode::OpGreaterThan => {
+                    self.execute_comparison(op)?;
                 }
                 _ => {
                     dbg!(op);
@@ -110,6 +125,53 @@ impl VM {
         }
 
         Ok(())
+    }
+
+    fn execute_comparison(&self, op: OpCode) -> Result<(), String> {
+        let right = self.pop()?;
+        let left = self.pop()?;
+
+        if left.object_type() == INTEGER_OBJECT && left.object_type() == INTEGER_OBJECT {
+            return self.execute_int_comparison(op, left.clone(), right.clone());
+        }
+
+        match op {
+            OpCode::OpEqual => self.push(
+                eval_infix_expression("==", Some(left.clone()), Some(right.clone())).unwrap(),
+            ),
+            OpCode::OpNotEqual => self.push(
+                eval_infix_expression("!=", Some(left.clone()), Some(right.clone())).unwrap(),
+            ),
+            _ => Err(format!("unknown operator: {}", op)),
+        }
+    }
+
+    fn execute_int_comparison(
+        &self,
+        op: OpCode,
+        left: Rc<dyn Object>,
+        right: Rc<dyn Object>,
+    ) -> Result<(), String> {
+        let l = left.as_any().downcast_ref::<Integer>().unwrap();
+        let r = right.as_any().downcast_ref::<Integer>().unwrap();
+        match op {
+            OpCode::OpEqual => self.push(self.convert_rust_bool_to_bool_object(l.value == r.value)),
+            OpCode::OpNotEqual => {
+                self.push(self.convert_rust_bool_to_bool_object(l.value != r.value))
+            }
+            OpCode::OpGreaterThan => {
+                self.push(self.convert_rust_bool_to_bool_object(l.value > r.value))
+            }
+            _ => Err(format!("unknown operator {}", op)),
+        }
+    }
+
+    fn convert_rust_bool_to_bool_object(&self, v: bool) -> Rc<dyn Object> {
+        if v {
+            TRUE.with(|v| v.clone())
+        } else {
+            FALSE.with(|v| v.clone())
+        }
     }
 
     fn execute_int_binary_operation(
