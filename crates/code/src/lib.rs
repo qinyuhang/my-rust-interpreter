@@ -32,8 +32,9 @@ pub fn format_one_instruction(def: Rc<Definition>, operands: &Vec<u16>) -> Strin
     let op_count = def.operand_widths.len();
     assert_eq!(op_count, operands.len(), "ERR");
     return match op_count {
+        0 => format!("{}", def.name),
         1 => format!("{} {}", def.name, operands[0]),
-        _ => "".into(),
+        other => format!("unsupported format op_count {other}"),
     };
 }
 
@@ -41,13 +42,14 @@ pub fn format_one_instruction(def: Rc<Definition>, operands: &Vec<u16>) -> Strin
 #[repr(u8)]
 pub enum OpCode {
     OpConstant = 0u8,
-    X,
+    OpAdd,
 }
 
 impl From<u8> for OpCode {
     fn from(value: u8) -> Self {
         match value {
-            0 => OpCode::OpConstant,
+            0 => Self::OpConstant,
+            1 => Self::OpAdd,
             // ... 其他枚举值的匹配
             _ => panic!("Invalid OpCode value: {}", value),
         }
@@ -68,9 +70,13 @@ pub struct Definition {
 thread_local! {
     pub static DEFINITIONS: Vec<Rc<Definition>> = vec![
         Rc::new(Definition {
-            name: "OpConst".into(),
+            name: "OpConstant".into(),
             operand_widths: vec![2],
         }),
+        Rc::new(Definition {
+            name: "OpAdd".into(),
+            operand_widths: vec![],
+        })
     ];
 }
 
@@ -82,7 +88,7 @@ impl Definition {
 
 // big end
 // 65534 -> 0xff 0xfe
-pub fn make(op: &OpCode, operands: Vec<u16>) -> Vec<u8> {
+pub fn make(op: &OpCode, operands: &[u16]) -> Vec<u8> {
     let mut instruction = vec![];
     if let Some(definition) = Definition::look_up(op) {
         instruction.push(*op as u8);

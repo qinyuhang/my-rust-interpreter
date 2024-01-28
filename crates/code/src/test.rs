@@ -12,13 +12,16 @@ mod test {
 
     #[test]
     fn test_make() {
-        let cases = vec![(
-            OpCode::OpConstant,
-            vec![65534],
-            vec![OpCode::OpConstant as u8, 255, 254],
-        )];
+        let cases = vec![
+            (
+                OpCode::OpConstant,
+                vec![65534],
+                vec![OpCode::OpConstant as u8, 255, 254],
+            ),
+            (OpCode::OpAdd, vec![], vec![OpCode::OpAdd as u8]),
+        ];
         cases.iter().for_each(|(op, operands, expected)| {
-            let instruction = make(op, operands.clone());
+            let instruction = make(op, &operands);
             assert_eq!(instruction, expected.clone());
         });
     }
@@ -32,15 +35,34 @@ mod test {
 
     #[test]
     fn test_proper_format_instructions() {
+        let v = vec![1, 2, 65535];
         let cases = vec![
-            make(&OpCode::OpConstant, vec![1]),
-            make(&OpCode::OpConstant, vec![2]),
-            make(&OpCode::OpConstant, vec![65535]),
+            make(&OpCode::OpConstant, &v[0..1]),
+            make(&OpCode::OpConstant, &v[1..2]),
+            make(&OpCode::OpConstant, &v[2..3]),
         ];
 
-        let expected = r#"0000 OpConst 1
-0003 OpConst 2
-0006 OpConst 65535
+        let expected = r#"0000 OpConstant 1
+0003 OpConstant 2
+0006 OpConstant 65535
+"#;
+
+        let c = concat_instructions(cases);
+        assert_eq!(expected, format_display_instructions(&c));
+    }
+
+    #[test]
+    fn test_proper_format_instructions_1() {
+        let v = vec![2, 65535];
+        let cases = vec![
+            make(&OpCode::OpAdd, &v[0..0]),
+            make(&OpCode::OpConstant, &v[0..1]),
+            make(&OpCode::OpConstant, &v[1..2]),
+        ];
+
+        let expected = r#"0000 OpAdd
+0001 OpConstant 2
+0004 OpConstant 65535
 "#;
 
         let c = concat_instructions(cases);
@@ -51,7 +73,7 @@ mod test {
     fn test_read_operands() {
         let cases = vec![(OpCode::OpConstant, vec![65535], 2)];
         cases.iter().for_each(|(op, operands, bytes_read)| {
-            let ins = make(op, operands.clone());
+            let ins = make(op, &operands);
             let z = Definition::look_up(op);
             assert!(z.is_some(), "{}", format!("definition not found: {}", op));
 

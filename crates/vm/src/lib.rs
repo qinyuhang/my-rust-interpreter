@@ -50,7 +50,14 @@ impl VM {
                             return Err(e);
                         }
                     }
-                    dbg!(const_index);
+                }
+                OpCode::OpAdd => {
+                    let right = self.pop()?;
+                    let left = self.pop()?;
+                    let right = right.as_any().downcast_ref::<Integer>().unwrap();
+                    let left = left.as_any().downcast_ref::<Integer>().unwrap();
+                    let value = left.value.wrapping_add(right.value);
+                    self.push(Rc::new(Integer { value }))?;
                 }
                 _ => {
                     dbg!(op);
@@ -77,5 +84,16 @@ impl VM {
         self.stack.borrow_mut()[sp] = o;
         self.sp.set(sp + 1);
         Ok(())
+    }
+
+    pub fn pop(&self) -> Result<Rc<dyn Object>, String> {
+        let sp = self.sp.get();
+        if sp < 0 {
+            return Err(format!("stack pointer less then 0, got={sp}"));
+        }
+        let stack = self.stack.borrow();
+        let r = stack.get(sp - 1).unwrap();
+        self.sp.set(sp - 1);
+        Ok(r.clone())
     }
 }

@@ -47,7 +47,7 @@ mod test {
         let cases = vec![
             ("1", testing_result!(Int, 1)),
             ("2", testing_result!(Int, 2)),
-            // ("1 + 2", testing_result!(Int, 3)),
+            ("1 + 2", testing_result!(Int, 3)),
         ];
         run_vm_test(&cases);
     }

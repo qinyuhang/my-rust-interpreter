@@ -52,6 +52,7 @@ impl Compiler {
             if let Some(InfixExpression {
                 left: Some(left),
                 right: Some(right),
+                operator,
                 ..
             }) = n.downcast_ref::<InfixExpression>()
             {
@@ -62,6 +63,12 @@ impl Compiler {
                 }
                 if let Err(e) = self.compile(right.upcast()) {
                     return Err(e);
+                }
+                match operator.as_str() {
+                    "+" => {
+                        self.emit(OpCode::OpAdd, vec![]);
+                    }
+                    _ => return Err(format!("unsupported operator: {}", operator)),
                 }
             }
         }
@@ -77,8 +84,9 @@ impl Compiler {
         Ok(())
     }
 
+    // TODO: maybe change to &Vec or slice to boost performance
     fn emit(&self, op: OpCode, operands: Vec<u16>) -> usize {
-        let ins = make(&op, operands);
+        let ins = make(&op, &operands[..]);
         let pos = self.add_instruction(&ins);
         pos
     }

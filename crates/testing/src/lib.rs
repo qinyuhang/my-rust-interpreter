@@ -18,7 +18,7 @@ impl std::fmt::Display for TestingResult {
         match self {
             TestingResult::Bool(b) => write!(f, "{}", b),
             TestingResult::Err(e) => write!(f, "Error: {e}"),
-            TestingResult::Hash(h) => write!(f, "HashMap"),
+            TestingResult::Hash(_h) => write!(f, "HashMap"),
             TestingResult::Float(ff) => write!(f, "{ff}"),
             TestingResult::Int(a) => write!(f, "{a}"),
             TestingResult::STRING(a) => write!(f, "{a}"),
