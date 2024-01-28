@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::Formatter;
 use std::rc::Rc;
 
 pub enum TestingResult {
@@ -10,6 +11,21 @@ pub enum TestingResult {
     Err(String),
     Nil,
     Hash(HashMap<Rc<String>, Box<TestingResult>>),
+}
+
+impl std::fmt::Display for TestingResult {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TestingResult::Bool(b) => write!(f, "{}", b),
+            TestingResult::Err(e) => write!(f, "Error: {e}"),
+            TestingResult::Hash(h) => write!(f, "HashMap"),
+            TestingResult::Float(ff) => write!(f, "{ff}"),
+            TestingResult::Int(a) => write!(f, "{a}"),
+            TestingResult::STRING(a) => write!(f, "{a}"),
+            TestingResult::Vec(a) => write!(f, "{:?}", a),
+            TestingResult::Nil => write!(f, "Nil"),
+        }
+    }
 }
 
 #[macro_export]

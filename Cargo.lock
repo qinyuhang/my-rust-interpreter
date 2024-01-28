@@ -146,6 +146,7 @@ dependencies = [
  "lexer",
  "object",
  "parser",
+ "testing",
 ]
 
 [[package]]

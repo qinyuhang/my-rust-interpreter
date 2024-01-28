@@ -6,7 +6,7 @@ mod test {
     use ::lexer::*;
     use ::parser::*;
     use ::testing::*;
-    use interpreter::testing_object::{handle_object, handle_test_case};
+    use interpreter::testing_object::*;
 
     fn parse(input: &str) -> Option<Program> {
         let l = Lexer::new(input);

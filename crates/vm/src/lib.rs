@@ -1,6 +1,6 @@
 use code::{read_uint16, Instructions, OpCode};
 use compiler::ByteCode;
-use object::{ErrorObject, Null, Object};
+use object::*;
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 

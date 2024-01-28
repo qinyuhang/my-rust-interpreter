@@ -4,10 +4,13 @@ mod test {
     use ::code::*;
     use ::lexer::*;
     use ::parser::*;
+    use ::testing::*;
+    use interpreter::testing_object::handle_object;
+    use std::panic::{self, AssertUnwindSafe};
 
     struct CompileTestCase<'a> {
         pub input: &'a str,
-        pub expected_constants: Vec<u8>,
+        pub expected_constants: Vec<TestingResult>,
         pub expected_instruction: Vec<Instructions>,
     }
 
@@ -16,7 +19,7 @@ mod test {
         assert_eq!(1, 1);
         let cases = vec![CompileTestCase {
             input: "1 + 2",
-            expected_constants: vec![1, 2],
+            expected_constants: vec![testing_result!(Int, 1), testing_result!(Int, 2)],
             expected_instruction: vec![
                 make(&OpCode::OpConstant, vec![0]),
                 make(&OpCode::OpConstant, vec![1]),
@@ -41,17 +44,69 @@ mod test {
                 let compiler = Compiler::new();
                 let r = compiler.compile(&pr.unwrap());
                 assert!(r.is_ok());
-                let _bytecode = compiler.bytecode();
-                // assert_eq!(bytecode.instructions, expected_instruction);
+                let bytecode = compiler.bytecode();
+                handle_instructions(
+                    expected_instruction.clone(),
+                    &*bytecode.instructions.borrow(),
+                );
 
-                // assert_eq!(bytecode.constants, expected_constants);
+                handle_constants(expected_constants, &*bytecode.constants.borrow());
             },
         );
     }
 
-    fn handle_instructions() {}
+    fn handle_instructions(expected: Vec<Instructions>, actual: &Instructions) {
+        let concat_ins = concat_instructions(expected);
+        assert_eq!(
+            concat_ins.len(),
+            actual.len(),
+            "wrong instruction length.\nwanted={}\ngot={}",
+            format_display_instructions(&concat_ins),
+            format_display_instructions(&actual)
+        );
+        concat_ins
+            .iter()
+            .zip(actual.iter())
+            .enumerate()
+            .for_each(|(idx, (ex, ac))| {
+                assert_eq!(
+                    *ex, *ac,
+                    "wrong instruction at {idx}.\nwanted={}\ngot={}",
+                    *ex, *ac
+                );
+            })
+    }
 
-    fn handle_constants() {}
+    fn handle_constants(expected: &Vec<TestingResult>, actual: &Vec<Rc<dyn Object>>) {
+        assert_eq!(
+            expected.len(),
+            actual.len(),
+            "wrong number of constants. got={}, want={}",
+            actual.len(),
+            expected.len()
+        );
+
+        expected
+            .iter()
+            .zip(actual.iter())
+            .enumerate()
+            .for_each(|(idx, (ex, ac))| {
+                let result = panic::catch_unwind(AssertUnwindSafe(|| {
+                    handle_object(Some(ac.clone()), ex);
+                }));
+                assert!(
+                    result.is_ok(),
+                    "constant {} testing failed: {}\n wanted={},\n got={}",
+                    idx,
+                    result
+                        .unwrap_err()
+                        .downcast_ref::<String>()
+                        .unwrap_or(&"failed".to_string()),
+                    ex,
+                    ac
+                );
+            });
+    }
 
     fn concat_instructions(s: Vec<Instructions>) -> Instructions {
         s.into_iter().flatten().collect()
@@ -63,6 +118,4 @@ mod test {
         let out = concat_instructions(vec![input.clone(), input.clone()]);
         assert_eq!(out, vec![0, 1, 2, 3, 4, 0, 1, 2, 3, 4]);
     }
-    #[allow(unused)]
-    fn handle_result() {}
 }
