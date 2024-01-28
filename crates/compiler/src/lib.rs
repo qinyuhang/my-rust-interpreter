@@ -19,6 +19,10 @@ pub struct ByteCode {
     pub constants: RefCell<Vec<Rc<dyn Object>>>,
 }
 
+thread_local! {
+    static EMPTY_V16: Vec<u16> = vec![];
+}
+
 impl Compiler {
     pub fn new() -> Self {
         Self {
@@ -45,7 +49,9 @@ impl Compiler {
             }) = n.downcast_ref::<ExpressionStatement>()
             {
                 let x = bbq.get_expression();
-                return self.compile(x.upcast());
+                let r = self.compile(x.upcast());
+                EMPTY_V16.with(|v| self.emit(OpCode::OpPop, v));
+                return r;
             }
         }
         if n.is::<InfixExpression>() {
@@ -65,9 +71,9 @@ impl Compiler {
                     return Err(e);
                 }
                 match operator.as_str() {
-                    "+" => {
-                        self.emit(OpCode::OpAdd, vec![]);
-                    }
+                    "+" => EMPTY_V16.with(|v| {
+                        self.emit(OpCode::OpAdd, v);
+                    }),
                     _ => return Err(format!("unsupported operator: {}", operator)),
                 }
             }
@@ -77,7 +83,7 @@ impl Compiler {
             let i = Integer { value: i.value };
             self.emit(
                 code::OpCode::OpConstant,
-                vec![self.add_constant(Rc::new(i)) as u16],
+                &vec![self.add_constant(Rc::new(i)) as u16],
             );
         }
         // match _node.ty {  }
@@ -85,7 +91,7 @@ impl Compiler {
     }
 
     // TODO: maybe change to &Vec or slice to boost performance
-    fn emit(&self, op: OpCode, operands: Vec<u16>) -> usize {
+    fn emit(&self, op: OpCode, operands: &Vec<u16>) -> usize {
         let ins = make(&op, &operands[..]);
         let pos = self.add_instruction(&ins);
         pos

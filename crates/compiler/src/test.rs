@@ -17,15 +17,28 @@ mod test {
     #[test]
     fn lang_compiler_canary_test() {
         let v = vec![0, 1];
-        let cases = vec![CompileTestCase {
-            input: "1 + 2",
-            expected_constants: vec![testing_result!(Int, 1), testing_result!(Int, 2)],
-            expected_instruction: vec![
-                make(&OpCode::OpConstant, &v[0..1]),
-                make(&OpCode::OpConstant, &v[1..2]),
-                make(&OpCode::OpAdd, &v[0..0]),
-            ],
-        }];
+        let cases = vec![
+            CompileTestCase {
+                input: "1 + 2",
+                expected_constants: vec![testing_result!(Int, 1), testing_result!(Int, 2)],
+                expected_instruction: vec![
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpAdd, &v[0..0]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: "1; 2",
+                expected_constants: vec![testing_result!(Int, 1), testing_result!(Int, 2)],
+                expected_instruction: vec![
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+        ];
 
         run_compile_test(cases);
     }

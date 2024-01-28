@@ -43,6 +43,7 @@ pub fn format_one_instruction(def: Rc<Definition>, operands: &Vec<u16>) -> Strin
 pub enum OpCode {
     OpConstant = 0u8,
     OpAdd,
+    OpPop,
 }
 
 impl From<u8> for OpCode {
@@ -50,6 +51,7 @@ impl From<u8> for OpCode {
         match value {
             0 => Self::OpConstant,
             1 => Self::OpAdd,
+            2 => Self::OpPop,
             // ... 其他枚举值的匹配
             _ => panic!("Invalid OpCode value: {}", value),
         }
@@ -75,6 +77,10 @@ thread_local! {
         }),
         Rc::new(Definition {
             name: "OpAdd".into(),
+            operand_widths: vec![],
+        }),
+        Rc::new(Definition {
+            name: "OpPop".into(),
             operand_widths: vec![],
         })
     ];
