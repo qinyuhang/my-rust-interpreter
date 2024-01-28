@@ -5,13 +5,21 @@
 // `mki` will start repl
 // `mik compile -i <file>.mok -o <out_file>.mokb` will compile <file>.mok to <out_file>.mokb
 use clap::{Parser, Subcommand};
-use interpreter::{run, start};
+use my_rust_interpreter::repl::{run, run_with_vm, start, start_with_vm};
 use std::path::PathBuf;
 
 #[derive(Subcommand)]
 enum Commands {
+    Repl {
+        #[arg(long)]
+        interpreter: bool,
+        #[arg(long)]
+        vm: bool,
+    },
     Run {
         file: PathBuf,
+        #[arg(long)]
+        vm: bool,
     },
     Compile {
         file: PathBuf,
@@ -30,10 +38,13 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
     match &cli.command {
-        Some(Commands::Run { file }) => {
+        Some(Commands::Run { file, vm }) => {
             // dbg!("{}", file);
             if let Ok(file) = std::fs::read_to_string(file) {
-                run(file);
+                match *vm {
+                    true => run_with_vm(file),
+                    _ => run(file),
+                };
             } else {
                 eprintln!("file not found {:?}", file);
             }
@@ -43,6 +54,13 @@ fn main() {
                 // repl::run(file);
             } else {
                 eprintln!("file not found {:?}", file);
+            }
+        }
+        Some(Commands::Repl { interpreter: _, vm }) => {
+            if *vm {
+                start_with_vm();
+            } else {
+                start();
             }
         }
         _ => {
