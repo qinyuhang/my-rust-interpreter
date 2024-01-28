@@ -16,3 +16,18 @@
 
 # Status
 [![CI](https://github.com/qinyuhang/my-rust-interpreter/actions/workflows/ci.yaml/badge.svg?branch=master)](https://github.com/qinyuhang/my-rust-interpreter/actions/workflows/ci.yaml)
+
+# 补充
+用到的工具
+
+用来查看`macro`扩展之后的情况`cargo expand`
+
+# 如何使用
+启动repl，默认interpreter `cargo run -- repl`
+
+使用vm来启动 `cargo run -- repl --vm`
+
+编译 `.mok` -> `.mokb` : `cargo run -- compile -i <in>.mok -o <out>.mokb`
+
+
+

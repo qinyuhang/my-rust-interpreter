@@ -105,7 +105,7 @@ pub fn start_with_vm() {
             continue;
         }
 
-        let stack_top = vm.stack_top().expect("get stack top failed");
+        let stack_top = vm.last_popped_stack_el().expect("get stack top failed");
         println!("{}", stack_top);
 
         input.clear();
@@ -135,7 +135,7 @@ pub fn run_with_vm(program: String) {
         eprintln!("VM run failed {}", e);
     }
 
-    let stack_top = vm.stack_top().expect("get stack top failed");
+    let stack_top = vm.last_popped_stack_el().expect("get stack top failed");
     println!("{}", stack_top);
 }
 

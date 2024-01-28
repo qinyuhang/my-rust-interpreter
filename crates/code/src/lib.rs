@@ -1,3 +1,4 @@
+use ast_macro::FromU8;
 use byteorder::{BigEndian, ByteOrder};
 use std::fmt::Formatter;
 
@@ -38,24 +39,16 @@ pub fn format_one_instruction(def: Rc<Definition>, operands: &Vec<u16>) -> Strin
     };
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, FromU8)]
 #[repr(u8)]
 pub enum OpCode {
     OpConstant = 0u8,
     OpAdd,
     OpPop,
-}
 
-impl From<u8> for OpCode {
-    fn from(value: u8) -> Self {
-        match value {
-            0 => Self::OpConstant,
-            1 => Self::OpAdd,
-            2 => Self::OpPop,
-            // ... 其他枚举值的匹配
-            _ => panic!("Invalid OpCode value: {}", value),
-        }
-    }
+    OpSub, // 3
+    OpMul,
+    OpDiv, // 5
 }
 
 impl std::fmt::Display for OpCode {

@@ -32,7 +32,7 @@ mod test {
             let r = vm.run();
             assert!(r.is_ok(), "vm error: {}", r.unwrap_err());
 
-            let stack_el = vm.stack_top();
+            let stack_el = vm.last_popped_stack_el();
 
             assert!(stack_el.is_some());
 

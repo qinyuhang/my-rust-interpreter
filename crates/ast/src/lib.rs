@@ -1,4 +1,4 @@
-pub use ast_macro::{ast_node, ast_node_with_try_from};
+pub use ast_macro::{ast_node, ast_node_with_try_from, ForAstExpression};
 use std::fmt::Formatter;
 use std::{
     any::Any,
@@ -76,7 +76,7 @@ pub enum AstStatement {
     LetStatement(LetStatement),
     ReturnStatement(ReturnStatement),
 }
-#[derive(Eq, PartialEq, Hash, Debug, Clone)]
+#[derive(Eq, PartialEq, Hash, Debug, Clone, ForAstExpression)]
 pub enum AstExpression {
     ArrayLiteral(ArrayLiteral),
     BlockStatement(BlockStatement),
@@ -132,88 +132,5 @@ impl std::fmt::Display for AstExpression {
                 AstExpression::UpdateExpression(a) => format!("{}", a),
             }
         )
-    }
-}
-
-impl AstExpression {
-    pub fn as_any(&self) -> &dyn Any {
-        match self {
-            AstExpression::ArrayLiteral(a) => a,
-            AstExpression::BlockStatement(a) => a,
-            AstExpression::BooleanLiteral(a) => a,
-            AstExpression::CallExpression(a) => a,
-            AstExpression::ExpressionStatement(a) => a,
-            AstExpression::FunctionLiteral(a) => a,
-            AstExpression::HashLiteral(a) => a,
-            AstExpression::Identifier(a) => a,
-            AstExpression::IfExpression(a) => a,
-            AstExpression::IndexExpression(a) => a,
-            AstExpression::InfixExpression(a) => a,
-            AstExpression::IntegerLiteral(a) => a,
-            AstExpression::FloatLiteral(a) => a,
-            AstExpression::LetStatement(a) => a,
-            AstExpression::PrefixExpression(a) => a,
-            // AstExpression::Program(a)=> a,
-            AstExpression::ReturnStatement(a) => a,
-            AstExpression::StringLiteral(a) => a,
-            AstExpression::WhileLoopLiteral(a) => a,
-            AstExpression::Break(a) => a,
-            AstExpression::AssignExpression(a) => a,
-            AstExpression::UpdateExpression(a) => a,
-        }
-    }
-
-    pub fn get_expression(&self) -> &dyn Expression {
-        match self {
-            AstExpression::ArrayLiteral(a) => a,
-            AstExpression::BlockStatement(a) => a,
-            AstExpression::BooleanLiteral(a) => a,
-            AstExpression::CallExpression(a) => a,
-            AstExpression::ExpressionStatement(a) => a,
-            AstExpression::FunctionLiteral(a) => a,
-            AstExpression::HashLiteral(a) => a,
-            AstExpression::Identifier(a) => a,
-            AstExpression::IfExpression(a) => a,
-            AstExpression::IndexExpression(a) => a,
-            AstExpression::InfixExpression(a) => a,
-            AstExpression::IntegerLiteral(a) => a,
-            AstExpression::FloatLiteral(a) => a,
-            AstExpression::LetStatement(a) => a,
-            AstExpression::PrefixExpression(a) => a,
-            // AstExpression::Program(a)=> a,
-            AstExpression::ReturnStatement(a) => a,
-            AstExpression::StringLiteral(a) => a,
-            AstExpression::WhileLoopLiteral(a) => a,
-            AstExpression::Break(a) => a,
-            AstExpression::AssignExpression(a) => a,
-            AstExpression::UpdateExpression(a) => a,
-        }
-    }
-
-    pub fn upcast(&self) -> &dyn Node {
-        match self {
-            AstExpression::ArrayLiteral(a) => a,
-            AstExpression::BlockStatement(a) => a,
-            AstExpression::BooleanLiteral(a) => a,
-            AstExpression::CallExpression(a) => a,
-            AstExpression::ExpressionStatement(a) => a,
-            AstExpression::FunctionLiteral(a) => a,
-            AstExpression::HashLiteral(a) => a,
-            AstExpression::Identifier(a) => a,
-            AstExpression::IfExpression(a) => a,
-            AstExpression::IndexExpression(a) => a,
-            AstExpression::InfixExpression(a) => a,
-            AstExpression::IntegerLiteral(a) => a,
-            AstExpression::FloatLiteral(a) => a,
-            AstExpression::LetStatement(a) => a,
-            AstExpression::PrefixExpression(a) => a,
-            // AstExpression::Program(a)=> a,
-            AstExpression::ReturnStatement(a) => a,
-            AstExpression::StringLiteral(a) => a,
-            AstExpression::WhileLoopLiteral(a) => a,
-            AstExpression::Break(a) => a,
-            AstExpression::AssignExpression(a) => a,
-            AstExpression::UpdateExpression(a) => a,
-        }
     }
 }

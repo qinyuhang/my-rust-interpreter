@@ -1,6 +1,7 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use syn;
+use syn::{parse_macro_input, Data, DataEnum, DeriveInput, Fields};
 
 /// add derive(Debug, Clone) to struct
 /// impl as_any for struct
@@ -191,3 +192,105 @@ pub fn object_with_try_from(args: TokenStream, input: TokenStream) -> TokenStrea
 //          map
 //     }}
 // }
+
+#[proc_macro_derive(FromU8)]
+pub fn from_u8_derive(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+
+    let name = &input.ident; // 获取枚举的名称
+
+    let variants = match input.data {
+        Data::Enum(DataEnum { variants, .. }) => variants,
+        _ => panic!("FromU8 can only be derived for enums"),
+    };
+
+    let mut arms = Vec::new();
+    let mut discriminant = 0u8;
+
+    for variant in variants {
+        let variant_ident = &variant.ident;
+
+        // 检查是否有显式指定的判别值
+        if let Fields::Unit = variant.fields {
+            if let Some((_, expr)) = &variant.discriminant {
+                // 尝试将表达式解析为整数
+                if let syn::Expr::Lit(syn::ExprLit {
+                    lit: syn::Lit::Int(lit_int),
+                    ..
+                }) = expr
+                {
+                    discriminant = lit_int.base10_parse().unwrap();
+                }
+            }
+        } else {
+            panic!("FromU8 can only be derived for enums with unit variants");
+        }
+
+        arms.push(quote! {
+            #discriminant => Self::#variant_ident,
+        });
+
+        discriminant += 1;
+    }
+
+    let expanded = quote! {
+        impl From<u8> for #name {
+            fn from(value: u8) -> Self {
+                match value {
+                    #(#arms)*
+                    _ => panic!("Invalid OpCode value: {}", value),
+                }
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
+}
+
+#[proc_macro_derive(ForAstExpression)]
+pub fn for_ast_expression_derive(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+
+    let name = &input.ident; // 获取枚举的名称
+
+    let variants = match input.data {
+        Data::Enum(DataEnum { variants, .. }) => variants,
+        _ => panic!("FromU8 can only be derived for enums"),
+    };
+
+    let mut arms = Vec::new();
+
+    for variant in variants {
+        let variant_ident = &variant.ident;
+
+        arms.push(quote! {
+            Self::#variant_ident(a) => a,
+        });
+    }
+
+    let expanded = quote! {
+        impl #name {
+
+            pub fn as_any(&self) -> &dyn std::any::Any {
+                match self {
+                    #(#arms)*
+                }
+            }
+
+            pub fn get_expression(&self) -> &dyn Expression {
+                match self {
+                    #(#arms)*
+                }
+            }
+
+            pub fn upcast(&self) -> &dyn Node {
+                match self {
+                    #(#arms)*
+                }
+            }
+        }
+
+    };
+
+    TokenStream::from(expanded)
+}

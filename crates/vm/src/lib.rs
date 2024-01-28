@@ -12,7 +12,7 @@ pub struct VM {
     pub instructions: RefCell<Instructions>,
 
     pub stack: RefCell<Vec<Rc<dyn Object>>>,
-    // stack_pointer
+    // stack_pointer always point to the next empty stack of stack_top
     pub sp: Cell<usize>,
 }
 
@@ -59,6 +59,9 @@ impl VM {
                     let value = left.value.wrapping_add(right.value);
                     self.push(Rc::new(Integer { value }))?;
                 }
+                OpCode::OpPop => {
+                    self.pop()?;
+                }
                 _ => {
                     dbg!(op);
                 }
@@ -95,5 +98,9 @@ impl VM {
         let r = stack.get(sp - 1).unwrap();
         self.sp.set(sp - 1);
         Ok(r.clone())
+    }
+
+    pub fn last_popped_stack_el(&self) -> Option<Rc<dyn Object>> {
+        return self.stack.borrow().get(self.sp.get()).cloned();
     }
 }
