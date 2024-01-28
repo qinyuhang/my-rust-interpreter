@@ -15,7 +15,7 @@ mod test {
     }
 
     #[test]
-    fn lang_compiler_canary_test() {
+    fn test_integer_arithmetic() {
         let v = vec![0, 1, 2];
         let cases = vec![
             CompileTestCase {
@@ -66,6 +66,15 @@ mod test {
                     make(&OpCode::OpConstant, &v[0..1]),
                     make(&OpCode::OpConstant, &v[1..2]),
                     make(&OpCode::OpDiv, &v[0..0]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: "-1",
+                expected_constants: vec![testing_result!(Int, 1)],
+                expected_instruction: vec![
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpMinus, &v[0..0]),
                     make(&OpCode::OpPop, &v[0..0]),
                 ],
             },
@@ -151,6 +160,15 @@ mod test {
                     make(&OpCode::OpTrue, &v[0..0]),
                     make(&OpCode::OpFalse, &v[1..1]),
                     make(&OpCode::OpNotEqual, &v[0..0]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: "!true",
+                expected_constants: vec![],
+                expected_instruction: vec![
+                    make(&OpCode::OpTrue, &v[0..0]),
+                    make(&OpCode::OpBang, &v[0..0]),
                     make(&OpCode::OpPop, &v[0..0]),
                 ],
             },

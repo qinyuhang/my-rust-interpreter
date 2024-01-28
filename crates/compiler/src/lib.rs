@@ -5,7 +5,7 @@ use ::ast::*;
 use ::object::*;
 use code;
 use code::{make, OpCode};
-use interpreter::*;
+// use interpreter::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -36,10 +36,7 @@ impl Compiler {
         if n.is::<Program>() {
             let n = n.downcast_ref::<Program>().unwrap();
             for st in n.statement.iter() {
-                match self.compile(st.get_expression().upcast()) {
-                    Err(e) => return Err(e),
-                    Ok(o) => {}
-                }
+                self.compile(st.get_expression().upcast())?;
             }
         }
         if n.is::<ExpressionStatement>() {
@@ -66,23 +63,15 @@ impl Compiler {
                 let right = right.get_expression();
                 // flip `x < y` to `y > x`
                 if operator == "<" {
-                    if let Err(e) = self.compile(right.upcast()) {
-                        return Err(e);
-                    }
-                    if let Err(e) = self.compile(left.upcast()) {
-                        return Err(e);
-                    }
+                    self.compile(right.upcast())?;
+                    self.compile(left.upcast())?;
                     EMPTY_V16.with(|v| {
                         self.emit(OpCode::OpGreaterThan, v);
                     });
                     return Ok(());
                 }
-                if let Err(e) = self.compile(left.upcast()) {
-                    return Err(e);
-                }
-                if let Err(e) = self.compile(right.upcast()) {
-                    return Err(e);
-                }
+                self.compile(left.upcast())?;
+                self.compile(right.upcast())?;
                 match operator.as_str() {
                     "+" => EMPTY_V16.with(|v| {
                         self.emit(OpCode::OpAdd, v);
@@ -108,6 +97,25 @@ impl Compiler {
                     _ => return Err(format!("unknown operator: {}", operator)),
                 }
             }
+        }
+        if n.is::<PrefixExpression>() {
+            if let Some(PrefixExpression {
+                right: Some(right),
+                operator,
+                ..
+            }) = n.downcast_ref::<PrefixExpression>()
+            {
+                self.compile(right.upcast())?;
+                match operator.as_str() {
+                    "!" => EMPTY_V16.with(|v| {
+                        self.emit(OpCode::OpBang, v);
+                    }),
+                    "-" => EMPTY_V16.with(|v| {
+                        self.emit(OpCode::OpMinus, v);
+                    }),
+                    _ => return Err(format!("unknown operator {}", operator)),
+                }
+            };
         }
         if n.is::<IntegerLiteral>() {
             let i = n.downcast_ref::<IntegerLiteral>().unwrap();

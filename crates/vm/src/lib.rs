@@ -1,6 +1,9 @@
+use ast::WrapF64;
 use code::{read_uint16, Instructions, OpCode};
 use compiler::ByteCode;
-use interpreter::eval_infix_expression;
+use interpreter::{
+    eval_bang_operator_expression, eval_infix_expression, eval_prefix_expression, is_truthy,
+};
 use object::*;
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
@@ -72,6 +75,12 @@ impl VM {
                 }
                 OpCode::OpEqual | OpCode::OpNotEqual | OpCode::OpGreaterThan => {
                     self.execute_comparison(op)?;
+                }
+                OpCode::OpBang => {
+                    self.execute_bang_operator()?;
+                }
+                OpCode::OpMinus => {
+                    self.execute_minus_operator()?;
                 }
                 _ => {
                     dbg!(op);
@@ -188,5 +197,33 @@ impl VM {
             _ => panic!("Should never reach here"),
         };
         self.push(Rc::new(Integer { value }))
+    }
+
+    fn execute_bang_operator(&self) -> Result<(), String> {
+        let operand = self.pop()?;
+        self.push(self.convert_rust_bool_to_bool_object(!is_truthy(Some(operand))))?;
+        Ok(())
+    }
+
+    fn execute_minus_operator(&self) -> Result<(), String> {
+        let operand = self.pop()?;
+        if operand.object_type() != INTEGER_OBJECT && operand.object_type() != FLOAT_OBJECT {
+            return Err(format!(
+                "unsupported type for negation: {}",
+                operand.object_type()
+            ));
+        }
+        let oa = operand.as_any();
+        if oa.is::<Integer>() {
+            let Integer { value } = oa.downcast_ref::<Integer>().unwrap();
+            return self.push(Rc::new(Integer { value: -value }));
+        };
+        if oa.is::<FloatObject>() {
+            let FloatObject { value } = oa.downcast_ref::<FloatObject>().unwrap();
+            return self.push(Rc::new(FloatObject {
+                value: WrapF64(-value.0),
+            }));
+        }
+        Ok(())
     }
 }

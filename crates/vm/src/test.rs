@@ -7,6 +7,7 @@ mod test {
     use ::parser::*;
     use ::testing::*;
     use interpreter::testing_object::*;
+    use std::panic::{self, AssertUnwindSafe};
 
     fn parse(input: &str) -> Option<Program> {
         let l = Lexer::new(input);
@@ -16,30 +17,36 @@ mod test {
 
     // FIXME: expected?
     fn run_vm_test(cases: &Vec<(/* input */ &str, /* expected */ TestingResult)>) {
-        cases.iter().for_each(|(input, expected)| {
-            let pr = parse(input).unwrap();
-            let comp = Compiler::new();
-            let c = comp.compile(&pr);
-            assert!(
-                c.is_ok(),
-                "fatal compiler error: {}, input={}",
-                c.unwrap_err(),
-                input
-            );
+        cases
+            .iter()
+            .enumerate()
+            .for_each(|(index, (input, expected))| {
+                let pr = parse(input).unwrap();
+                let comp = Compiler::new();
+                let c = comp.compile(&pr);
+                assert!(
+                    c.is_ok(),
+                    "fatal compiler error: {}, input={}",
+                    c.unwrap_err(),
+                    input
+                );
 
-            let vm = VM::new(comp.bytecode());
+                let vm = VM::new(comp.bytecode());
 
-            let r = vm.run();
-            assert!(r.is_ok(), "vm error: {}", r.unwrap_err());
+                let r = vm.run();
+                assert!(r.is_ok(), "vm error: {}", r.unwrap_err());
 
-            let stack_el = vm.last_popped_stack_el();
+                let stack_el = vm.last_popped_stack_el();
 
-            assert!(stack_el.is_some());
+                assert!(stack_el.is_some());
 
-            let stack_el = stack_el.unwrap();
+                let stack_el = stack_el.unwrap();
 
-            handle_object(Some(stack_el), expected);
-        });
+                panic::catch_unwind(AssertUnwindSafe(|| {
+                    handle_object(Some(stack_el), expected);
+                }))
+                .expect(format!("Case failed: index={}, input={}", index, input).as_str());
+            });
     }
 
     #[test]
@@ -60,6 +67,13 @@ mod test {
             ("5 * 2 + 10", testing_result!(Int, 5 * 2 + 10)),
             ("5 + 2 * 10", testing_result!(Int, 5 + 2 * 10)),
             ("5 * (2 + 10)", testing_result!(Int, 5 * (2 + 10))),
+            ("-5", testing_result!(Int, -5)),
+            ("-10", testing_result!(Int, -10)),
+            ("-50 + 100 + -50", testing_result!(Int, -50 + 100 + -50)),
+            (
+                "(5 + 10 * 2 + 15 / 2) * 2 + -10",
+                testing_result!(Int, (5 + 10 * 2 + 15 / 2) * 2 + -10),
+            ),
         ];
         run_vm_test(&cases);
     }
@@ -90,6 +104,13 @@ mod test {
             ("(1 < 2) == false", testing_result!(Bool, false)),
             ("(1 > 2) == true", testing_result!(Bool, false)),
             ("(1 > 2) == false", testing_result!(Bool, true)),
+            // prefix
+            ("!true", testing_result!(Bool, false)),
+            ("!false", testing_result!(Bool, true)),
+            ("!5", testing_result!(Bool, false)),
+            ("!!true", testing_result!(Bool, true)),
+            ("!!false", testing_result!(Bool, false)),
+            ("!!5", testing_result!(Bool, true)),
         ];
         run_vm_test(&cases);
     }

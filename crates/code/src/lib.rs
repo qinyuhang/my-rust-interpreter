@@ -57,9 +57,11 @@ pub enum OpCode {
     OpNotEqual,
     OpGreaterThan, // 10
 
-                   // Why delete this? because we can rearrange x < y to x > y
-                   // to keep a minimal instruction, so delete this
-                   // OpLessThan, // 11
+    // Why delete this? because we can rearrange x < y to x > y
+    // to keep a minimal instruction, so delete this
+    // OpLessThan, // 11
+    OpMinus, // - 11
+    OpBang,  // ! 12
 }
 
 impl std::fmt::Display for OpCode {
@@ -118,6 +120,14 @@ thread_local! {
         Rc::new(Definition {
             name: "OpGreaterThan".into(),
             operand_widths: vec![2],
+        }),
+        Rc::new(Definition {
+            name: "OpMinus".into(),
+            operand_widths: vec![],
+        }),
+        Rc::new(Definition {
+            name: "OpBang".into(),
+            operand_widths: vec![],
         }),
     ];
 }
