@@ -27,7 +27,7 @@ impl Compiler {
         }
     }
 
-    pub fn compile(&self, node: &dyn Node) -> Result<String, String> {
+    pub fn compile(&self, node: &dyn Node) -> Result<(), String> {
         let n = node.as_any();
         if n.is::<Program>() {
             let n = n.downcast_ref::<Program>().unwrap();
@@ -74,7 +74,7 @@ impl Compiler {
             );
         }
         // match _node.ty {  }
-        Ok("".into())
+        Ok(())
     }
 
     fn emit(&self, op: OpCode, operands: Vec<u16>) -> usize {

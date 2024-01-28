@@ -127,7 +127,7 @@ pub fn ast_node_with_try_from(args: TokenStream, input: TokenStream) -> TokenStr
                         }
                     }
                 }
-                Err(format!("Cannot cast {:?} to {}", value, "#name"))
+                Err(format!("Cannot cast {:?} to {}", value, stringify!(#name)))
             }
         }
     };
@@ -177,7 +177,7 @@ pub fn object_with_try_from(args: TokenStream, input: TokenStream) -> TokenStrea
                 if let Some(v) = value.as_any().downcast_ref::<#name>() {
                     return Ok((*v).clone());
                 }
-                Err(format!("cannot convert {} into {}", &value, "#name"))
+                Err(format!("cannot convert {} into {}", &value, stringify!(#name)))
             }
         }
     };

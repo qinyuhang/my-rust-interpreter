@@ -123,7 +123,7 @@ pub fn read_operands(def: Rc<Definition>, ins: &[u8]) -> (/* operands */ Vec<u16
     (operands, offset)
 }
 
-fn read_uint16(instructions: &[u8]) -> u16 {
+pub fn read_uint16(instructions: &[u8]) -> u16 {
     BigEndian::read_u16(instructions)
 }
 

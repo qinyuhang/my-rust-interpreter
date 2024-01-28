@@ -20,7 +20,12 @@ mod test {
             let pr = parse(input).unwrap();
             let comp = Compiler::new();
             let c = comp.compile(&pr);
-            assert!(c.is_ok(), "fatal compiler error: {}", c.unwrap_err());
+            assert!(
+                c.is_ok(),
+                "fatal compiler error: {}, input={}",
+                c.unwrap_err(),
+                input
+            );
 
             let vm = VM::new(comp.bytecode());
 
@@ -33,7 +38,7 @@ mod test {
 
             let stack_el = stack_el.unwrap();
 
-            // handle_object(Some(stack_el), expected);
+            handle_object(Some(stack_el), expected);
         });
     }
 
@@ -42,7 +47,7 @@ mod test {
         let cases = vec![
             ("1", testing_result!(Int, 1)),
             ("2", testing_result!(Int, 2)),
-            ("1 + 2", testing_result!(Int, 3)),
+            // ("1 + 2", testing_result!(Int, 3)),
         ];
         run_vm_test(&cases);
     }

@@ -8,11 +8,7 @@ use std::rc::Rc;
 
 pub fn test_string_object(obj: Option<Rc<dyn Object>>, expected: String) -> bool {
     let i = StringObject::try_from(obj.unwrap());
-    assert!(
-        i.is_ok(),
-        "test string result expected to be StringObject: {}",
-        i.unwrap_err()
-    );
+    assert!(i.is_ok(), "expect=OK, got={}", i.unwrap_err());
     let i = i.unwrap();
     assert_eq!(*i.value, expected, "expect={}, got={}", expected, *i.value);
     true
@@ -34,9 +30,9 @@ pub fn test_error_object(object: Option<Rc<dyn Object>>, expected: String) -> bo
 pub fn test_integer_object(obj: Option<Rc<dyn Object>>, expected: i64) -> bool {
     // println!("test_integer_object {:?}", obj);
     let i = Integer::try_from(obj.unwrap());
-    assert!(i.is_ok());
+    assert!(i.is_ok(), "expect=OK, got={}", i.unwrap_err());
     let i = i.unwrap();
-    assert_eq!(i.value, expected);
+    assert_eq!(i.value, expected, "expect={}, got={}", expected, i.value);
     true
 }
 
@@ -44,20 +40,24 @@ pub fn test_float_object(obj: Option<Rc<dyn Object>>, expected: f64) -> bool {
     let i = FloatObject::try_from(obj.unwrap());
     assert!(i.is_ok());
     let i = i.unwrap();
-    assert_eq!(i.value.0, expected);
+    assert_eq!(
+        i.value.0, expected,
+        "expect={}, got={}",
+        expected, i.value.0
+    );
     true
 }
 
 pub fn test_boolean_object(obj: Option<Rc<dyn Object>>, expected: bool) -> bool {
     let i = Boolean::try_from(obj.unwrap());
-    assert!(i.is_ok());
+    assert!(i.is_ok(), "expect=OK, got={}", i.unwrap_err());
     let i = i.unwrap();
     assert_eq!(i.value, expected);
     true
 }
 
 pub fn test_null_object(obj: &Option<Rc<dyn Object>>) {
-    assert!(obj.is_some());
+    assert!(obj.is_some(), "expect=Some, got=None");
     // println!("test null object: {}", obj.as_ref().unwrap());
     let x = obj.as_ref().unwrap().as_any();
     assert!(x.downcast_ref::<Null>().is_some());
@@ -83,7 +83,11 @@ pub fn test_eval(input: &str) -> Option<Rc<dyn Object>> {
 pub fn handle_test_case(case: &str, out: &TestingResult) {
     let input = case;
     let evaluated = test_eval(input);
-    assert!(evaluated.is_some());
+    assert!(
+        evaluated.is_some(),
+        "expect=Some, got=None, input={}",
+        input
+    );
     dbg!(&evaluated);
     handle_object(evaluated, out);
 }
