@@ -39,7 +39,7 @@ pub fn format_one_instruction(def: Rc<Definition>, operands: &Vec<u16>) -> Strin
     };
 }
 
-#[derive(Clone, Copy, Debug, FromU8)]
+#[derive(Clone, Copy, Debug, FromU8, Eq, PartialEq)]
 #[repr(u8)]
 pub enum OpCode {
     OpConstant = 0u8,
@@ -75,7 +75,19 @@ thread_local! {
         Rc::new(Definition {
             name: "OpPop".into(),
             operand_widths: vec![],
-        })
+        }),
+         Rc::new(Definition {
+            name: "OpSub".into(),
+            operand_widths: vec![2],
+        }),
+         Rc::new(Definition {
+            name: "OpMul".into(),
+            operand_widths: vec![2],
+        }),
+         Rc::new(Definition {
+            name: "OpDiv".into(),
+            operand_widths: vec![2],
+        }),
     ];
 }
 

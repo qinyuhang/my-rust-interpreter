@@ -74,6 +74,15 @@ impl Compiler {
                     "+" => EMPTY_V16.with(|v| {
                         self.emit(OpCode::OpAdd, v);
                     }),
+                    "-" => EMPTY_V16.with(|v| {
+                        self.emit(OpCode::OpSub, v);
+                    }),
+                    "*" => EMPTY_V16.with(|v| {
+                        self.emit(OpCode::OpMul, v);
+                    }),
+                    "/" => EMPTY_V16.with(|v| {
+                        self.emit(OpCode::OpDiv, v);
+                    }),
                     _ => return Err(format!("unsupported operator: {}", operator)),
                 }
             }

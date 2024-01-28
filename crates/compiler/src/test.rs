@@ -16,12 +16,13 @@ mod test {
 
     #[test]
     fn lang_compiler_canary_test() {
-        let v = vec![0, 1];
+        let v = vec![0, 1, 2];
         let cases = vec![
             CompileTestCase {
                 input: "1 + 2",
                 expected_constants: vec![testing_result!(Int, 1), testing_result!(Int, 2)],
                 expected_instruction: vec![
+                    // 表示的是变量的 index
                     make(&OpCode::OpConstant, &v[0..1]),
                     make(&OpCode::OpConstant, &v[1..2]),
                     make(&OpCode::OpAdd, &v[0..0]),
@@ -35,6 +36,36 @@ mod test {
                     make(&OpCode::OpConstant, &v[0..1]),
                     make(&OpCode::OpPop, &v[0..0]),
                     make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: "1 - 2",
+                expected_constants: vec![testing_result!(Int, 1), testing_result!(Int, 2)],
+                expected_instruction: vec![
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpSub, &v[0..0]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: "1 * 2",
+                expected_constants: vec![testing_result!(Int, 1), testing_result!(Int, 2)],
+                expected_instruction: vec![
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpMul, &v[0..0]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: "2 / 1",
+                expected_constants: vec![testing_result!(Int, 2), testing_result!(Int, 1)],
+                expected_instruction: vec![
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpDiv, &v[0..0]),
                     make(&OpCode::OpPop, &v[0..0]),
                 ],
             },

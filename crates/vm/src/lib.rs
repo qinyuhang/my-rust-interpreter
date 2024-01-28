@@ -7,6 +7,7 @@ use std::rc::Rc;
 mod test;
 
 pub const STACK_SIZE: usize = 2048usize;
+
 pub struct VM {
     pub constants: RefCell<Vec<Rc<dyn Object>>>,
     pub instructions: RefCell<Instructions>,
@@ -51,13 +52,8 @@ impl VM {
                         }
                     }
                 }
-                OpCode::OpAdd => {
-                    let right = self.pop()?;
-                    let left = self.pop()?;
-                    let right = right.as_any().downcast_ref::<Integer>().unwrap();
-                    let left = left.as_any().downcast_ref::<Integer>().unwrap();
-                    let value = left.value.wrapping_add(right.value);
-                    self.push(Rc::new(Integer { value }))?;
+                OpCode::OpAdd | OpCode::OpSub | OpCode::OpMul | OpCode::OpDiv => {
+                    self.execute_binary_operation(op)?;
                 }
                 OpCode::OpPop => {
                     self.pop()?;
@@ -102,5 +98,33 @@ impl VM {
 
     pub fn last_popped_stack_el(&self) -> Option<Rc<dyn Object>> {
         return self.stack.borrow().get(self.sp.get()).cloned();
+    }
+
+    fn execute_binary_operation(&self, op: OpCode) -> Result<(), String> {
+        let right = self.pop()?;
+        let left = self.pop()?;
+        if left.object_type() == INTEGER_OBJECT && right.object_type() == INTEGER_OBJECT {
+            let right = right.as_any().downcast_ref::<Integer>().unwrap();
+            let left = left.as_any().downcast_ref::<Integer>().unwrap();
+            return self.execute_int_binary_operation(op, left, right);
+        }
+
+        Ok(())
+    }
+
+    fn execute_int_binary_operation(
+        &self,
+        op: OpCode,
+        left: &Integer,
+        right: &Integer,
+    ) -> Result<(), String> {
+        let value = match op {
+            OpCode::OpAdd => left.value.wrapping_add(right.value),
+            OpCode::OpSub => left.value.wrapping_sub(right.value),
+            OpCode::OpMul => left.value.wrapping_mul(right.value),
+            OpCode::OpDiv => left.value.wrapping_div(right.value),
+            _ => panic!("Should never reach here"),
+        };
+        self.push(Rc::new(Integer { value }))
     }
 }

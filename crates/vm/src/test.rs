@@ -48,6 +48,18 @@ mod test {
             ("1", testing_result!(Int, 1)),
             ("2", testing_result!(Int, 2)),
             ("1 + 2", testing_result!(Int, 3)),
+            ("2 - 2", testing_result!(Int, 0)),
+            ("2 * 2", testing_result!(Int, 4)),
+            ("2 / 2", testing_result!(Int, 1)),
+            ("1 - 2", testing_result!(Int, 1 - 2)),
+            ("1 * 2", testing_result!(Int, 1 * 2)),
+            ("4 / 2", testing_result!(Int, 4 / 2)),
+            ("50 / 2 * 2 + 10 - 5", testing_result!(Int, 55)),
+            ("5 + 5+ 5+5 - 10", testing_result!(Int, 10)),
+            ("2*2*2*2*2", testing_result!(Int, 32)),
+            ("5 * 2 + 10", testing_result!(Int, 5 * 2 + 10)),
+            ("5 + 2 * 10", testing_result!(Int, 5 + 2 * 10)),
+            ("5 * (2 + 10)", testing_result!(Int, 5 * (2 + 10))),
         ];
         run_vm_test(&cases);
     }
