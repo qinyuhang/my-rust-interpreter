@@ -49,6 +49,9 @@ pub enum OpCode {
     OpSub, // 3
     OpMul,
     OpDiv, // 5
+
+    OpTrue,  // 6
+    OpFalse, // 7
 }
 
 impl std::fmt::Display for OpCode {
@@ -76,17 +79,25 @@ thread_local! {
             name: "OpPop".into(),
             operand_widths: vec![],
         }),
-         Rc::new(Definition {
+        Rc::new(Definition {
             name: "OpSub".into(),
             operand_widths: vec![2],
         }),
-         Rc::new(Definition {
+        Rc::new(Definition {
             name: "OpMul".into(),
             operand_widths: vec![2],
         }),
-         Rc::new(Definition {
+        Rc::new(Definition {
             name: "OpDiv".into(),
             operand_widths: vec![2],
+        }),
+        Rc::new(Definition {
+            name: "OpTrue".into(),
+            operand_widths: vec![],
+        }),
+        Rc::new(Definition {
+            name: "OpFalse".into(),
+            operand_widths: vec![],
         }),
     ];
 }

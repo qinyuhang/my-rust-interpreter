@@ -95,6 +95,17 @@ impl Compiler {
                 &vec![self.add_constant(Rc::new(i)) as u16],
             );
         }
+        if n.is::<BooleanLiteral>() {
+            let i = n.downcast_ref::<BooleanLiteral>().unwrap();
+            match i.value {
+                true => EMPTY_V16.with(|v| {
+                    self.emit(OpCode::OpTrue, v);
+                }),
+                false => EMPTY_V16.with(|v| {
+                    self.emit(OpCode::OpFalse, v);
+                }),
+            };
+        }
         // match _node.ty {  }
         Ok(())
     }

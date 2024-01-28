@@ -74,6 +74,30 @@ mod test {
         run_compile_test(cases);
     }
 
+    #[test]
+    fn test_boolean_expressioin() {
+        let v = vec![0, 1, 2];
+        let cases = vec![
+            CompileTestCase {
+                input: "true",
+                expected_constants: vec![],
+                expected_instruction: vec![
+                    make(&OpCode::OpTrue, &v[0..0]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: "false",
+                expected_constants: vec![],
+                expected_instruction: vec![
+                    make(&OpCode::OpFalse, &v[0..0]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+        ];
+
+        run_compile_test(cases);
+    }
     fn run_compile_test(tests: Vec<CompileTestCase>) {
         tests.iter().for_each(
             |CompileTestCase {
