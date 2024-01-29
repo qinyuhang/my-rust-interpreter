@@ -66,6 +66,7 @@ pub enum OpCode {
     OpJNT,
     /// Jump
     OpJMP,
+    OpNull, // 15
 }
 
 impl std::fmt::Display for OpCode {
@@ -140,6 +141,10 @@ thread_local! {
         Rc::new(Definition {
             name: "OpJMP".into(),
             operand_widths: vec![2],
+        }),
+        Rc::new(Definition {
+            name: "OpNull".into(),
+            operand_widths: vec![],
         }),
     ];
 }

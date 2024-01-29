@@ -188,14 +188,18 @@ mod test {
                     // 0000
                     make(&OpCode::OpTrue, &v[0..0]),
                     // 0001
-                    make(&OpCode::OpJNT, &vec![7]),
+                    make(&OpCode::OpJNT, &vec![10]),
                     // 0004
                     make(&OpCode::OpConstant, &v[0..1]),
                     // 0007
-                    make(&OpCode::OpPop, &v[0..0]),
-                    // 0008
-                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpJMP, &vec![11]),
+                    // 0010
+                    make(&OpCode::OpNull, &v[0..0]),
                     // 0011
+                    make(&OpCode::OpPop, &v[0..0]),
+                    // 0012
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    // 0015
                     make(&OpCode::OpPop, &v[0..0]),
                 ],
             },

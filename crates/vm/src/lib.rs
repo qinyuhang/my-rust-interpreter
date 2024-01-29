@@ -15,6 +15,7 @@ pub const STACK_SIZE: usize = 2048usize;
 thread_local! {
     static TRUE: Rc<dyn Object> = Rc::new(Boolean { value : true });
     static FALSE: Rc<dyn Object> = Rc::new(Boolean { value : false });
+    static NULL: Rc<dyn Object> = Rc::new(Null {});
 }
 
 pub struct VM {
@@ -97,6 +98,9 @@ impl VM {
                     if !is_truthy(Some(condition)) {
                         ip = (pos as usize) - 1;
                     }
+                }
+                OpCode::OpNull => {
+                    NULL.with(|v| self.push(v.clone()))?;
                 }
                 _ => {
                     dbg!(op);

@@ -160,18 +160,11 @@ impl Compiler {
         if n.is::<IfExpression>() {
             // with alternative:
             //     condition
-            //     jnt────────────┐
-            //     consequence    │
-            // ┌───jmp            │
-            // │   alternative◄───┘
+            //     jnt───────────────────┐
+            //     consequence           │
+            // ┌───jmp                   │
+            // │   null / alternative◄───┘
             // └──►next
-            //
-            // without alternative
-            //     condition
-            //     jnt────────────┐
-            //     consequence    │
-            //     next◄──────────┘
-            //
             let i = n.downcast_ref::<IfExpression>().unwrap();
             self.compile(i.condition.get_expression().upcast())?;
 
@@ -185,24 +178,24 @@ impl Compiler {
                 self.remove_last_pop();
             }
 
-            let mut after_consequence = self.instructions.borrow().len();
+            let jmp_position = self.emit(OpCode::OpJMP, &vec![9999]);
+
+            let after_consequence = self.instructions.borrow().len();
+            self.change_operand(jnt_position, after_consequence)?;
+
 
             if let Some(alternative) = &i.alternative {
-                let jmp_position = self.emit(OpCode::OpJMP, &vec![9999]);
-                // After emit jmp, get the position as jnt's operands
-                after_consequence = self.instructions.borrow().len();
-
                 self.compile(alternative.get_expression().upcast())?;
                 if self.last_instruction_is_pop() {
                     self.remove_last_pop();
                 }
-
-                let after_alternative = self.instructions.borrow().len();
-                self.change_operand(jmp_position, after_alternative)?;
+            } else {
+                EMPTY_V16.with(|v| self.emit(OpCode::OpNull, v));
             }
+            let after_alternative = self.instructions.borrow().len();
+            self.change_operand(jmp_position, after_alternative)?;
 
             // dbg!(after_consequence);
-            self.change_operand(jnt_position, after_consequence)?;
         }
         if n.is::<BlockStatement>() {
             let i = n.downcast_ref::<BlockStatement>().unwrap();

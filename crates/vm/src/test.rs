@@ -127,6 +127,8 @@ mod test {
             ("if (1 < 2) { 10 }", testing_result!(Int, 10)),
             ("if (1 < 2) { 10 } else { 20 }", testing_result!(Int, 10)),
             ("if (1 > 2) { 10 } else { 20 }", testing_result!(Int, 20)),
+            ("if (1 > 2) { 10 }", testing_result!(Nil)),
+            ("if (false) { 10 }", testing_result!(Nil)),
         ];
 
         run_vm_test(&cases);
