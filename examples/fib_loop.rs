@@ -18,5 +18,5 @@ fn main() {
     // assert_eq!(fib(2), 2);
     // assert_eq!(fib(3), 3);
     // assert_eq!(fib(4), 5);
-    dbg!(fib(30));
+    dbg!(fib(35));
 }

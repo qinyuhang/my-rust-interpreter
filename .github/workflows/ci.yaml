@@ -56,25 +56,33 @@ jobs:
           echo "-----------------"
           echo "test node js"
           /usr/bin/time node examples/fib.js &&
+          sleep 5
           echo "-----------------"
           echo "test my interpreter hot run"
           /usr/bin/time ./target/release/my-rust-interpreter run ./examples/fib.mok &&
+          sleep 5
           echo "-----------------"
           echo "test my interpreter compiled run"
           /usr/bin/time ./target/release/examples/fib_interpreter &&
+          sleep 5
           echo "-----------------"
           echo "test rust native"
           /usr/bin/time ./target/release/examples/fib &&
+          sleep 5
           echo "-----------------"
           echo "test node js fib using loop"
           /usr/bin/time node examples/fib_loop.js &&
+          sleep 5
           echo "-----------------"
           echo "test my interpreter hot run using loop"
           /usr/bin/time ./target/release/my-rust-interpreter run ./examples/fib_loop.mok &&
+          sleep 5
           echo "-----------------"
           echo "test my interpreter compiled run using loop"
           /usr/bin/time ./target/release/examples/fib_loop_interpreter &&
+          sleep 5
           echo "-----------------"
           echo "test rust native using loop"
           /usr/bin/time ./target/release/examples/fib_loop &&
+          sleep 5
           echo "DONE"
