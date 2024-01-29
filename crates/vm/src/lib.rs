@@ -1,5 +1,5 @@
 use ast::WrapF64;
-use code::{read_uint16, Instructions, OpCode};
+use code::{read_uint16, Instructions, OpCode, format_display_instructions};
 use compiler::ByteCode;
 use interpreter::{
     eval_bang_operator_expression, eval_infix_expression, eval_prefix_expression, is_truthy,
@@ -42,6 +42,9 @@ impl VM {
 
     // FIXME: type
     pub fn run(&self) -> Result<Rc<dyn Object>, String> {
+        // ip 表示 [(操作符, 操作数), (操作符, 操作数)] 的一个 范围切片的位置
+        // pos 表示[u8, u8] 的位置
+        // 虽然都是 [u8] 但是看的颗粒度不一样
         let mut ip = 0;
         while ip < self.instructions.borrow().len() {
             let ins = *self.instructions.borrow().get(ip).unwrap();
@@ -82,6 +85,19 @@ impl VM {
                 OpCode::OpMinus => {
                     self.execute_minus_operator()?;
                 }
+                OpCode::OpJMP => {
+                    let pos = read_uint16(&self.instructions.borrow()[ip + 1..]);
+                    ip = (pos as usize) - 1;
+                }
+                OpCode::OpJNT => {
+                    let pos = read_uint16(&self.instructions.borrow()[ip + 1..]);
+                    ip += 2;
+
+                    let condition = self.pop()?;
+                    if !is_truthy(Some(condition)) {
+                        ip = (pos as usize) - 1;
+                    }
+                }
                 _ => {
                     dbg!(op);
                 }
@@ -111,7 +127,7 @@ impl VM {
 
     pub fn pop(&self) -> Result<Rc<dyn Object>, String> {
         let sp = self.sp.get();
-        if sp < 0 {
+        if sp <= 0 {
             return Err(format!("stack pointer less then 0, got={sp}"));
         }
         let stack = self.stack.borrow();
@@ -225,5 +241,10 @@ impl VM {
             }));
         }
         Ok(())
+    }
+
+    fn dump_instruction(&self) -> String {
+        let instruction = &*self.instructions.borrow();
+        format_display_instructions(instruction)
     }
 }

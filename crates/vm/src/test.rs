@@ -34,7 +34,9 @@ mod test {
                 let vm = VM::new(comp.bytecode());
 
                 let r = vm.run();
-                assert!(r.is_ok(), "vm error: {}", r.unwrap_err());
+                assert!(r.is_ok(), "vm error: {} \nVM Instructions: {}Compiler Instructions: {}", r.unwrap_err(), vm.dump_instruction(),
+                        comp.dump_instruction()
+                );
 
                 let stack_el = vm.last_popped_stack_el();
 
@@ -45,7 +47,7 @@ mod test {
                 panic::catch_unwind(AssertUnwindSafe(|| {
                     handle_object(Some(stack_el), expected);
                 }))
-                .expect(format!("Case failed: index={}, input={}", index, input).as_str());
+                    .expect(format!("Case failed: index={}, input={}", index, input).as_str());
             });
     }
 
@@ -112,6 +114,21 @@ mod test {
             ("!!false", testing_result!(Bool, false)),
             ("!!5", testing_result!(Bool, true)),
         ];
+        run_vm_test(&cases);
+    }
+
+    #[test]
+    fn test_condition() {
+        let cases = vec![
+            ("if (true) { 10 }", testing_result!(Int, 10)),
+            ("if (true) { 10 } else { 20 }", testing_result!(Int, 10)),
+            ("if (false) { 10 } else { 20 }", testing_result!(Int, 20)),
+            ("if (1) { 10 }", testing_result!(Int, 10)),
+            ("if (1 < 2) { 10 }", testing_result!(Int, 10)),
+            ("if (1 < 2) { 10 } else { 20 }", testing_result!(Int, 10)),
+            ("if (1 > 2) { 10 } else { 20 }", testing_result!(Int, 20)),
+        ];
+
         run_vm_test(&cases);
     }
 }

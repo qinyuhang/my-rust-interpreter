@@ -5,7 +5,7 @@ use ::ast::*;
 use ::object::*;
 #[allow(unused)]
 use byteorder::{BigEndian, ByteOrder};
-use code::{self, make, Definition, OpCode};
+use code::{self, make, Definition, OpCode, Instructions, read_operands, format_one_instruction, format_display_instructions};
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
@@ -292,5 +292,10 @@ impl Compiler {
             instructions: self.instructions.clone(),
             constants: self.constants.clone(),
         })
+    }
+
+    pub fn dump_instruction(&self) -> String {
+        let instructions: &Instructions = &*self.instructions.borrow();
+        format_display_instructions(instructions)
     }
 }
