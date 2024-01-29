@@ -180,24 +180,52 @@ mod test {
     #[test]
     fn test_conditions() {
         let v = vec![0, 1, 2, 7];
-        let cases = vec![CompileTestCase {
-            input: "if (true) { 10 }; 3333;",
-            expected_constants: vec![testing_result!(Int, 10), testing_result!(Int, 3333)],
-            expected_instruction: vec![
-                // 0000
-                make(&OpCode::OpTrue, &v[0..0]),
-                // 0001
-                make(&OpCode::OpJNT, &vec![7]),
-                // 0004
-                make(&OpCode::OpConstant, &v[0..1]),
-                // 0007
-                make(&OpCode::OpPop, &v[0..0]),
-                // 0008
-                make(&OpCode::OpConstant, &v[1..2]),
-                // 0011
-                make(&OpCode::OpPop, &v[0..0]),
-            ],
-        }];
+        let cases = vec![
+            CompileTestCase {
+                input: "if (true) { 10 }; 3333;",
+                expected_constants: vec![testing_result!(Int, 10), testing_result!(Int, 3333)],
+                expected_instruction: vec![
+                    // 0000
+                    make(&OpCode::OpTrue, &v[0..0]),
+                    // 0001
+                    make(&OpCode::OpJNT, &vec![7]),
+                    // 0004
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    // 0007
+                    make(&OpCode::OpPop, &v[0..0]),
+                    // 0008
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    // 0011
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: "if (true) { 10 } else { 20 }; 3333;",
+                expected_constants: vec![
+                    testing_result!(Int, 10),
+                    testing_result!(Int, 20),
+                    testing_result!(Int, 3333),
+                ],
+                expected_instruction: vec![
+                    // 0000
+                    make(&OpCode::OpTrue, &v[0..0]),
+                    // 0001
+                    make(&OpCode::OpJNT, &vec![10]),
+                    // 0004
+                    make(&OpCode::OpConstant, &vec![0]),
+                    // 0007
+                    make(&OpCode::OpJMP, &vec![13]),
+                    // 0010
+                    make(&OpCode::OpConstant, &vec![1]),
+                    // 0013
+                    make(&OpCode::OpPop, &v[0..0]),
+                    // 0014
+                    make(&OpCode::OpConstant, &vec![2]),
+                    // 0017
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+        ];
 
         run_compile_test(cases);
     }

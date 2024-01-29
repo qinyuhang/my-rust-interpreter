@@ -5,7 +5,7 @@ use ::ast::*;
 use ::object::*;
 #[allow(unused)]
 use byteorder::{BigEndian, ByteOrder};
-use code::{self, make, OpCode};
+use code::{self, make, Definition, OpCode};
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
@@ -158,6 +158,20 @@ impl Compiler {
             };
         }
         if n.is::<IfExpression>() {
+            // with alternative:
+            //     condition
+            //     jnt────────────┐
+            //     consequence    │
+            // ┌───jmp            │
+            // │   alternative◄───┘
+            // └──►next
+            //
+            // without alternative
+            //     condition
+            //     jnt────────────┐
+            //     consequence    │
+            //     next◄──────────┘
+            //
             let i = n.downcast_ref::<IfExpression>().unwrap();
             self.compile(i.condition.get_expression().upcast())?;
 
@@ -171,7 +185,27 @@ impl Compiler {
                 self.remove_last_pop();
             }
 
-            let after_consequence = self.instructions.borrow().len();
+            let mut after_consequence = self.instructions.borrow().len();
+
+            if let Some(alternative) = &i.alternative {
+                let jmp_position = self.emit(OpCode::OpJMP, &vec![9999]);
+                let def = Definition::look_up(&OpCode::OpJMP).unwrap();
+                self.compile(alternative.get_expression().upcast())?;
+                if self.last_instruction_is_pop() {
+                    self.remove_last_pop();
+                }
+                // update after_consequence here? add 3 direct?
+                // add 1 offset for jmp instruction and def.operand_widths.iter().sum() for its operands width
+                after_consequence += 1 + def
+                    .operand_widths
+                    .iter()
+                    .map(|&val| val as usize)
+                    .sum::<usize>();
+
+                let after_alternative = self.instructions.borrow().len();
+                self.change_operand(jmp_position, after_alternative)?;
+            }
+
             // dbg!(after_consequence);
             self.change_operand(jnt_position, after_consequence)?;
         }
