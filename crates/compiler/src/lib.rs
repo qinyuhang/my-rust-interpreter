@@ -189,18 +189,13 @@ impl Compiler {
 
             if let Some(alternative) = &i.alternative {
                 let jmp_position = self.emit(OpCode::OpJMP, &vec![9999]);
-                let def = Definition::look_up(&OpCode::OpJMP).unwrap();
+                // After emit jmp, get the position as jnt's operands
+                after_consequence = self.instructions.borrow().len();
+
                 self.compile(alternative.get_expression().upcast())?;
                 if self.last_instruction_is_pop() {
                     self.remove_last_pop();
                 }
-                // update after_consequence here? add 3 direct?
-                // add 1 offset for jmp instruction and def.operand_widths.iter().sum() for its operands width
-                after_consequence += 1 + def
-                    .operand_widths
-                    .iter()
-                    .map(|&val| val as usize)
-                    .sum::<usize>();
 
                 let after_alternative = self.instructions.borrow().len();
                 self.change_operand(jmp_position, after_alternative)?;
