@@ -177,6 +177,31 @@ mod test {
         run_compile_test(cases);
     }
 
+    #[test]
+    fn test_conditions() {
+        let v = vec![0, 1, 2, 7];
+        let cases = vec![CompileTestCase {
+            input: "if (true) { 10 }; 3333;",
+            expected_constants: vec![testing_result!(Int, 10), testing_result!(Int, 3333)],
+            expected_instruction: vec![
+                // 0000
+                make(&OpCode::OpTrue, &v[0..0]),
+                // 0001
+                make(&OpCode::OpJNT, &vec![7]),
+                // 0004
+                make(&OpCode::OpConstant, &v[0..1]),
+                // 0007
+                make(&OpCode::OpPop, &v[0..0]),
+                // 0008
+                make(&OpCode::OpConstant, &v[1..2]),
+                // 0011
+                make(&OpCode::OpPop, &v[0..0]),
+            ],
+        }];
+
+        run_compile_test(cases);
+    }
+
     fn run_compile_test(tests: Vec<CompileTestCase>) {
         tests.iter().for_each(
             |CompileTestCase {
@@ -218,9 +243,22 @@ mod test {
             .enumerate()
             .for_each(|(idx, (ex, ac))| {
                 assert_eq!(
-                    *ex, *ac,
-                    "wrong instruction at {idx}.\nwanted={}\ngot={}",
-                    *ex, *ac
+                    *ex,
+                    *ac,
+                    r#"wrong instruction at {idx}.
+wanted={}
+got   ={}
+wanted instructions={}
+got    instructions={}
+wanted instructions vec={:?}
+got    instructions vec={:?}
+"#,
+                    *ex,
+                    *ac,
+                    format_display_instructions(&concat_ins),
+                    format_display_instructions(&actual),
+                    &concat_ins,
+                    &actual
                 );
             })
     }

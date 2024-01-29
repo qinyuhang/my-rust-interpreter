@@ -3,15 +3,33 @@ mod test;
 use ::ast::*;
 // use ::parser::*;
 use ::object::*;
-use code;
-use code::{make, OpCode};
-// use interpreter::*;
-use std::cell::RefCell;
+#[allow(unused)]
+use byteorder::{BigEndian, ByteOrder};
+use code::{self, make, OpCode};
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
 pub struct Compiler {
     instructions: RefCell<code::Instructions>,
     constants: RefCell<Vec<Rc<dyn Object>>>,
+
+    last_instruction: Cell<EmittedInstruction>,
+    previous_instruction: Cell<EmittedInstruction>,
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct EmittedInstruction {
+    pub op_code: OpCode,
+    pub position: usize,
+}
+
+impl Default for EmittedInstruction {
+    fn default() -> Self {
+        Self {
+            position: 0,
+            op_code: OpCode::OpConstant,
+        }
+    }
 }
 
 pub struct ByteCode {
@@ -28,6 +46,9 @@ impl Compiler {
         Self {
             instructions: RefCell::new(vec![]),
             constants: RefCell::new(vec![]),
+
+            last_instruction: Cell::new(EmittedInstruction::default()),
+            previous_instruction: Cell::new(EmittedInstruction::default()),
         }
     }
 
@@ -136,15 +157,50 @@ impl Compiler {
                 }),
             };
         }
+        if n.is::<IfExpression>() {
+            let i = n.downcast_ref::<IfExpression>().unwrap();
+            self.compile(i.condition.get_expression().upcast())?;
+
+            // fake offset
+            let jnt_position = self.emit(OpCode::OpJNT, &vec![9999]);
+
+            if let Some(consequence) = &i.consequence {
+                self.compile(consequence.get_expression().upcast())?;
+            }
+            if self.last_instruction_is_pop() {
+                self.remove_last_pop();
+            }
+
+            let after_consequence = self.instructions.borrow().len();
+            // dbg!(after_consequence);
+            self.change_operand(jnt_position, after_consequence)?;
+        }
+        if n.is::<BlockStatement>() {
+            let i = n.downcast_ref::<BlockStatement>().unwrap();
+            for val in &i.statement {
+                self.compile(val.get_expression().upcast())?;
+            }
+        }
         // match _node.ty {  }
         Ok(())
     }
 
-    // TODO: maybe change to &Vec or slice to boost performance
     fn emit(&self, op: OpCode, operands: &Vec<u16>) -> usize {
         let ins = make(&op, &operands[..]);
         let pos = self.add_instruction(&ins);
+        self.set_last_instruction(op, pos);
         pos
+    }
+
+    fn set_last_instruction(&self, op: OpCode, pos: usize) {
+        let prev = self.last_instruction.get();
+        let last = EmittedInstruction {
+            op_code: op,
+            position: pos,
+        };
+
+        self.previous_instruction.set(prev);
+        self.last_instruction.set(last);
     }
 
     fn add_instruction(&self, ins: &[u8]) -> usize {
@@ -156,6 +212,50 @@ impl Compiler {
     fn add_constant(&self, obj: Rc<dyn Object>) -> usize {
         self.constants.borrow_mut().push(obj);
         self.constants.borrow().len() - 1
+    }
+
+    fn last_instruction_is_pop(&self) -> bool {
+        self.last_instruction.get().op_code == OpCode::OpPop
+    }
+
+    fn remove_last_pop(&self) {
+        let last_instruction_position = self.last_instruction.get().position;
+
+        self.instructions
+            .borrow_mut()
+            .truncate(last_instruction_position);
+
+        let previous_instruction = self.previous_instruction.get();
+        self.last_instruction.set(previous_instruction);
+    }
+
+    fn replace_instruction(&self, pos: usize, n: &[u8]) {
+        let mut i = 0;
+        while i < n.len() {
+            self.instructions.borrow_mut()[pos + i] = n[i];
+            i += 1;
+        }
+    }
+
+    fn change_operand(&self, op_pos: usize, operand: usize) -> Result<(), String> {
+        let op = OpCode::from(*self.instructions.borrow_mut().get(op_pos).unwrap());
+
+        // look up op to find the op_width
+        // convert operand to Vec<u16> limited to op_width
+
+        // hope this will guard the safety restriction
+        // u16::Max = 65535
+        // u32::Max = 4294967295
+        // which means the program written in `monkey lang` should
+        // be small enough to be compiled to bytecode
+        // OR OTHERWISE WE MUST WIDER THE OPERAND OF OpJNT AND OpJMP
+        // write usize to u16 array
+
+        /// FIXME: operand is usize (consider it u64) it should be convert into u16 instead of `as u16`
+        /// anyway it now works, later change the op_width of JNT JMP to 4, we need impl the convert
+        let new_instruction = make(&op, &vec![operand as u16]);
+        self.replace_instruction(op_pos, &new_instruction);
+        Ok(())
     }
 
     pub fn bytecode(&self) -> Rc<ByteCode> {

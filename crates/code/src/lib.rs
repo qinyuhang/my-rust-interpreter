@@ -62,6 +62,10 @@ pub enum OpCode {
     // OpLessThan, // 11
     OpMinus, // - 11
     OpBang,  // ! 12
+    /// JumpNotTrue
+    OpJNT,
+    /// Jump
+    OpJMP,
 }
 
 impl std::fmt::Display for OpCode {
@@ -128,6 +132,14 @@ thread_local! {
         Rc::new(Definition {
             name: "OpBang".into(),
             operand_widths: vec![],
+        }),
+        Rc::new(Definition {
+            name: "OpJNT".into(),
+            operand_widths: vec![2],
+        }),
+        Rc::new(Definition {
+            name: "OpJMP".into(),
+            operand_widths: vec![2],
         }),
     ];
 }
