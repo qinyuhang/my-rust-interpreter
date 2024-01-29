@@ -113,6 +113,8 @@ mod test {
             ("!!true", testing_result!(Bool, true)),
             ("!!false", testing_result!(Bool, false)),
             ("!!5", testing_result!(Bool, true)),
+            ("!(if (false) { 5; })", testing_result!(Bool, true)),
+            ("if ((if (false) { 10 })) { 10 } else { 20 }", testing_result!(Int, 20)),
         ];
         run_vm_test(&cases);
     }
