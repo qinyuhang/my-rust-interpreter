@@ -391,31 +391,31 @@ got    instructions vec={:?}
     #[test]
     fn test_define() {
         let expected = HashMap::from([
-            ("a".to_string(), Symbol { name: "a".into(), scope: GLOBAL_SCOPE, index: 0 }),
-            ("b".to_string(), Symbol { name: "b".into(), scope: GLOBAL_SCOPE, index: 1 }),
+            ("a".to_string(), Symbol { name: Rc::new(Identifier::from("a".to_string())), scope: GLOBAL_SCOPE, index: 0 }),
+            ("b".to_string(), Symbol { name: Rc::new(Identifier::from("b".to_string())), scope: GLOBAL_SCOPE, index: 1 }),
         ]);
 
         let global = SymbolTable::new();
-        let a = global.define("a".into());
+        let a = global.define(Rc::new(Identifier::from("a".to_string())));
         assert_eq!(*a, *expected.get("a").unwrap());
 
-        let b = global.define("b".into());
+        let b = global.define(Rc::new(Identifier::from("b".to_string())));
         assert_eq!(*b, *expected.get("b").unwrap());
     }
 
     #[test]
     fn test_resolve() {
         let global = SymbolTable::new();
-        global.define("a".to_string());
-        global.define("b".to_string());
+        global.define(Rc::new(Identifier::from("a".to_string())));
+        global.define(Rc::new(Identifier::from("b".to_string())));
 
         let expected = vec![
-            ("a", Symbol { name: "a".to_string(), scope: GLOBAL_SCOPE, index: 0 }),
-            ("b", Symbol { name: "b".to_string(), scope: GLOBAL_SCOPE, index: 1 }),
+            ("a", Symbol { name: Rc::new(Identifier::from("a".to_string())), scope: GLOBAL_SCOPE, index: 0 }),
+            ("b", Symbol { name: Rc::new(Identifier::from("b".to_string())), scope: GLOBAL_SCOPE, index: 1 }),
         ];
 
         expected.iter().for_each(|(name, sy)| {
-            let r = global.resolve(name.to_string());
+            let r = global.resolve(Rc::new(Identifier::from(name.to_string())));
             assert!(r.is_ok(), "name {} not resolvable", &sy.name);
             let r = r.unwrap();
             assert_eq!(*r, *sy, "expected {} to resolve to {:?}, got={:?}", &sy.name, sy, *r);

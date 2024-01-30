@@ -211,7 +211,13 @@ impl Compiler {
             let i = n.downcast_ref::<LetStatement>().unwrap();
             self.compile(i.value.as_ref().unwrap().get_expression().upcast())?;
             // TBD: 为什么不直接用 identifier 作为 define的参数，不是更好吗？(面的String的clone)
-            let symbol = self.symbol_table.borrow().define(i.name.value.clone());
+            let symbol = self.symbol_table.borrow().define(i.name.clone());
+            self.emit(OpCode::OpSetGlobal, &vec![symbol.index as u16]);
+        }
+        if n.is::<Identifier>() {
+            let i = n.downcast_ref::<Identifier>().unwrap();
+            // FIXME: DRAW BACK CLONE
+            let symbol = self.symbol_table.borrow().resolve(Rc::new(i.clone()))?;
         }
         // match _node.ty {  }
         Ok(())

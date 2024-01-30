@@ -4,11 +4,23 @@ use ::token::*;
 #[ast_node(Expression)]
 #[ast_node_with_try_from(Expression)]
 // #[derive(Hash, Eq, PartialEq)]
-#[derive(Hash)]
+#[derive(Hash, Default)]
 pub struct Identifier {
     pub token: Token,
-
+    // TODO: 这改成 Rc<String> 更好
     pub value: String,
+}
+
+impl From<String> for Identifier {
+    fn from(value: String) -> Self {
+        Identifier {
+            token: Token {
+                token_type: IDENT,
+                literal: value.clone(),
+            },
+            value,
+        }
+    }
 }
 
 impl TryFrom<Box<&ExpressionStatement>> for Identifier {

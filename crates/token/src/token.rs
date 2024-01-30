@@ -4,6 +4,7 @@ pub type TokenType = &'static str;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Token {
     pub token_type: TokenType,
+    // TODO: 这改成 Rc<String> 更好
     pub literal: String,
 }
 impl std::fmt::Display for Token {
