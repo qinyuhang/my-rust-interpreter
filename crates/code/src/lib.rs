@@ -99,15 +99,15 @@ thread_local! {
         }),
         Rc::new(Definition {
             name: "OpSub".into(),
-            operand_widths: vec![2],
+            operand_widths: vec![],
         }),
         Rc::new(Definition {
             name: "OpMul".into(),
-            operand_widths: vec![2],
+            operand_widths: vec![],
         }),
         Rc::new(Definition {
             name: "OpDiv".into(),
-            operand_widths: vec![2],
+            operand_widths: vec![],
         }),
         Rc::new(Definition {
             name: "OpTrue".into(),
@@ -119,15 +119,15 @@ thread_local! {
         }),
         Rc::new(Definition {
             name: "OpEqual".into(),
-            operand_widths: vec![2],
+            operand_widths: vec![],
         }),
         Rc::new(Definition {
             name: "OpNotEqual".into(),
-            operand_widths: vec![2],
+            operand_widths: vec![],
         }),
         Rc::new(Definition {
             name: "OpGreaterThan".into(),
-            operand_widths: vec![2],
+            operand_widths: vec![],
         }),
         Rc::new(Definition {
             name: "OpMinus".into(),

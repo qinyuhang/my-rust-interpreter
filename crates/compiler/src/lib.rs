@@ -1,15 +1,18 @@
-mod test;
 mod symbol_table;
+mod test;
 
 use ::ast::*;
 // use ::parser::*;
+use crate::symbol_table::SymbolTable;
 use ::object::*;
 #[allow(unused)]
 use byteorder::{BigEndian, ByteOrder};
-use code::{self, make, Definition, OpCode, Instructions, read_operands, format_one_instruction, format_display_instructions};
+use code::{
+    self, format_display_instructions, format_one_instruction, make, read_operands, Definition,
+    Instructions, OpCode,
+};
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
-use crate::symbol_table::{SymbolTable};
 
 pub struct Compiler {
     instructions: RefCell<code::Instructions>,
@@ -66,9 +69,9 @@ impl Compiler {
         }
         if n.is::<ExpressionStatement>() {
             if let Some(ExpressionStatement {
-                            expression: Some(bbq),
-                            ..
-                        }) = n.downcast_ref::<ExpressionStatement>()
+                expression: Some(bbq),
+                ..
+            }) = n.downcast_ref::<ExpressionStatement>()
             {
                 let x = bbq.get_expression();
                 let r = self.compile(x.upcast());
@@ -78,11 +81,11 @@ impl Compiler {
         }
         if n.is::<InfixExpression>() {
             if let Some(InfixExpression {
-                            left: Some(left),
-                            right: Some(right),
-                            operator,
-                            ..
-                        }) = n.downcast_ref::<InfixExpression>()
+                left: Some(left),
+                right: Some(right),
+                operator,
+                ..
+            }) = n.downcast_ref::<InfixExpression>()
             {
                 let left = left.get_expression();
                 let right = right.get_expression();
@@ -125,10 +128,10 @@ impl Compiler {
         }
         if n.is::<PrefixExpression>() {
             if let Some(PrefixExpression {
-                            right: Some(right),
-                            operator,
-                            ..
-                        }) = n.downcast_ref::<PrefixExpression>()
+                right: Some(right),
+                operator,
+                ..
+            }) = n.downcast_ref::<PrefixExpression>()
             {
                 self.compile(right.upcast())?;
                 match operator.as_str() {
@@ -187,7 +190,6 @@ impl Compiler {
             let after_consequence = self.instructions.borrow().len();
             self.change_operand(jnt_position, after_consequence)?;
 
-
             if let Some(alternative) = &i.alternative {
                 self.compile(alternative.get_expression().upcast())?;
                 if self.last_instruction_is_pop() {
@@ -210,7 +212,10 @@ impl Compiler {
         if n.is::<LetStatement>() {
             let i = n.downcast_ref::<LetStatement>().unwrap();
             self.compile(i.value.as_ref().unwrap().get_expression().upcast())?;
-            // TBD: 为什么不直接用 identifier 作为 define的参数，不是更好吗？(面的String的clone)
+            // 这里和书不一样
+            if self.last_instruction_is_pop() {
+                self.remove_last_pop();
+            }
             let symbol = self.symbol_table.borrow().define(i.name.clone());
             self.emit(OpCode::OpSetGlobal, &vec![symbol.index as u16]);
         }
@@ -218,6 +223,7 @@ impl Compiler {
             let i = n.downcast_ref::<Identifier>().unwrap();
             // FIXME: DRAW BACK CLONE
             let symbol = self.symbol_table.borrow().resolve(Rc::new(i.clone()))?;
+            self.emit(OpCode::OpGetGlobal, &vec![symbol.index as u16]);
         }
         // match _node.ty {  }
         Ok(())

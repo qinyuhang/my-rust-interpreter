@@ -1,14 +1,14 @@
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
+    use crate::symbol_table::*;
     use crate::*;
     use ::code::*;
     use ::lexer::*;
     use ::parser::*;
     use ::testing::*;
     use interpreter::testing_object::handle_object;
+    use std::collections::HashMap;
     use std::panic::{self, AssertUnwindSafe};
-    use crate::symbol_table::*;
 
     struct CompileTestCase<'a> {
         pub input: &'a str,
@@ -252,32 +252,24 @@ mod test {
             },
             CompileTestCase {
                 input: "let one = 1; one;",
-                expected_constants: vec![
-                    testing_result!(Int, 10),
-                    testing_result!(Int, 20),
-                    testing_result!(Int, 3333),
-                ],
+                expected_constants: vec![testing_result!(Int, 1)],
                 expected_instruction: vec![
                     make(&OpCode::OpConstant, &vec![0]),
                     make(&OpCode::OpSetGlobal, &vec![0]),
                     make(&OpCode::OpGetGlobal, &vec![0]),
-                    make(&OpCode::OpPop, &vec![0]),
+                    make(&OpCode::OpPop, &v[0..0]),
                 ],
             },
             CompileTestCase {
                 input: "let one = 1; let two = one; two;",
-                expected_constants: vec![
-                    testing_result!(Int, 10),
-                    testing_result!(Int, 20),
-                    testing_result!(Int, 3333),
-                ],
+                expected_constants: vec![testing_result!(Int, 1)],
                 expected_instruction: vec![
                     make(&OpCode::OpConstant, &vec![0]),
                     make(&OpCode::OpSetGlobal, &vec![0]),
                     make(&OpCode::OpGetGlobal, &vec![0]),
                     make(&OpCode::OpSetGlobal, &vec![1]),
                     make(&OpCode::OpGetGlobal, &vec![1]),
-                    make(&OpCode::OpPop, &vec![0]),
+                    make(&OpCode::OpPop, &v[0..0]),
                 ],
             },
         ];
@@ -300,6 +292,8 @@ mod test {
                 let compiler = Compiler::new();
                 let r = compiler.compile(&pr.unwrap());
                 assert!(r.is_ok(), "compile failed: {}", r.unwrap_err());
+                dbg!("compile succeed");
+                dbg!(&compiler.dump_instruction());
                 let bytecode = compiler.bytecode();
                 handle_instructions(
                     expected_instruction.clone(),
@@ -391,8 +385,22 @@ got    instructions vec={:?}
     #[test]
     fn test_define() {
         let expected = HashMap::from([
-            ("a".to_string(), Symbol { name: Rc::new(Identifier::from("a".to_string())), scope: GLOBAL_SCOPE, index: 0 }),
-            ("b".to_string(), Symbol { name: Rc::new(Identifier::from("b".to_string())), scope: GLOBAL_SCOPE, index: 1 }),
+            (
+                "a".to_string(),
+                Symbol {
+                    name: Rc::new(Identifier::from("a".to_string())),
+                    scope: GLOBAL_SCOPE,
+                    index: 0,
+                },
+            ),
+            (
+                "b".to_string(),
+                Symbol {
+                    name: Rc::new(Identifier::from("b".to_string())),
+                    scope: GLOBAL_SCOPE,
+                    index: 1,
+                },
+            ),
         ]);
 
         let global = SymbolTable::new();
@@ -410,16 +418,33 @@ got    instructions vec={:?}
         global.define(Rc::new(Identifier::from("b".to_string())));
 
         let expected = vec![
-            ("a", Symbol { name: Rc::new(Identifier::from("a".to_string())), scope: GLOBAL_SCOPE, index: 0 }),
-            ("b", Symbol { name: Rc::new(Identifier::from("b".to_string())), scope: GLOBAL_SCOPE, index: 1 }),
+            (
+                "a",
+                Symbol {
+                    name: Rc::new(Identifier::from("a".to_string())),
+                    scope: GLOBAL_SCOPE,
+                    index: 0,
+                },
+            ),
+            (
+                "b",
+                Symbol {
+                    name: Rc::new(Identifier::from("b".to_string())),
+                    scope: GLOBAL_SCOPE,
+                    index: 1,
+                },
+            ),
         ];
 
         expected.iter().for_each(|(name, sy)| {
             let r = global.resolve(Rc::new(Identifier::from(name.to_string())));
             assert!(r.is_ok(), "name {} not resolvable", &sy.name);
             let r = r.unwrap();
-            assert_eq!(*r, *sy, "expected {} to resolve to {:?}, got={:?}", &sy.name, sy, *r);
+            assert_eq!(
+                *r, *sy,
+                "expected {} to resolve to {:?}, got={:?}",
+                &sy.name, sy, *r
+            );
         });
-
     }
 }

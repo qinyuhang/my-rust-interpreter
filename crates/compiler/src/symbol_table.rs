@@ -1,8 +1,8 @@
+use ast::Identifier;
+use std::cell::Cell;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::cell::Cell;
-use ast::Identifier;
 
 pub type SymbolScope = &'static str;
 
@@ -23,16 +23,27 @@ pub struct SymbolTable {
 
 impl SymbolTable {
     pub fn new() -> Self {
-        SymbolTable { store: Default::default(), num_definitions: Default::default() }
+        SymbolTable {
+            store: Default::default(),
+            num_definitions: Default::default(),
+        }
     }
     pub fn define(&self, name: Rc<Identifier>) -> Rc<Symbol> {
-        let symbol = Rc::new(Symbol { name: name.clone(), index: self.num_definitions.get(), scope: GLOBAL_SCOPE });
+        let symbol = Rc::new(Symbol {
+            name: name.clone(),
+            index: self.num_definitions.get(),
+            scope: GLOBAL_SCOPE,
+        });
         self.store.borrow_mut().insert(name, symbol.clone());
         self.num_definitions.set(self.num_definitions.get() + 1);
         symbol
     }
 
     pub fn resolve(&self, name: Rc<Identifier>) -> Result<Rc<Symbol>, String> {
-        self.store.borrow().get(&name).map(|v| v.clone()).ok_or(format!("Fail get {}", &name))
+        self.store
+            .borrow()
+            .get(&name)
+            .map(|v| v.clone())
+            .ok_or(format!("Fail get {}", &name))
     }
 }

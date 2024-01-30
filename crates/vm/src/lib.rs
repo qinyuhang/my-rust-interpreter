@@ -1,5 +1,5 @@
 use ast::WrapF64;
-use code::{read_uint16, Instructions, OpCode, format_display_instructions};
+use code::{format_display_instructions, read_uint16, Instructions, OpCode};
 use compiler::ByteCode;
 use interpreter::{
     eval_bang_operator_expression, eval_infix_expression, eval_prefix_expression, is_truthy,
