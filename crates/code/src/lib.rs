@@ -67,6 +67,9 @@ pub enum OpCode {
     /// Jump
     OpJMP,
     OpNull, // 15
+
+    OpGetGlobal,
+    OpSetGlobal,
 }
 
 impl std::fmt::Display for OpCode {
@@ -145,6 +148,14 @@ thread_local! {
         Rc::new(Definition {
             name: "OpNull".into(),
             operand_widths: vec![],
+        }),
+        Rc::new(Definition {
+            name: "OpGetGlobal".into(),
+            operand_widths: vec![2],
+        }),
+        Rc::new(Definition {
+            name: "OpSetGlobal".into(),
+            operand_widths: vec![2],
         }),
     ];
 }

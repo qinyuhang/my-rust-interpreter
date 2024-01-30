@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
     use crate::*;
     use ::code::*;
     use ::lexer::*;
@@ -7,6 +8,7 @@ mod test {
     use ::testing::*;
     use interpreter::testing_object::handle_object;
     use std::panic::{self, AssertUnwindSafe};
+    use crate::symbol_table::*;
 
     struct CompileTestCase<'a> {
         pub input: &'a str,
@@ -234,6 +236,55 @@ mod test {
         run_compile_test(cases);
     }
 
+    #[test]
+    fn test_let() {
+        let v = vec![0, 1, 2, 7];
+        let cases = vec![
+            CompileTestCase {
+                input: "let one = 1; let two = 2;",
+                expected_constants: vec![testing_result!(Int, 1), testing_result!(Int, 2)],
+                expected_instruction: vec![
+                    make(&OpCode::OpConstant, &vec![0]),
+                    make(&OpCode::OpSetGlobal, &vec![0]),
+                    make(&OpCode::OpConstant, &vec![1]),
+                    make(&OpCode::OpSetGlobal, &vec![1]),
+                ],
+            },
+            CompileTestCase {
+                input: "let one = 1; one;",
+                expected_constants: vec![
+                    testing_result!(Int, 10),
+                    testing_result!(Int, 20),
+                    testing_result!(Int, 3333),
+                ],
+                expected_instruction: vec![
+                    make(&OpCode::OpConstant, &vec![0]),
+                    make(&OpCode::OpSetGlobal, &vec![0]),
+                    make(&OpCode::OpGetGlobal, &vec![0]),
+                    make(&OpCode::OpPop, &vec![0]),
+                ],
+            },
+            CompileTestCase {
+                input: "let one = 1; let two = one; two;",
+                expected_constants: vec![
+                    testing_result!(Int, 10),
+                    testing_result!(Int, 20),
+                    testing_result!(Int, 3333),
+                ],
+                expected_instruction: vec![
+                    make(&OpCode::OpConstant, &vec![0]),
+                    make(&OpCode::OpSetGlobal, &vec![0]),
+                    make(&OpCode::OpGetGlobal, &vec![0]),
+                    make(&OpCode::OpSetGlobal, &vec![1]),
+                    make(&OpCode::OpGetGlobal, &vec![1]),
+                    make(&OpCode::OpPop, &vec![0]),
+                ],
+            },
+        ];
+
+        run_compile_test(cases);
+    }
+
     fn run_compile_test(tests: Vec<CompileTestCase>) {
         tests.iter().for_each(
             |CompileTestCase {
@@ -335,5 +386,40 @@ got    instructions vec={:?}
         let input = vec![0, 1, 2, 3, 4];
         let out = concat_instructions(vec![input.clone(), input.clone()]);
         assert_eq!(out, vec![0, 1, 2, 3, 4, 0, 1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn test_define() {
+        let expected = HashMap::from([
+            ("a".to_string(), Symbol { name: "a".into(), scope: GLOBAL_SCOPE, index: 0 }),
+            ("b".to_string(), Symbol { name: "b".into(), scope: GLOBAL_SCOPE, index: 1 }),
+        ]);
+
+        let global = SymbolTable::new();
+        let a = global.define("a".into());
+        assert_eq!(*a, *expected.get("a").unwrap());
+
+        let b = global.define("b".into());
+        assert_eq!(*b, *expected.get("b").unwrap());
+    }
+
+    #[test]
+    fn test_resolve() {
+        let global = SymbolTable::new();
+        global.define("a".to_string());
+        global.define("b".to_string());
+
+        let expected = vec![
+            ("a", Symbol { name: "a".to_string(), scope: GLOBAL_SCOPE, index: 0 }),
+            ("b", Symbol { name: "b".to_string(), scope: GLOBAL_SCOPE, index: 1 }),
+        ];
+
+        expected.iter().for_each(|(name, sy)| {
+            let r = global.resolve(name.to_string());
+            assert!(r.is_ok(), "name {} not resolvable", &sy.name);
+            let r = r.unwrap();
+            assert_eq!(*r, *sy, "expected {} to resolve to {:?}, got={:?}", &sy.name, sy, *r);
+        });
+
     }
 }
