@@ -295,8 +295,8 @@ impl Compiler {
         // OR OTHERWISE WE MUST WIDER THE OPERAND OF OpJNT AND OpJMP
         // write usize to u16 array
 
-        /// FIXME: operand is usize (consider it u64) it should be convert into u16 instead of `as u16`
-        /// anyway it now works, later change the op_width of JNT JMP to 4, we need impl the convert
+        // FIXME: operand is usize (consider it u64) it should be convert into u16 instead of `as u16`
+        // anyway it now works, later change the op_width of JNT JMP to 4, we need impl the convert
         let new_instruction = make(&op, &vec![operand as u16]);
         self.replace_instruction(op_pos, &new_instruction);
         Ok(())

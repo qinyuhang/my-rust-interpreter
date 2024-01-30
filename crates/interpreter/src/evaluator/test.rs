@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod test {
     use crate::*;
-    use ::ast::*;
+    // use ::ast::*;
     use ::object::*;
     use ::testing::{testing_result, TestingResult};
     use std::collections::HashMap;

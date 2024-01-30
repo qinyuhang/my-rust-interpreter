@@ -104,14 +104,14 @@ pub fn ast_node(
 pub fn ast_node_with_try_from(args: TokenStream, input: TokenStream) -> TokenStream {
     let ipt = syn::parse_macro_input!(input as syn::DeriveInput);
     let name = &ipt.ident;
-    let attr_args = syn::parse_macro_input!(args as syn::Ident);
+    // let attr_args = syn::parse_macro_input!(args as syn::Ident);
 
     let s = quote! {
         #ipt
         impl TryFrom<Box<&dyn Expression>> for #name {
             type Error = String;
 
-            fn try_from(value: Box<&dyn Expression>) -> Result<Self, Self::Error> {
+            fn try_from(value: Box<&dyn Expression>) -> std::result::Result<Self, Self::Error> {
                 let x = value.as_any();
                 if x.is::<Self>() {
                     let x = x.downcast_ref::<Self>().unwrap();
@@ -168,13 +168,13 @@ pub fn object(args: TokenStream, input: TokenStream) -> TokenStream {
 pub fn object_with_try_from(args: TokenStream, input: TokenStream) -> TokenStream {
     let ipt = syn::parse_macro_input!(input as syn::DeriveInput);
     let name = &ipt.ident;
-    let attr_args = syn::parse_macro_input!(args as syn::Ident);
+    // let attr_args = syn::parse_macro_input!(args as syn::Ident);
     let s = quote! {
         #ipt
         impl TryFrom<Rc<dyn Object>> for #name {
             type Error = String;
 
-            fn try_from(value: Rc<dyn Object>) -> Result<Self, Self::Error> {
+            fn try_from(value: std::rc::Rc<dyn Object>) -> std::result::Result<Self, Self::Error> {
                 if let Some(v) = value.as_any().downcast_ref::<#name>() {
                     return Ok((*v).clone());
                 }

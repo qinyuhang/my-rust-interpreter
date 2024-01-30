@@ -476,10 +476,10 @@ pub fn eval_while_loop(ex: &WhileLoopLiteral, context: Rc<Context>) -> Option<Rc
             // dbg!(&body);
             match body.clone().as_ref() {
                 AstExpression::BlockStatement(blk) => {
-                    'inner: for st in blk.statement.iter() {
+                    for st in blk.statement.iter() {
                         // dbg!(&st.clone().as_ref());
                         match st.clone().as_ref() {
-                            AstExpression::Break(b) => {
+                            AstExpression::Break(_) => {
                                 // dbg!(&st);
                                 break 'outer;
                             }

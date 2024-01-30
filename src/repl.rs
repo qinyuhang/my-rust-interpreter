@@ -114,7 +114,6 @@ pub fn start_with_vm() {
 
 pub fn run_with_vm(program: String) {
     let mut input = program.clone();
-    let context = Rc::new(Context::new());
     let lex = Lexer::new(input.clone());
     let p = Parser::new(lex.clone());
     let pr = p.parse_program();

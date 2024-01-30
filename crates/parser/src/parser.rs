@@ -584,7 +584,7 @@ impl Parser {
 
     // just like parse_function_parameters, this function will consume some token
     pub fn parse_while_loop_literal(&self) -> Option<Rc<AstExpression>> {
-        let literal = self.cur_token.borrow().literal.clone();
+        // let literal = self.cur_token.borrow().literal.clone();
         let token = (*self.cur_token.borrow()).clone();
         if !self.expect_peek(LPAREN) {
             return None;

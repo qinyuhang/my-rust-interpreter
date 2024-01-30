@@ -7,11 +7,11 @@
 // use std::fmt::Formatter;
 // use std::hash::Hasher;
 
-use ast::*;
-use ast_macro::*;
+// use ast::*;
+// use ast_macro::*;
 
-struct A {}
-struct B {}
+// struct A {}
+// struct B {}
 
 // #[derive(ForAstExpression)]
 // enum XY {
