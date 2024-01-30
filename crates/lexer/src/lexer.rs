@@ -38,7 +38,7 @@ impl Lexer {
         let t = *self.ch.borrow();
         let mut token_type = match t {
             '=' => {
-                if self.peek_char() == "=" {
+                if self.peek_char() == '=' {
                     self.read_char();
                     token::EQ
                 } else {
@@ -51,30 +51,30 @@ impl Lexer {
             '{' => token::LBRACE,
             '}' => token::RBRACE,
             ',' => token::COMMA,
-            '+' => match self.peek_char().as_str() {
-                "=" => {
+            '+' => match self.peek_char() {
+                '=' => {
                     self.read_char();
                     token::PLUSEQ
                 }
-                "+" => {
+                '+' => {
                     self.read_char();
                     token::INCREASE
                 }
                 _ => token::PLUS,
             },
-            '-' => match self.peek_char().as_str() {
-                "=" => {
+            '-' => match self.peek_char() {
+                '=' => {
                     self.read_char();
                     token::MINEQ
                 }
-                "-" => {
+                '-' => {
                     self.read_char();
                     token::DECREASE
                 }
                 _ => token::MINUS,
             },
             '!' => {
-                if self.peek_char() == "=" {
+                if self.peek_char() == '=' {
                     self.read_char();
                     token::NOT_EQ
                 } else {
@@ -82,7 +82,7 @@ impl Lexer {
                 }
             }
             '^' => {
-                if self.peek_char() == "^" {
+                if self.peek_char() == '^' {
                     self.read_char();
                     token::POW
                 } else {
@@ -90,7 +90,7 @@ impl Lexer {
                 }
             }
             '|' => {
-                if self.peek_char() == "|" {
+                if self.peek_char() == '|' {
                     self.read_char();
                     token::LOGICOR
                 } else {
@@ -98,22 +98,22 @@ impl Lexer {
                 }
             }
             '&' => {
-                if self.peek_char() == "&" {
+                if self.peek_char() == '&' {
                     self.read_char();
                     token::LOGICAND
                 } else {
                     token::BITAND
                 }
             }
-            '/' => match self.peek_char().as_str() {
-                "=" => {
+            '/' => match self.peek_char() {
+                '=' => {
                     self.read_char();
                     token::DIVEQ
                 }
                 _ => token::SLASH,
             },
-            '*' => match self.peek_char().as_str() {
-                "=" => {
+            '*' => match self.peek_char() {
+                '=' => {
                     self.read_char();
                     token::MULEQ
                 }
@@ -194,11 +194,13 @@ impl Lexer {
         self.read_position.set(self.read_position.get() + 1);
         // }
     }
-    pub fn peek_char(&self) -> String {
+
+    // change to char
+    pub fn peek_char(&self) -> char {
         if self.read_position.get() > self.input_chars.len() {
-            "".into()
+            '\0'
         } else {
-            self.input_chars[self.read_position.get()].clone().into()
+            self.input_chars[self.read_position.get()]
         }
     }
     pub fn read_identifier(&self) -> String {
@@ -217,7 +219,7 @@ impl Lexer {
         let mut did_read_dot = false;
         let position = self.position.get();
         let is_read_hex =
-            *self.ch.borrow() == '0' && (self.peek_char() == "x" || self.peek_char() == "X");
+            *self.ch.borrow() == '0' && (self.peek_char() == 'x' || self.peek_char() == 'X');
         while is_digits(*self.ch.borrow())
             || is_not_decimal_symbol(*self.ch.borrow())
             || (is_read_hex && is_hex(*self.ch.borrow()))
