@@ -3,6 +3,7 @@
 
 use crate::*;
 use ::token::*;
+use std::rc::Rc;
 
 #[ast_node(Expression)]
 #[ast_node_with_try_from(Expression)]
@@ -17,8 +18,16 @@ impl TryFrom<String> for IntegerLiteral {
     type Error = String;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
+        Self::try_from(Rc::new(value))
+    }
+}
+
+impl TryFrom<Rc<String>> for IntegerLiteral {
+    type Error = String;
+
+    fn try_from(value: Rc<String>) -> Result<Self, Self::Error> {
         let mut radix = 10;
-        let mut v = value.clone();
+        let mut v = value.to_string();
         if value.starts_with("0x") || value.starts_with("0X") {
             radix = 16;
             v = value.replace("0x", "").replace("0X", "");
@@ -36,7 +45,7 @@ impl TryFrom<String> for IntegerLiteral {
             return Ok(IntegerLiteral {
                 token: Token {
                     token_type: INT,
-                    literal: value,
+                    literal: value.clone(),
                 },
                 value: v,
             });
@@ -44,7 +53,6 @@ impl TryFrom<String> for IntegerLiteral {
         Err(format!("can not parse {} into IntegerLiteral", value))
     }
 }
-
 impl TryFrom<Box<&ExpressionStatement>> for IntegerLiteral {
     type Error = String;
 
@@ -104,12 +112,13 @@ mod test {
         ast::IntegerLiteral,
         token::{Token, INT},
     };
+    use std::rc::Rc;
 
     #[test]
     fn test_int_literal_print() {
         let s = IntegerLiteral {
             token: Token {
-                literal: "5".into(),
+                literal: Rc::new("5".into()),
                 token_type: INT,
             },
             value: 5,

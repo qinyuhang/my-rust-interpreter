@@ -180,7 +180,7 @@ impl Lexer {
 
         Token {
             token_type,
-            literal: ch,
+            literal: Rc::new(ch),
         }
     }
     pub fn read_char(&self) {

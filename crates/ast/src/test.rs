@@ -29,13 +29,13 @@ mod test {
         let pe = PrefixExpression {
             token: Token {
                 token_type: INT,
-                literal: "1".into(),
+                literal: Rc::new("1".into()),
             },
-            operator: "-".into(),
+            operator: Rc::new("-".into()),
             right: Some(Rc::new(AstExpression::IntegerLiteral(IntegerLiteral {
                 token: Token {
                     token_type: INT,
-                    literal: "1".into(),
+                    literal: Rc::new("1".into()),
                 },
                 value: 1,
             }))),
@@ -50,7 +50,7 @@ mod test {
             value: 5,
             token: Token {
                 token_type: INT,
-                literal: "5".to_string(),
+                literal: Rc::new("5".to_string()),
             },
         };
     }
@@ -61,7 +61,7 @@ mod test {
         let i = IntegerLiteral::try_from(input.to_string());
         assert!(i.is_ok());
         let i = i.unwrap();
-        assert_eq!(i.token_literal(), input.to_string());
+        assert_eq!(*i.token_literal(), input.to_string());
         assert_eq!(5, i.value);
     }
 }

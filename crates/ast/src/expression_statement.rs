@@ -49,7 +49,7 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
         let mut did_match = false;
         let mut tk: Token = Token {
             token_type: EOF,
-            literal: "".into(),
+            literal: Rc::new("".into()),
         };
 
         let v_any = value.as_any();
@@ -213,13 +213,14 @@ impl std::fmt::Display for ExpressionStatement {
 #[cfg(test)]
 mod test {
     use {ast::ExpressionStatement, token::Token, token::EOF};
+    use std::rc::Rc;
 
     #[test]
     fn test_to_string() {
         let e = ExpressionStatement {
             token: Token {
                 token_type: EOF,
-                literal: ";".into(),
+                literal: Rc::new(";".into(),)
             },
             expression: None,
         };

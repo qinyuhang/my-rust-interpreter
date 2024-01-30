@@ -1,23 +1,16 @@
 use std::collections::HashMap;
+use std::rc::Rc;
 pub type TokenType = &'static str;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub struct Token {
     pub token_type: TokenType,
     // TODO: 这改成 Rc<String> 更好
-    pub literal: String,
+    pub literal: Rc<String>,
 }
 impl std::fmt::Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "<Token {} {}>", self.token_type, &self.literal,)
-    }
-}
-impl Default for Token {
-    fn default() -> Self {
-        Token {
-            token_type: EOF,
-            literal: "".into(),
-        }
     }
 }
 
@@ -30,7 +23,7 @@ impl ToBeToken {
     pub fn from_t(t: TokenType) -> Token {
         Token {
             token_type: t,
-            literal: t.to_lowercase().to_string(),
+            literal: Rc::new(t.to_lowercase().to_string()),
         }
     }
 
@@ -90,7 +83,7 @@ impl From<ToBeToken> for Token {
             if let Some(t) = t {
                 return Self {
                     token_type: t,
-                    literal: t.to_lowercase().to_string(),
+                    literal: Rc::new(t.to_lowercase().to_string()),
                 };
             }
         }
@@ -104,7 +97,7 @@ impl From<ToBeToken> for Token {
             } {
                 return Self {
                     token_type: t,
-                    literal: r,
+                    literal: Rc::new(r),
                 };
             }
         }

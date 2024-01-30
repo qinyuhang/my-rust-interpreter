@@ -358,7 +358,7 @@ impl Parser {
     // fixme: return Option is better?
     pub fn parse_identifier(&self) -> Option<Rc<AstExpression>> {
         let token = (*self.cur_token.borrow()).clone();
-        let value = self.cur_token.borrow().literal.to_string();
+        let value = self.cur_token.borrow().literal.clone();
         Some(Rc::new(AstExpression::Identifier(Identifier {
             token,
             value,
@@ -399,7 +399,7 @@ impl Parser {
     }
     pub fn parse_infix_expression(&self, left: Rc<AstExpression>) -> Option<Rc<AstExpression>> {
         let token = (*self.cur_token.borrow()).clone();
-        let operator = self.cur_token.borrow().literal.clone().into();
+        let operator = self.cur_token.borrow().literal.clone();
 
         let precedence = self.cur_precedence();
         self.next_token();
@@ -697,7 +697,7 @@ impl Parser {
     pub fn parse_assign_expression(&self, left: Rc<AstExpression>) -> Option<Rc<AstExpression>> {
         if let AstExpression::Identifier(left) = left.as_ref() {
             let token = (*self.cur_token.borrow()).clone();
-            let operator = self.cur_token.borrow().literal.clone().into();
+            let operator = self.cur_token.borrow().literal.clone();
 
             let precedence = self.cur_precedence();
             self.next_token();
@@ -719,7 +719,7 @@ impl Parser {
     pub fn parse_update_expression(&self, left: Rc<AstExpression>) -> Option<Rc<AstExpression>> {
         if let AstExpression::Identifier(left) = left.as_ref() {
             let token = (*self.cur_token.borrow()).clone();
-            let operator = self.cur_token.borrow().literal.clone().into();
+            let operator = self.cur_token.borrow().literal.clone();
 
             let precedence = self.cur_precedence();
             self.next_token();

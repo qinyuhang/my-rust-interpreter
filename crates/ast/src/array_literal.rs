@@ -36,7 +36,7 @@ mod test {
         let i = ArrayLiteral {
             token: Token {
                 token_type: LBRACKET,
-                literal: "[".into(),
+                literal: Rc::new("[".into()),
             },
             elements: vec![
                 Rc::new(AstExpression::IntegerLiteral(

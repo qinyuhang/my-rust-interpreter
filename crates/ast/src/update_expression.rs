@@ -8,7 +8,7 @@ use std::rc::Rc;
 #[derive(Hash)]
 pub struct UpdateExpression {
     pub token: Token,
-    pub operator: String,
+    pub operator: Rc<String>,
     pub name: Option<Rc<Identifier>>,
     pub right: Option<Rc<AstExpression>>,
 }

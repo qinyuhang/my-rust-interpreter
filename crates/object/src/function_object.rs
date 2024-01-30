@@ -44,7 +44,7 @@ mod test {
             let p_token = lex.next_token();
             // println!("Running Test: {:?}, lexer.next_token: {:?}", test, p_token);
             assert_eq!(p_token.token_type, test.0);
-            assert_eq!(p_token.literal, test.1);
+            assert_eq!(*p_token.literal, test.1);
         });
     }
 }

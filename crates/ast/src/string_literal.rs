@@ -15,12 +15,28 @@ impl TryFrom<String> for StringLiteral {
     type Error = String;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
+        let value = Rc::new(value);
         Ok(Self {
             token: Token {
                 token_type: STRING,
                 literal: value.clone(),
             },
-            value: Rc::new(value),
+            value,
+        })
+    }
+}
+
+impl TryFrom<Rc<String>> for StringLiteral {
+    type Error = String;
+
+    fn try_from(value: Rc<String>) -> Result<Self, Self::Error> {
+        let value = value.clone();
+        Ok(Self {
+            token: Token {
+                token_type: STRING,
+                literal: value.clone(),
+            },
+            value,
         })
     }
 }
@@ -61,7 +77,7 @@ mod test {
     fn test_int_literal_print() {
         let s = StringLiteral {
             token: Token {
-                literal: "5".into(),
+                literal: Rc::new("5".into()),
                 token_type: STRING,
             },
             value: Rc::new("5".into()),

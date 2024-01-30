@@ -28,21 +28,21 @@ mod test {
         let x = IndexExpression {
             token: Token {
                 token_type: LPAREN,
-                literal: "".into(),
+                literal: Rc::new("".into()),
             },
             left: Rc::new(AstExpression::Identifier(Identifier {
                 token: Token {
                     token_type: LPAREN,
-                    literal: "a".into(),
+                    literal: Rc::new("a".into()),
                 },
-                value: "a".to_string(),
+                value: Rc::new("a".to_string()),
             })),
             index: Rc::new(AstExpression::Identifier(Identifier {
                 token: Token {
                     token_type: LPAREN,
-                    literal: "a".into(),
+                    literal: Rc::new("a".into()),
                 },
-                value: "a".to_string(),
+                value: Rc::new("a".to_string()),
             })),
         };
         dbg!(&x);

@@ -90,7 +90,7 @@ impl Compiler {
                 let left = left.get_expression();
                 let right = right.get_expression();
                 // flip `x < y` to `y > x`
-                if operator == "<" {
+                if operator.as_str() == "<" {
                     self.compile(right.upcast())?;
                     self.compile(left.upcast())?;
                     EMPTY_V16.with(|v| {

@@ -132,7 +132,24 @@ impl TryFrom<String> for FloatLiteral {
             return Ok(FloatLiteral {
                 token: Token {
                     token_type: FLOAT,
-                    literal: value,
+                    literal: Rc::new(value),
+                },
+                value: float_literal::WrapF64(v),
+            });
+        }
+        Err(format!("can not parse {} into FloatLiteral", value))
+    }
+}
+
+impl TryFrom<Rc<String>> for FloatLiteral {
+    type Error = String;
+
+    fn try_from(value: Rc<String>) -> Result<Self, Self::Error> {
+        if let Ok(v) = f64::from_str(&value) {
+            return Ok(FloatLiteral {
+                token: Token {
+                    token_type: FLOAT,
+                    literal: value.clone(),
                 },
                 value: float_literal::WrapF64(v),
             });

@@ -8,12 +8,11 @@ pub struct Program {
 }
 
 impl Node for Program {
-    fn token_literal(&self) -> String {
+    fn token_literal(&self) -> Rc<String> {
         if self.statement.len() > 0 {
-            // self.statement[0].token_literal().clone()
-            "".into()
+            self.statement[0].get_expression().token_literal().clone()
         } else {
-            "".into()
+            Rc::new("".into())
         }
     }
     fn as_any(&self) -> &dyn Any {

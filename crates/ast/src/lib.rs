@@ -3,6 +3,7 @@ use std::fmt::Formatter;
 use std::{
     any::Any,
     fmt::{Debug, Display},
+    rc::Rc,
 };
 
 mod test;
@@ -54,7 +55,7 @@ pub use update_expression::*;
 pub use while_loop_literal::*;
 
 pub trait Node: Debug + Display {
-    fn token_literal(&self) -> String;
+    fn token_literal(&self) -> Rc<String>;
     fn as_any(&self) -> &dyn Any;
 }
 

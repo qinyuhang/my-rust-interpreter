@@ -42,17 +42,17 @@ let foobar = 838383;
 
     #[allow(unused)]
     fn test_let_statement(s: &dyn Statement, name: String) -> bool {
-        assert_eq!(s.token_literal(), "let".to_string());
+        assert_eq!(*s.token_literal(), "let");
         // assert_eq!()
 
         let s = LetStatement::try_from(Box::new(s));
 
         assert!(s.is_ok());
         let s = s.unwrap();
-        assert_eq!(s.name.value, name);
+        assert_eq!(*s.name.value, name);
         //
         // assert_eq!(s.statement_node());
-        assert_eq!(s.name.token_literal(), name);
+        assert_eq!(*s.name.token_literal(), name);
         true
     }
 
@@ -97,7 +97,7 @@ return;
             assert!(s.is_ok());
 
             let s = s.unwrap();
-            assert_eq!(s.token_literal(), "return".to_string());
+            assert_eq!(*s.token_literal(), "return");
         }
     }
 
@@ -113,7 +113,7 @@ return 500;
             Some(Rc::new(AstExpression::ExpressionStatement(
                 ExpressionStatement {
                     token: Token {
-                        literal: EOF.into(),
+                        literal: Rc::new(EOF.to_string()),
                         token_type: EOF,
                     },
                     expression: None,
@@ -124,7 +124,7 @@ return 500;
             Some(Rc::new(AstExpression::ExpressionStatement(
                 ExpressionStatement {
                     token: Token {
-                        literal: EOF.into(),
+                        literal: Rc::new(EOF.into()),
                         token_type: EOF,
                     },
                     expression: None,
@@ -185,8 +185,8 @@ return 500;
         let il = il.unwrap();
 
         assert_eq!(il.value, 5);
-        assert_eq!(il.token_literal(), "5");
-        assert_eq!(il.token.literal, "5");
+        assert_eq!(*il.token_literal(), "5");
+        assert_eq!(*il.token.literal, "5");
         assert_eq!(il.token.token_type, INT);
     }
 
@@ -224,8 +224,8 @@ return 500;
         let il = il.unwrap();
 
         assert_eq!(il.value.0, 3.1415926);
-        assert_eq!(il.token_literal(), "3.1415926");
-        assert_eq!(il.token.literal, "3.1415926");
+        assert_eq!(*il.token_literal(), "3.1415926");
+        assert_eq!(*il.token.literal, "3.1415926");
         assert_eq!(il.token.token_type, FLOAT);
     }
     #[test]
@@ -278,7 +278,7 @@ return 500;
 
                 let il = il.unwrap();
                 println!("{:?}", il);
-                assert_eq!(il.operator, operator);
+                assert_eq!(*il.operator, operator);
                 assert_eq!(
                     IntegerLiteral::try_from(Box::new(&*il.right.unwrap()))
                         .unwrap()
@@ -337,7 +337,7 @@ return 500;
 
             let il = il.unwrap();
             // println!("{:?}", il);
-            assert_eq!(il.operator, operator);
+            assert_eq!(*il.operator, operator);
             assert_eq!(
                 IntegerLiteral::try_from(Box::new(&*il.left.unwrap()))
                     .unwrap()
@@ -389,7 +389,7 @@ return 500;
 
             let il = il.unwrap();
             // println!("{:?}", il);
-            assert_eq!(il.operator, operator);
+            assert_eq!(*il.operator, operator);
             assert_eq!(
                 BooleanLiteral::try_from(Box::new(&*il.left.unwrap()))
                     .unwrap()

@@ -8,7 +8,7 @@ use std::rc::Rc;
 #[derive(Hash)]
 pub struct InfixExpression {
     pub token: Token,
-    pub operator: String,
+    pub operator: Rc<String>,
     pub left: Option<Rc<AstExpression>>,
     pub right: Option<Rc<AstExpression>>,
 }

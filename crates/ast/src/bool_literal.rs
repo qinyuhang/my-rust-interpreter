@@ -60,13 +60,14 @@ impl std::fmt::Display for BooleanLiteral {
 #[cfg(test)]
 mod test {
     use {crate::BooleanLiteral, ::token::*};
+    use std::rc::Rc;
 
     #[test]
     fn test_bool_literal() {
         let s = BooleanLiteral {
             token: Token {
                 token_type: TRUE,
-                literal: "true".into(),
+                literal: Rc::new("true".into()),
             },
             value: true,
         };

@@ -1,5 +1,6 @@
 use crate::*;
 use ::token::*;
+use std::rc::Rc;
 
 #[ast_node(Expression)]
 #[ast_node_with_try_from(Expression)]
@@ -8,11 +9,12 @@ use ::token::*;
 pub struct Identifier {
     pub token: Token,
     // TODO: 这改成 Rc<String> 更好
-    pub value: String,
+    pub value: Rc<String>,
 }
 
 impl From<String> for Identifier {
     fn from(value: String) -> Self {
+        let value = Rc::new(value);
         Identifier {
             token: Token {
                 token_type: IDENT,
@@ -56,6 +58,8 @@ pub fn test_identifier_expression(exp: Box<&dyn Statement>, value: String) -> bo
 
     let id = id.unwrap();
 
+    let value = Rc::new(value);
+
     assert_eq!(id.value, value);
 
     assert_eq!(id.token_literal(), value);
@@ -76,6 +80,8 @@ pub fn test_identifier_enum(exp: Box<&AstExpression>, value: String) -> bool {
     assert!(id.is_ok());
 
     let id = id.unwrap();
+
+    let value = Rc::new(value);
 
     assert_eq!(id.value, value);
 

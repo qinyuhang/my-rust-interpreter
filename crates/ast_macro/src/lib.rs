@@ -24,7 +24,7 @@ pub fn ast_node(
             // println!("start decorate for Node");
             quote! {
                 impl Node for #name {
-                    fn token_literal(&self) -> String {
+                    fn token_literal(&self) -> std::rc::Rc<String> {
                         self.token.literal.clone()
                     }
                     fn as_any(&self) -> &dyn Any {
@@ -37,7 +37,7 @@ pub fn ast_node(
             // println!("start decorate for Expression");
             quote! {
                 impl Node for #name {
-                    fn token_literal(&self) -> String {
+                    fn token_literal(&self) -> std::rc::Rc<String> {
                         self.token.literal.clone()
                     }
                     fn as_any(&self) -> &dyn Any {
@@ -58,7 +58,7 @@ pub fn ast_node(
             // println!("start decorate for Statement");
             quote! {
                 impl Node for #name {
-                    fn token_literal(&self) -> String {
+                    fn token_literal(&self) -> std::rc::Rc<String> {
                         self.token.literal.clone()
                     }
                     fn as_any(&self) -> &dyn Any {

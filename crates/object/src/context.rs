@@ -79,9 +79,9 @@ mod test {
         Rc::new(Identifier {
             token: Token {
                 token_type: IDENT,
-                literal: name.to_string(),
+                literal: Rc::new(name.to_string()),
             },
-            value: name.to_string(),
+            value: Rc::new(name.to_string()),
         })
     }
 
