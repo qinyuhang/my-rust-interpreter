@@ -539,4 +539,91 @@ got    instructions vec={:?}
         ];
         run_compile_test(cases);
     }
+
+    #[test]
+    fn test_hash() {
+        let v = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
+        let cases = vec![
+            CompileTestCase {
+                input: r#"{1:2,3:4,5:6}"#,
+                expected_constants: vec![
+                    testing_result!(Int, 1),
+                    testing_result!(Int, 2),
+                    testing_result!(Int, 3),
+                    testing_result!(Int, 4),
+                    testing_result!(Int, 5),
+                    testing_result!(Int, 6),
+                ],
+                expected_instruction: vec![
+                    // 表示的是变量的 index
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    //
+                    make(&OpCode::OpConstant, &v[2..3]),
+                    make(&OpCode::OpConstant, &v[3..4]),
+                    //
+                    make(&OpCode::OpConstant, &v[4..5]),
+                    make(&OpCode::OpConstant, &v[5..6]),
+                    //
+                    make(&OpCode::OpHash, &vec![6]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: r#"{1:2+3, 4: 5*6}"#,
+                expected_constants: vec![
+                    testing_result!(Int, 1),
+                    testing_result!(Int, 2),
+                    testing_result!(Int, 3),
+                    testing_result!(Int, 4),
+                    testing_result!(Int, 5),
+                    testing_result!(Int, 6),
+                ],
+                expected_instruction: vec![
+                    // 表示的是变量的 index
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpConstant, &v[2..3]),
+                    make(&OpCode::OpAdd, &vec![]),
+                    //
+                    make(&OpCode::OpConstant, &v[3..4]),
+                    make(&OpCode::OpConstant, &v[4..5]),
+                    make(&OpCode::OpConstant, &v[5..6]),
+                    make(&OpCode::OpMul, &vec![]),
+                    //
+                    make(&OpCode::OpHash, &vec![4]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: r#"[1+2,3-4,5*6]"#,
+                expected_constants: vec![
+                    testing_result!(Int, 1),
+                    testing_result!(Int, 2),
+                    testing_result!(Int, 3),
+                    testing_result!(Int, 4),
+                    testing_result!(Int, 5),
+                    testing_result!(Int, 6),
+                ],
+                expected_instruction: vec![
+                    // 表示的是变量的 index
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpAdd, &vec![]),
+                    //
+                    make(&OpCode::OpConstant, &v[2..3]),
+                    make(&OpCode::OpConstant, &v[3..4]),
+                    make(&OpCode::OpSub, &vec![]),
+                    //
+                    make(&OpCode::OpConstant, &v[4..5]),
+                    make(&OpCode::OpConstant, &v[5..6]),
+                    make(&OpCode::OpMul, &vec![]),
+                    //
+                    make(&OpCode::OpArray, &vec![3]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+        ];
+        run_compile_test(cases);
+    }
 }

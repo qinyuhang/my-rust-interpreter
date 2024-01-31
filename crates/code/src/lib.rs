@@ -72,6 +72,7 @@ pub enum OpCode {
     OpSetGlobal,
 
     OpArray, // 18
+    OpHash,
 }
 
 impl std::fmt::Display for OpCode {
@@ -161,6 +162,10 @@ thread_local! {
         }),
         Rc::new(Definition {
             name: "OpArray".into(),
+            operand_widths: vec![2],
+        }),
+        Rc::new(Definition {
+            name: "OpHash".into(),
             operand_widths: vec![2],
         }),
     ];
