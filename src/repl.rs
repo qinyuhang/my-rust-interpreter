@@ -18,7 +18,7 @@ pub const PROMPT: &'static str = ">> ";
 pub const SYMBOL: &'static str = r#">> Monkey Lang 0.1.0 | (Rust BackEnd)"#;
 
 pub fn start() {
-    println!("{}", SYMBOL);
+    println!("{} | engine eval", SYMBOL);
     // readline in
     let stdin = io::stdin();
     let mut input = String::new();
@@ -53,7 +53,7 @@ pub fn start() {
 }
 
 pub fn start_with_vm() {
-    println!("{}", SYMBOL);
+    println!("{} | engine vm", SYMBOL);
     // readline in
     let stdin = io::stdin();
     let mut input = String::new();
@@ -112,6 +112,7 @@ pub fn start_with_vm() {
 }
 
 pub fn run_with_vm(program: String) {
+    println!("{} | engine vm", SYMBOL);
     let mut input = program.clone();
     let lex = Lexer::new(input.clone());
     let p = Parser::new(lex.clone());
@@ -138,6 +139,7 @@ pub fn run_with_vm(program: String) {
 }
 
 pub fn run(program: String) {
+    println!("{} | engine eval", SYMBOL);
     let mut input = program.clone();
     let context = Rc::new(Context::new());
     let lex = Lexer::new(input.clone());

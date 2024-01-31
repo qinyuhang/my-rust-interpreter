@@ -15,11 +15,13 @@ enum Commands {
         interpreter: bool,
         #[arg(long)]
         vm: bool,
+        #[arg(long)]
+        engine: Option<String>,
     },
     Run {
         file: PathBuf,
         #[arg(long)]
-        vm: bool,
+        engine: Option<String>,
     },
     Compile {
         file: PathBuf,
@@ -38,11 +40,11 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
     match &cli.command {
-        Some(Commands::Run { file, vm }) => {
+        Some(Commands::Run { file, engine }) => {
             // dbg!("{}", file);
             if let Ok(file) = std::fs::read_to_string(file) {
-                match *vm {
-                    true => run_with_vm(file),
+                match engine {
+                    Some(v) if v.as_str() == "vm" => run_with_vm(file),
                     _ => run(file),
                 };
             } else {
@@ -56,8 +58,12 @@ fn main() {
                 eprintln!("file not found {:?}", file);
             }
         }
-        Some(Commands::Repl { interpreter: _, vm }) => {
-            if *vm {
+        Some(Commands::Repl {
+            interpreter: _,
+            vm,
+            engine: Some(engine),
+        }) => {
+            if engine == "vm" || *vm {
                 start_with_vm();
             } else {
                 start();

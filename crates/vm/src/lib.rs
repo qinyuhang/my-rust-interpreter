@@ -181,6 +181,7 @@ impl<'a> VM<'a> {
                     let left = self.pop()?;
                     self.execute_index_expression(left, index)?;
                 }
+                #[allow(unreachable_patterns)]
                 _ => {
                     dbg!(op);
                 }
@@ -359,7 +360,7 @@ impl<'a> VM<'a> {
     fn build_hash(&self, start_index: usize, end_index: usize) -> Result<Rc<dyn Object>, String> {
         let x = (start_index..end_index)
             .enumerate()
-            .filter(|(index, val)| index % 2 == 0)
+            .filter(|(index, _)| index % 2 == 0)
             .map(|(_, val)| {
                 let key = self.stack.borrow().get(val).unwrap().clone();
                 let key = Rc::new(HashKey::try_from(key).unwrap());

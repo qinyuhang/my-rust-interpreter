@@ -92,7 +92,9 @@ mod test {
                 })
         });
     }
+    #[allow(dead_code)]
     fn handle_operands() {}
+    #[allow(dead_code)]
     fn handle_constants(expected: Vec<TestingResult>, actual: Vec<Rc<dyn Object>>) {
         assert_eq!(expected.len(), actual.len());
         expected
@@ -109,6 +111,7 @@ mod test {
             })
     }
 
+    #[allow(dead_code)]
     fn handle_instructions(expected: Vec<Instructions>, actual: Instructions) {
         let concat_instructions_result = concat_instructions(expected);
         assert_eq!(concat_instructions_result.len(), actual.len());

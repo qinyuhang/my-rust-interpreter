@@ -1,5 +1,5 @@
 use crate::*;
-use ast::{AstExpression, Expression, StringLiteral};
+use ast::*;
 use std::rc::Rc;
 
 #[derive(Eq, PartialEq, Hash, Debug)]

@@ -101,7 +101,7 @@ pub fn ast_node(
 }
 
 #[proc_macro_attribute]
-pub fn ast_node_with_try_from(args: TokenStream, input: TokenStream) -> TokenStream {
+pub fn ast_node_with_try_from(_args: TokenStream, input: TokenStream) -> TokenStream {
     let ipt = syn::parse_macro_input!(input as syn::DeriveInput);
     let name = &ipt.ident;
     // let attr_args = syn::parse_macro_input!(args as syn::Ident);
@@ -165,7 +165,7 @@ pub fn object(args: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
-pub fn object_with_try_from(args: TokenStream, input: TokenStream) -> TokenStream {
+pub fn object_with_try_from(_args: TokenStream, input: TokenStream) -> TokenStream {
     let ipt = syn::parse_macro_input!(input as syn::DeriveInput);
     let name = &ipt.ident;
     // let attr_args = syn::parse_macro_input!(args as syn::Ident);
