@@ -215,6 +215,21 @@ mod vm_test {
                 ),
             ),
             (
+                r#"{1 + 1: 2 * 2}"#,
+                testing_result!(
+                    Hash,
+                    HashMap::from([
+                        (
+                            Rc::new(AstExpression::IntegerLiteral(IntegerLiteral {
+                                value: 2,
+                                token: Default::default()
+                            })),
+                            testing_result!(Int, 4)
+                        ),
+                    ])
+                ),
+            ),
+            (
                 r#"{1 + 1: 2 * 2, 3 + 3: 4 * 4}"#,
                 testing_result!(
                     Hash,
@@ -224,7 +239,7 @@ mod vm_test {
                                 value: 2,
                                 token: Default::default()
                             })),
-                            testing_result!(Int, 6)
+                            testing_result!(Int, 4)
                         ),
                         (
                             Rc::new(AstExpression::IntegerLiteral(IntegerLiteral {

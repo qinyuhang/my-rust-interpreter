@@ -139,12 +139,15 @@ pub fn handle_object(evaluated: Option<Rc<dyn Object>>, out: &TestingResult) {
             assert!(ev.is::<HashObject>());
             let ev = ev.downcast_ref::<HashObject>().unwrap();
             for (k, v) in h.iter() {
-                // FIXME: 添加 HashKey::try_from(AstExpression)
-                // let key = HashKey::try_from(k.get_expression().upcast())?;
-                // let ex = ev.pairs.borrow().get(&key);
-                // assert!(ex.is_some());
+                let k = k.clone();
+                let key = HashKey::try_from(k.clone());
+                assert!(key.is_ok());
+                let key = key.unwrap();
+                let pairs = ev.pairs.borrow();
+                let ex = pairs.get(&Rc::new(key));
+                assert!(ex.is_some());
                 //
-                // handle_object(ex.cloned(), v);
+                handle_object(ex.cloned(), v);
             }
         }
         TestingResult::Nil => {

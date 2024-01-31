@@ -1,4 +1,5 @@
 use crate::*;
+use ast::{AstExpression, Expression, StringLiteral};
 use std::rc::Rc;
 
 #[derive(Eq, PartialEq, Hash, Debug)]
@@ -51,6 +52,32 @@ impl TryFrom<Box<dyn Object>> for HashKey {
     }
 }
 
+impl TryFrom<Rc<&AstExpression>> for HashKey {
+    type Error = String;
+    fn try_from(value: Rc<&AstExpression>) -> Result<Self, Self::Error> {
+        return match *value {
+            AstExpression::BooleanLiteral(v) => {
+                return Ok(HashKey::Boolean(Boolean { value: v.value }));
+            }
+            AstExpression::StringLiteral(v) => {
+                return Ok(HashKey::StringObject(StringObject {
+                    value: v.value.clone(),
+                }));
+            }
+            AstExpression::IntegerLiteral(v) => {
+                return Ok(HashKey::Integer(Integer { value: v.value }));
+            }
+            _ => Err("".into()),
+        };
+    }
+}
+
+impl TryFrom<Rc<AstExpression>> for HashKey {
+    type Error = String;
+    fn try_from(value: Rc<AstExpression>) -> Result<Self, Self::Error> {
+        Self::try_from(Rc::new(value.as_ref()))
+    }
+}
 impl HashKey {}
 
 impl std::fmt::Display for HashKey {

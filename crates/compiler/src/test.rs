@@ -542,7 +542,7 @@ got    instructions vec={:?}
 
     #[test]
     fn test_hash() {
-        let v = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
+        let v = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
         let cases = vec![
             CompileTestCase {
                 input: r#"{1:2,3:4,5:6}"#,
@@ -596,7 +596,7 @@ got    instructions vec={:?}
                 ],
             },
             CompileTestCase {
-                input: r#"[1+2,3-4,5*6]"#,
+                input: r#"{1+2:3-4,5*6: 7 +8 }"#,
                 expected_constants: vec![
                     testing_result!(Int, 1),
                     testing_result!(Int, 2),
@@ -604,6 +604,8 @@ got    instructions vec={:?}
                     testing_result!(Int, 4),
                     testing_result!(Int, 5),
                     testing_result!(Int, 6),
+                    testing_result!(Int, 7),
+                    testing_result!(Int, 8),
                 ],
                 expected_instruction: vec![
                     // 表示的是变量的 index
@@ -619,7 +621,11 @@ got    instructions vec={:?}
                     make(&OpCode::OpConstant, &v[5..6]),
                     make(&OpCode::OpMul, &vec![]),
                     //
-                    make(&OpCode::OpArray, &vec![3]),
+                    make(&OpCode::OpConstant, &v[6..7]),
+                    make(&OpCode::OpConstant, &v[7..8]),
+                    make(&OpCode::OpAdd, &vec![]),
+                    //
+                    make(&OpCode::OpHash, &vec![4]),
                     make(&OpCode::OpPop, &v[0..0]),
                 ],
             },

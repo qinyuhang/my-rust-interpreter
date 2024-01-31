@@ -4,6 +4,8 @@ use compiler::ByteCode;
 use interpreter::*;
 use object::*;
 use std::cell::{Cell, RefCell};
+use std::collections::hash_map::RandomState;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 mod test;
@@ -164,6 +166,15 @@ impl<'a> VM<'a> {
                     self.sp.set(self.sp.get() - num_els);
 
                     self.push(arr)?
+                }
+                OpCode::OpHash => {
+                    let num_els = read_uint16(&self.instructions.borrow()[ip + 1..]) as usize;
+                    ip += 2;
+
+                    let hash = self.build_hash(self.sp.get() - num_els, self.sp.get());
+                    self.sp.set(self.sp.get() - num_els);
+
+                    self.push(hash?)?
                 }
                 _ => {
                     dbg!(op);
@@ -338,6 +349,23 @@ impl<'a> VM<'a> {
         Rc::new(ArrayObject {
             elements: RefCell::new(els),
         })
+    }
+
+    fn build_hash(&self, start_index: usize, end_index: usize) -> Result<Rc<dyn Object>, String> {
+        let x = (start_index..end_index)
+            .enumerate()
+            .filter(|(index, val)| index % 2 == 0)
+            .map(|(_, val)| {
+                let key = self.stack.borrow().get(val).unwrap().clone();
+                let key = Rc::new(HashKey::try_from(key).unwrap());
+                let value = self.stack.borrow().get(val + 1).unwrap().clone();
+                (key, value)
+            })
+            .collect::<Vec<_>>();
+        let hm: HashMap<Rc<object::HashKey>, Rc<dyn object::Object>, RandomState> =
+            HashMap::from_iter(x);
+        let ho = HashObject { pairs: RefCell::new(hm) };
+        Ok(Rc::new(ho))
     }
 
     pub fn dump_instruction(&self) -> String {
