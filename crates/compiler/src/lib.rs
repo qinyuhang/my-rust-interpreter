@@ -250,6 +250,11 @@ impl<'a> Compiler<'a> {
             let symbol = self.resolve_symbol(Rc::new(i.clone()))?;
             self.emit(OpCode::OpGetGlobal, &vec![symbol.index as u16]);
         }
+        if n.is::<StringLiteral>() {
+            let i = n.downcast_ref::<StringLiteral>().unwrap();
+            let obj = Rc::new(StringObject { value: i.value.clone() });
+            self.emit(OpCode::OpConstant, &vec![self.add_constant(obj) as u16]);
+        }
         // match _node.ty {  }
         Ok(())
     }

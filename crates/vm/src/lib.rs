@@ -201,6 +201,11 @@ impl<'a> VM<'a> {
             let left = left.as_any().downcast_ref::<Integer>().unwrap();
             return self.execute_int_binary_operation(op, left, right);
         }
+        if left.object_type() == STRING_OBJECT && right.object_type() == STRING_OBJECT {
+            let right = right.as_any().downcast_ref::<StringObject>().unwrap();
+            let left = left.as_any().downcast_ref::<StringObject>().unwrap();
+            return self.execute_string_binary_operation(op, left, right);
+        }
 
         Ok(())
     }
@@ -266,6 +271,19 @@ impl<'a> VM<'a> {
             _ => panic!("Should never reach here"),
         };
         self.push(Rc::new(Integer { value }))
+    }
+
+    fn execute_string_binary_operation(
+        &self,
+        op: OpCode,
+        left: &StringObject,
+        right: &StringObject,
+    ) -> Result<(), String> {
+        let value = match op {
+            OpCode::OpAdd => format!("{}{}", left.value, right.value), // left.value.wrapping_add(right.value),
+            _ => panic!("Should never reach here"),
+        };
+        self.push(Rc::new(StringObject { value: Rc::new(value) }))
     }
 
     fn execute_bang_operator(&self) -> Result<(), String> {

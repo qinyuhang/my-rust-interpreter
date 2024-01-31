@@ -153,4 +153,15 @@ mod vm_test {
 
         run_vm_test(&cases);
     }
+
+    #[test]
+    fn test_string_expression() {
+        let cases = vec![
+            (r#""monkey""#, testing_result!(String, "monkey")),
+            (r#""mon" + "key""#, testing_result!(String, "monkey")),
+            (r#""mon" + "key" + "banana""#, testing_result!(String, "monkeybanana")),
+        ];
+
+        run_vm_test(&cases);
+    }
 }

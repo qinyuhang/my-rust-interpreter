@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod test {
+mod compiler_test {
     use crate::symbol_table::*;
     use crate::*;
     use ::code::*;
@@ -446,5 +446,33 @@ got    instructions vec={:?}
                 &sy.name, sy, *r
             );
         });
+    }
+
+    #[test]
+    fn test_string() {
+        let v = vec![0, 1, 2];
+        let cases = vec![
+            CompileTestCase {
+                input: r#""monkey""#,
+                expected_constants: vec![testing_result!(String, "monkey")],
+                expected_instruction: vec![
+                    // 表示的是变量的 index
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: r#""mon" + "key""#,
+                expected_constants: vec![testing_result!(String, "mon"), testing_result!(String, "key")],
+                expected_instruction: vec![
+                    // 表示的是变量的 index
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpAdd, &v[0..0]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+        ];
+        run_compile_test(cases);
     }
 }

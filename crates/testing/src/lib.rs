@@ -31,7 +31,7 @@ impl std::fmt::Display for TestingResult {
 #[macro_export]
 macro_rules! testing_result {
     (String, $e:expr) => {
-        TestingResult::String($e.to_string())
+        TestingResult::STRING($e.to_string())
     };
     (Int, $e:expr) => {
         TestingResult::Int($e)
