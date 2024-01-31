@@ -15,21 +15,7 @@ thread_local! {
 }
 
 pub const PROMPT: &'static str = ">> ";
-pub const SYMBOL: &'static str = r#"
- xxxxxxxxxxxx
-  xx       xxx
-  xx        xxx
-  xx        xxx
-  xx       xxx
-  xxxxxxxxxxx
-  xxxx
-  xxxxxx
-  xx   xxx
-  xx    xxxx
-  xx      xxxx
-  xx        xxxx
-  xx          xxxx  #
-######       ########"#;
+pub const SYMBOL: &'static str = r#">> Monkey Lang 0.1.0 | (Rust BackEnd)"#;
 
 pub fn start() {
     println!("{}", SYMBOL);
@@ -71,7 +57,7 @@ pub fn start_with_vm() {
     // readline in
     let stdin = io::stdin();
     let mut input = String::new();
-    
+
     let mut external_constants: Vec<Rc<dyn Object>> = Compiler::create_constants();
     let mut external_symbol_table: SymbolTable = Compiler::create_symbol_table();
     let mut external_globals: Vec<Rc<dyn Object>> = VM::create_globals();
