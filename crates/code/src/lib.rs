@@ -70,6 +70,8 @@ pub enum OpCode {
 
     OpGetGlobal,
     OpSetGlobal,
+
+    OpArray, // 18
 }
 
 impl std::fmt::Display for OpCode {
@@ -155,6 +157,10 @@ thread_local! {
         }),
         Rc::new(Definition {
             name: "OpSetGlobal".into(),
+            operand_widths: vec![2],
+        }),
+        Rc::new(Definition {
+            name: "OpArray".into(),
             operand_widths: vec![2],
         }),
     ];

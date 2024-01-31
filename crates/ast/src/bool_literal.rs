@@ -60,8 +60,8 @@ impl std::fmt::Display for BooleanLiteral {
 
 #[cfg(test)]
 mod test {
-    use {crate::BooleanLiteral, ::token::*};
     use std::rc::Rc;
+    use {crate::BooleanLiteral, ::token::*};
 
     #[test]
     fn test_bool_literal() {

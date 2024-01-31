@@ -63,22 +63,36 @@ impl<'a> Compiler<'a> {
         }
     }
 
-    pub fn create_constants() -> Vec<Rc<dyn Object>> { vec![] }
-    pub fn create_symbol_table() -> SymbolTable { SymbolTable::new() }
+    pub fn create_constants() -> Vec<Rc<dyn Object>> {
+        vec![]
+    }
+    pub fn create_symbol_table() -> SymbolTable {
+        SymbolTable::new()
+    }
 
     /// IF want call this, must call before compile
-    pub fn load_external_constants(&self, external_constants: &'a mut Vec<Rc<dyn Object>>) -> Result<(), String> {
+    pub fn load_external_constants(
+        &self,
+        external_constants: &'a mut Vec<Rc<dyn Object>>,
+    ) -> Result<(), String> {
         if self.constants.borrow().len() != 0 {
-            return Err(format!("call load_external_constants before compiler.compile()"));
+            return Err(format!(
+                "call load_external_constants before compiler.compile()"
+            ));
         }
         *self.external_constants.borrow_mut() = Some(external_constants);
         Ok(())
     }
 
     /// IF want call this, must call before compile
-    pub fn load_external_symbol_table(&self, external_symbol_table: &'a mut SymbolTable) -> Result<(), String> {
+    pub fn load_external_symbol_table(
+        &self,
+        external_symbol_table: &'a mut SymbolTable,
+    ) -> Result<(), String> {
         if self.symbol_table.borrow().define_count() != 0 {
-            return Err(format!("call load_external_symbol_table before compiler.compile()"));
+            return Err(format!(
+                "call load_external_symbol_table before compiler.compile()"
+            ));
         }
         *self.external_symbol_table.borrow_mut() = Some(external_symbol_table);
         Ok(())
@@ -94,9 +108,9 @@ impl<'a> Compiler<'a> {
         }
         if n.is::<ExpressionStatement>() {
             if let Some(ExpressionStatement {
-                            expression: Some(bbq),
-                            ..
-                        }) = n.downcast_ref::<ExpressionStatement>()
+                expression: Some(bbq),
+                ..
+            }) = n.downcast_ref::<ExpressionStatement>()
             {
                 let x = bbq.get_expression();
                 let r = self.compile(x.upcast());
@@ -106,11 +120,11 @@ impl<'a> Compiler<'a> {
         }
         if n.is::<InfixExpression>() {
             if let Some(InfixExpression {
-                            left: Some(left),
-                            right: Some(right),
-                            operator,
-                            ..
-                        }) = n.downcast_ref::<InfixExpression>()
+                left: Some(left),
+                right: Some(right),
+                operator,
+                ..
+            }) = n.downcast_ref::<InfixExpression>()
             {
                 let left = left.get_expression();
                 let right = right.get_expression();
@@ -153,10 +167,10 @@ impl<'a> Compiler<'a> {
         }
         if n.is::<PrefixExpression>() {
             if let Some(PrefixExpression {
-                            right: Some(right),
-                            operator,
-                            ..
-                        }) = n.downcast_ref::<PrefixExpression>()
+                right: Some(right),
+                operator,
+                ..
+            }) = n.downcast_ref::<PrefixExpression>()
             {
                 self.compile(right.upcast())?;
                 match operator.as_str() {
@@ -252,8 +266,17 @@ impl<'a> Compiler<'a> {
         }
         if n.is::<StringLiteral>() {
             let i = n.downcast_ref::<StringLiteral>().unwrap();
-            let obj = Rc::new(StringObject { value: i.value.clone() });
+            let obj = Rc::new(StringObject {
+                value: i.value.clone(),
+            });
             self.emit(OpCode::OpConstant, &vec![self.add_constant(obj) as u16]);
+        }
+        if n.is::<ArrayLiteral>() {
+            let i = n.downcast_ref::<ArrayLiteral>().unwrap();
+            for val in i.elements.iter() {
+                self.compile(val.get_expression().upcast())?;
+            }
+            self.emit(OpCode::OpArray, &vec![i.elements.len() as u16]);
         }
         // match _node.ty {  }
         Ok(())
@@ -286,7 +309,11 @@ impl<'a> Compiler<'a> {
     fn add_constant(&self, obj: Rc<dyn Object>) -> usize {
         let has_external = self.external_constants.borrow().is_some();
         if has_external {
-            self.external_constants.borrow_mut().as_mut().unwrap().push(obj);
+            self.external_constants
+                .borrow_mut()
+                .as_mut()
+                .unwrap()
+                .push(obj);
             self.external_constants.borrow().as_ref().unwrap().len() - 1
         } else {
             self.constants.borrow_mut().push(obj);
@@ -297,7 +324,11 @@ impl<'a> Compiler<'a> {
     fn define_symbol(&self, i: Rc<Identifier>) -> Rc<Symbol> {
         let has_external = self.external_symbol_table.borrow().is_some();
         if has_external {
-            self.external_symbol_table.borrow().as_ref().unwrap().define(i)
+            self.external_symbol_table
+                .borrow()
+                .as_ref()
+                .unwrap()
+                .define(i)
         } else {
             self.symbol_table.borrow().define(i)
         }
@@ -305,7 +336,11 @@ impl<'a> Compiler<'a> {
     fn resolve_symbol(&self, i: Rc<Identifier>) -> Result<Rc<Symbol>, String> {
         let has_external = self.external_symbol_table.borrow().is_some();
         if has_external {
-            self.external_symbol_table.borrow().as_ref().unwrap().resolve(i)
+            self.external_symbol_table
+                .borrow()
+                .as_ref()
+                .unwrap()
+                .resolve(i)
         } else {
             self.symbol_table.borrow().resolve(i)
         }
@@ -358,7 +393,15 @@ impl<'a> Compiler<'a> {
     pub fn bytecode(&self) -> Rc<ByteCode> {
         let has_external = self.external_constants.borrow().is_some();
         let constants = if has_external {
-            RefCell::new(self.external_constants.borrow().as_ref().unwrap().iter().cloned().collect())
+            RefCell::new(
+                self.external_constants
+                    .borrow()
+                    .as_ref()
+                    .unwrap()
+                    .iter()
+                    .cloned()
+                    .collect(),
+            )
         } else {
             self.constants.clone()
         };

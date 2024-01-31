@@ -212,15 +212,15 @@ impl std::fmt::Display for ExpressionStatement {
 
 #[cfg(test)]
 mod test {
-    use {ast::ExpressionStatement, token::Token, token::EOF};
     use std::rc::Rc;
+    use {ast::ExpressionStatement, token::Token, token::EOF};
 
     #[test]
     fn test_to_string() {
         let e = ExpressionStatement {
             token: Rc::new(Token {
                 token_type: EOF,
-                literal: Rc::new(";".into(),)
+                literal: Rc::new(";".into()),
             }),
             expression: None,
         };

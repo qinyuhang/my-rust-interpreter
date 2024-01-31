@@ -2,8 +2,8 @@ use crate::*;
 use ::token::*;
 use std::hash::{Hash, Hasher};
 use std::ops::{Add, Div, Mul, Sub};
-use std::str::FromStr;
 use std::rc::Rc;
+use std::str::FromStr;
 
 #[ast_node(Expression)]
 #[ast_node_with_try_from(Expression)]

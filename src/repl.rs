@@ -85,15 +85,20 @@ pub fn start_with_vm() {
 
         let pr = pr.unwrap();
         let compi = Compiler::new();
-        compi.load_external_constants(&mut external_constants).expect("failed to load external constants");
-        compi.load_external_symbol_table(&mut external_symbol_table).expect("failed to load external symbol table");
+        compi
+            .load_external_constants(&mut external_constants)
+            .expect("failed to load external constants");
+        compi
+            .load_external_symbol_table(&mut external_symbol_table)
+            .expect("failed to load external symbol table");
         if let Err(e) = compi.compile(&pr) {
             eprintln!("Compile failed {}", e);
             continue;
         }
 
         let vm = VM::new(compi.bytecode());
-        vm.load_external_globals(&mut external_globals).expect("failed to load external globals");
+        vm.load_external_globals(&mut external_globals)
+            .expect("failed to load external globals");
         if let Err(e) = vm.run() {
             eprintln!("VM run failed {}", e);
             continue;

@@ -1,7 +1,7 @@
 use crate::*;
 use std::any::Any;
-use token::Token;
 use std::rc::Rc;
+use token::Token;
 
 #[ast_node(Expression)]
 #[ast_node_with_try_from(Expression)]

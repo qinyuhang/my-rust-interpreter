@@ -108,11 +108,11 @@ impl std::fmt::Display for IntegerLiteral {
 
 #[cfg(test)]
 mod test {
+    use std::rc::Rc;
     use ::{
         ast::IntegerLiteral,
         token::{Token, INT},
     };
-    use std::rc::Rc;
 
     #[test]
     fn test_int_literal_print() {

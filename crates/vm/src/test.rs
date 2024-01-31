@@ -147,8 +147,14 @@ mod vm_test {
     fn test_global_let_statements() {
         let cases = vec![
             ("let one = 1; one", testing_result!(Int, 1)),
-            ("let one = 1; let two = 2; one + two", testing_result!(Int, 3)),
-            ("let one = 1; let two = one + one; one + two", testing_result!(Int, 3)),
+            (
+                "let one = 1; let two = 2; one + two",
+                testing_result!(Int, 3),
+            ),
+            (
+                "let one = 1; let two = one + one; one + two",
+                testing_result!(Int, 3),
+            ),
         ];
 
         run_vm_test(&cases);
@@ -159,7 +165,21 @@ mod vm_test {
         let cases = vec![
             (r#""monkey""#, testing_result!(String, "monkey")),
             (r#""mon" + "key""#, testing_result!(String, "monkey")),
-            (r#""mon" + "key" + "banana""#, testing_result!(String, "monkeybanana")),
+            (
+                r#""mon" + "key" + "banana""#,
+                testing_result!(String, "monkeybanana"),
+            ),
+        ];
+
+        run_vm_test(&cases);
+    }
+
+    #[test]
+    fn test_array_literal() {
+        let cases = vec![
+            (r#"[]"#, testing_result!(Vec, vec![])),
+            (r#"[1,2,3]"#, testing_result!(Vec, vec![1, 2, 3])),
+            (r#"[1+2, 3*4, 5+6]"#, testing_result!(Vec, vec![3, 12, 11])),
         ];
 
         run_vm_test(&cases);

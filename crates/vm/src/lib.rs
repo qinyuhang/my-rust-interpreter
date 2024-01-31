@@ -31,7 +31,8 @@ pub struct VM<'a> {
 impl<'a> VM<'a> {
     pub fn create_globals() -> Vec<Rc<dyn Object>> {
         let ept = Rc::new(Null {});
-        (0..GLOBALS_SIZE).map(|_| ept.clone() as Rc<dyn Object>)
+        (0..GLOBALS_SIZE)
+            .map(|_| ept.clone() as Rc<dyn Object>)
             .collect()
     }
     pub fn new(byte_code: Rc<ByteCode>) -> Self {
@@ -39,7 +40,8 @@ impl<'a> VM<'a> {
         let stack = (0..STACK_SIZE)
             .map(|_| ept.clone() as Rc<dyn Object>)
             .collect();
-        let globals = (0..GLOBALS_SIZE).map(|_| ept.clone() as Rc<dyn Object>)
+        let globals = (0..GLOBALS_SIZE)
+            .map(|_| ept.clone() as Rc<dyn Object>)
             .collect();
         Self {
             constants: RefCell::new(byte_code.constants.borrow().clone()),
@@ -52,7 +54,10 @@ impl<'a> VM<'a> {
     }
 
     /// IF want call this, must call before run
-    pub fn load_external_globals(&self, external_globals: &'a mut Vec<Rc<dyn Object>>) -> Result<(), String> {
+    pub fn load_external_globals(
+        &self,
+        external_globals: &'a mut Vec<Rc<dyn Object>>,
+    ) -> Result<(), String> {
         if self.sp.get() != 0 {
             return Err(format!("call load external_globals before vm.run()"));
         }
@@ -150,6 +155,15 @@ impl<'a> VM<'a> {
                     ip += 2;
 
                     self.push(self.get_global(global_index as usize))?;
+                }
+                OpCode::OpArray => {
+                    let num_els = read_uint16(&self.instructions.borrow()[ip + 1..]) as usize;
+                    ip += 2;
+
+                    let arr = self.build_array(self.sp.get() - num_els, self.sp.get());
+                    self.sp.set(self.sp.get() - num_els);
+
+                    self.push(arr)?
                 }
                 _ => {
                     dbg!(op);
@@ -283,7 +297,9 @@ impl<'a> VM<'a> {
             OpCode::OpAdd => format!("{}{}", left.value, right.value), // left.value.wrapping_add(right.value),
             _ => panic!("Should never reach here"),
         };
-        self.push(Rc::new(StringObject { value: Rc::new(value) }))
+        self.push(Rc::new(StringObject {
+            value: Rc::new(value),
+        }))
     }
 
     fn execute_bang_operator(&self) -> Result<(), String> {
@@ -312,6 +328,16 @@ impl<'a> VM<'a> {
             }));
         }
         Ok(())
+    }
+
+    fn build_array(&self, start_index: usize, end_index: usize) -> Rc<dyn Object> {
+        let els = (start_index..end_index)
+            .map(|idx| self.stack.borrow().get(idx).unwrap().clone())
+            .collect();
+
+        Rc::new(ArrayObject {
+            elements: RefCell::new(els),
+        })
     }
 
     pub fn dump_instruction(&self) -> String {
