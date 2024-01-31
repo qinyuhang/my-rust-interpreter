@@ -9,6 +9,7 @@ use std::rc::Rc;
 mod test;
 
 pub const STACK_SIZE: usize = 2048usize;
+pub const GLOBALS_SIZE: usize = 65536;
 
 thread_local! {
     static TRUE: Rc<dyn Object> = Rc::new(Boolean { value : true });
@@ -23,6 +24,7 @@ pub struct VM {
     pub stack: RefCell<Vec<Rc<dyn Object>>>,
     // stack_pointer always point to the next empty stack of stack_top
     pub sp: Cell<usize>,
+    globals: RefCell<Vec<Rc<dyn Object>>>,
 }
 
 impl VM {
@@ -31,11 +33,14 @@ impl VM {
         let stack = (0..STACK_SIZE)
             .map(|_| ept.clone() as Rc<dyn Object>)
             .collect();
+        let globals = (0..GLOBALS_SIZE).map(|_| ept.clone() as Rc<dyn Object>)
+            .collect();
         Self {
             constants: RefCell::new(byte_code.constants.borrow().clone()),
             instructions: RefCell::new(byte_code.instructions.borrow().clone()),
             stack: RefCell::new(stack),
             sp: Cell::new(0),
+            globals: RefCell::new(globals),
         }
     }
 
@@ -99,6 +104,18 @@ impl VM {
                 }
                 OpCode::OpNull => {
                     NULL.with(|v| self.push(v.clone()))?;
+                }
+                OpCode::OpSetGlobal => {
+                    let global_index = read_uint16(&self.instructions.borrow()[ip + 1..]);
+                    ip += 2;
+
+                    self.globals.borrow_mut()[global_index as usize] = self.pop()?;
+                }
+                OpCode::OpGetGlobal => {
+                    let global_index = read_uint16(&self.instructions.borrow()[ip + 1..]);
+                    ip += 2;
+
+                    self.push(self.globals.borrow()[global_index as usize].clone())?;
                 }
                 _ => {
                     dbg!(op);

@@ -142,4 +142,15 @@ mod vm_test {
 
         run_vm_test(&cases);
     }
+
+    #[test]
+    fn test_global_let_statements() {
+        let cases = vec![
+            ("let one = 1; one", testing_result!(Int, 1)),
+            ("let one = 1; let two = 2; one + two", testing_result!(Int, 3)),
+            ("let one = 1; let two = one + one; one + two", testing_result!(Int, 3)),
+        ];
+
+        run_vm_test(&cases);
+    }
 }
