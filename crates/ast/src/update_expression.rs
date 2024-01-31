@@ -7,7 +7,7 @@ use std::rc::Rc;
 #[ast_node_with_try_from(Expression)]
 #[derive(Hash)]
 pub struct UpdateExpression {
-    pub token: Token,
+    pub token: Rc<Token>,
     pub operator: Rc<String>,
     pub name: Option<Rc<Identifier>>,
     pub right: Option<Rc<AstExpression>>,

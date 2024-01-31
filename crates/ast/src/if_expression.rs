@@ -7,7 +7,7 @@ use std::rc::Rc;
 // #[derive(PartialEq, Eq, Hash)]
 #[derive(Hash)]
 pub struct IfExpression {
-    pub token: Token,
+    pub token: Rc<Token>,
     pub condition: Rc<AstExpression>,
 
     // FIXME: BlockStatement

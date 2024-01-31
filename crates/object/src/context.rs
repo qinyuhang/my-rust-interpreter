@@ -77,10 +77,10 @@ mod test {
     #[allow(unused)]
     fn gen_id(name: &str) -> Rc<Identifier> {
         Rc::new(Identifier {
-            token: Token {
+            token: Rc::new(Token {
                 token_type: IDENT,
                 literal: Rc::new(name.to_string()),
-            },
+            }),
             value: Rc::new(name.to_string()),
         })
     }

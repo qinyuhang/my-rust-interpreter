@@ -6,7 +6,7 @@ use std::rc::Rc;
 #[ast_node_with_try_from(Expression)]
 #[derive(Hash)]
 pub struct FunctionLiteral {
-    pub token: Token,
+    pub token: Rc<Token>,
     pub parameters: Option<Vec<Rc<Identifier>>>,
     // blockStatement
     pub body: Option<Rc<AstExpression>>,

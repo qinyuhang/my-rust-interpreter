@@ -6,7 +6,7 @@ use std::rc::Rc;
 #[ast_node_with_try_from(Expression)]
 #[derive(Hash)]
 pub struct LetStatement {
-    pub token: Token,
+    pub token: Rc<Token>,
     pub name: Rc<Identifier>,
     //         Option<Rc<dyn Expression>>;
     pub value: Option<Rc<AstExpression>>,

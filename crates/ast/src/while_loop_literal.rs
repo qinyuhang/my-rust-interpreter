@@ -8,7 +8,8 @@ use token::Token;
 #[ast_node_with_try_from(Expression)]
 #[derive(Hash)]
 pub struct WhileLoopLiteral {
-    pub token: Token,
+    // TODO: WHAT IF Rc ?
+    pub token: Rc<Token>,
     pub condition: Rc<AstExpression>,
     // blockStatement
     pub body: Option<Rc<AstExpression>>,
@@ -39,11 +40,11 @@ mod test {
         let exp = WhileLoopLiteral {
             token: Default::default(),
             condition: Rc::new(AstExpression::BooleanLiteral(BooleanLiteral {
-                token: ToBeToken::from_t(TRUE),
+                token: ToBeToken::from_ttt(TRUE),
                 value: true,
             })),
             body: Some(Rc::new(AstExpression::BooleanLiteral(BooleanLiteral {
-                token: ToBeToken::from_t(TRUE),
+                token: ToBeToken::from_ttt(TRUE),
                 value: true,
             }))),
         };

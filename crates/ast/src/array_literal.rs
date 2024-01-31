@@ -6,7 +6,7 @@ use std::rc::Rc;
 #[ast_node_with_try_from(Expression)]
 #[derive(Hash)]
 pub struct ArrayLiteral {
-    pub token: Token,
+    pub token: Rc<Token>,
     pub elements: Vec<Rc<AstExpression>>,
 }
 
@@ -34,10 +34,10 @@ mod test {
     fn test_array_literal_display() {
         let input = "[1, 2]";
         let i = ArrayLiteral {
-            token: Token {
+            token: Rc::new(Token {
                 token_type: LBRACKET,
                 literal: Rc::new("[".into()),
-            },
+            }),
             elements: vec![
                 Rc::new(AstExpression::IntegerLiteral(
                     IntegerLiteral::try_from("1".to_string()).unwrap(),

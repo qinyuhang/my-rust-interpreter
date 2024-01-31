@@ -3,12 +3,13 @@ use ::token::*;
 use std::hash::{Hash, Hasher};
 use std::ops::{Add, Div, Mul, Sub};
 use std::str::FromStr;
+use std::rc::Rc;
 
 #[ast_node(Expression)]
 #[ast_node_with_try_from(Expression)]
 #[derive(Hash)]
 pub struct FloatLiteral {
-    pub token: Token,
+    pub token: Rc<Token>,
     pub value: WrapF64,
 }
 
@@ -130,10 +131,10 @@ impl TryFrom<String> for FloatLiteral {
     fn try_from(value: String) -> Result<Self, Self::Error> {
         if let Ok(v) = f64::from_str(&value) {
             return Ok(FloatLiteral {
-                token: Token {
+                token: Rc::new(Token {
                     token_type: FLOAT,
                     literal: Rc::new(value),
-                },
+                }),
                 value: float_literal::WrapF64(v),
             });
         }
@@ -147,10 +148,10 @@ impl TryFrom<Rc<String>> for FloatLiteral {
     fn try_from(value: Rc<String>) -> Result<Self, Self::Error> {
         if let Ok(v) = f64::from_str(&value) {
             return Ok(FloatLiteral {
-                token: Token {
+                token: Rc::new(Token {
                     token_type: FLOAT,
                     literal: value.clone(),
-                },
+                }),
                 value: float_literal::WrapF64(v),
             });
         }

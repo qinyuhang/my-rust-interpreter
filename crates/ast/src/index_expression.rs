@@ -6,7 +6,7 @@ use std::rc::Rc;
 #[ast_node_with_try_from(Expression)]
 #[derive(Hash)]
 pub struct IndexExpression {
-    pub token: Token,
+    pub token: Rc<Token>,
     pub left: Rc<AstExpression>,
     pub index: Rc<AstExpression>,
 }
@@ -26,22 +26,22 @@ mod test {
     #[test]
     fn test_index_expression_print() {
         let x = IndexExpression {
-            token: Token {
+            token: Rc::new(Token {
                 token_type: LPAREN,
                 literal: Rc::new("".into()),
-            },
+            }),
             left: Rc::new(AstExpression::Identifier(Identifier {
-                token: Token {
+                token: Rc::new(Token {
                     token_type: LPAREN,
                     literal: Rc::new("a".into()),
-                },
+                }),
                 value: Rc::new("a".to_string()),
             })),
             index: Rc::new(AstExpression::Identifier(Identifier {
-                token: Token {
+                token: Rc::new(Token {
                     token_type: LPAREN,
                     literal: Rc::new("a".into()),
-                },
+                }),
                 value: Rc::new("a".to_string()),
             })),
         };

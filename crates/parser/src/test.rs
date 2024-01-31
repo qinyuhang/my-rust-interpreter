@@ -112,10 +112,10 @@ return 500;
         fn the_fn() -> Option<Rc<AstExpression>> {
             Some(Rc::new(AstExpression::ExpressionStatement(
                 ExpressionStatement {
-                    token: Token {
+                    token: Rc::new(Token {
                         literal: Rc::new(EOF.to_string()),
                         token_type: EOF,
-                    },
+                    }),
                     expression: None,
                 },
             )))
@@ -123,10 +123,10 @@ return 500;
         fn the_fn1() -> Option<Rc<AstExpression>> {
             Some(Rc::new(AstExpression::ExpressionStatement(
                 ExpressionStatement {
-                    token: Token {
+                    token: Rc::new(Token {
                         literal: Rc::new(EOF.into()),
                         token_type: EOF,
-                    },
+                    }),
                     expression: None,
                 },
             )))

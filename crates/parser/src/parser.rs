@@ -89,8 +89,8 @@ thread_local! {
 // #[derive(Clone)]
 pub struct Parser {
     l: Box<Lexer>,
-    cur_token: Rc<RefCell<Token>>,
-    peek_token: Rc<RefCell<Token>>,
+    cur_token: Rc<RefCell<Rc<Token>>>,
+    peek_token: Rc<RefCell<Rc<Token>>>,
     errors: Rc<RefCell<Vec<String>>>,
 
     prefix_parse_fns: Rc<RefCell<HashMap<TokenType, Rc<PrefixParseFn>>>>,
@@ -117,8 +117,8 @@ impl Parser {
     pub fn new(l: Lexer) -> Rc<Self> {
         let p = Parser {
             l: Box::new(l),
-            cur_token: Rc::new(RefCell::new(Token::default())),
-            peek_token: Rc::new(RefCell::new(Token::default())),
+            cur_token: Rc::new(RefCell::new(Rc::new(Token::default()))),
+            peek_token: Rc::new(RefCell::new(Rc::new(Token::default()))),
             errors: Rc::new(RefCell::new(vec![])),
             prefix_parse_fns: Rc::new(RefCell::new(HashMap::new())),
             infix_parse_fns: Rc::new(RefCell::new(HashMap::new())),
@@ -617,12 +617,10 @@ impl Parser {
     pub fn parse_array_literal(&self) -> Option<Rc<AstExpression>> {
         // let mut list = vec![];
         // Some(Rc::new())
-        let literal = self.cur_token.borrow().literal.clone();
+        let token = self.cur_token.borrow().clone();
+        assert_eq!(token.token_type, token::LBRACKET);
         let arr = ArrayLiteral {
-            token: Token {
-                literal,
-                token_type: token::LBRACKET,
-            },
+            token,
             elements: self.parse_expression_list(token::RBRACKET),
         };
         Some(Rc::new(AstExpression::ArrayLiteral(arr)))
@@ -649,10 +647,10 @@ impl Parser {
             return None;
         }
         Some(Rc::new(AstExpression::HashLiteral(HashLiteral {
-            token: Token {
+            token: Rc::new(Token {
                 literal,
                 token_type: token::LBRACE,
-            },
+            }),
             pairs: RefCell::new(pairs),
         })))
         // None
@@ -686,18 +684,18 @@ impl Parser {
             return None;
         }
         return Some(Rc::new(AstExpression::IndexExpression(IndexExpression {
-            token: Token {
+            token: Rc::new(Token {
                 literal,
                 token_type: token::LBRACKET,
-            },
+            }),
             left: left.clone(),
             index: index.unwrap(),
         })));
     }
     pub fn parse_assign_expression(&self, left: Rc<AstExpression>) -> Option<Rc<AstExpression>> {
         if let AstExpression::Identifier(left) = left.as_ref() {
-            let token = (*self.cur_token.borrow()).clone();
-            let operator = self.cur_token.borrow().literal.clone();
+            let token = self.cur_token.borrow().clone();
+            let operator = token.literal.clone();
 
             let precedence = self.cur_precedence();
             self.next_token();
@@ -718,8 +716,8 @@ impl Parser {
     }
     pub fn parse_update_expression(&self, left: Rc<AstExpression>) -> Option<Rc<AstExpression>> {
         if let AstExpression::Identifier(left) = left.as_ref() {
-            let token = (*self.cur_token.borrow()).clone();
-            let operator = self.cur_token.borrow().literal.clone();
+            let token = self.cur_token.borrow().clone();
+            let operator = token.literal.clone();
 
             let precedence = self.cur_precedence();
             self.next_token();

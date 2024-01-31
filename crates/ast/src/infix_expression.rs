@@ -7,7 +7,7 @@ use std::rc::Rc;
 #[ast_node_with_try_from(Expression)]
 #[derive(Hash)]
 pub struct InfixExpression {
-    pub token: Token,
+    pub token: Rc<Token>,
     pub operator: Rc<String>,
     pub left: Option<Rc<AstExpression>>,
     pub right: Option<Rc<AstExpression>>,

@@ -27,6 +27,13 @@ impl ToBeToken {
         }
     }
 
+    pub fn from_ttt(t: TokenType) -> Rc<Token> {
+        Rc::new(Token {
+            token_type: t,
+            literal: Rc::new(t.to_lowercase().to_string()),
+        })
+    }
+
     pub fn from_tt(t: TokenType) -> Self {
         Self {
             token_type: Some(t),

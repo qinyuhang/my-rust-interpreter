@@ -6,7 +6,7 @@ use std::rc::Rc;
 #[ast_node(Statement)]
 #[derive(Hash)]
 pub struct ExpressionStatement {
-    pub token: Token,
+    pub token: Rc<Token>,
     pub expression: Option<Rc<AstExpression>>,
 }
 
@@ -47,10 +47,10 @@ impl TryFrom<Box<&dyn Expression>> for ExpressionStatement {
         //
         let mut ex = None;
         let mut did_match = false;
-        let mut tk: Token = Token {
+        let mut tk: Rc<Token> = Rc::new(Token {
             token_type: EOF,
             literal: Rc::new("".into()),
-        };
+        });
 
         let v_any = value.as_any();
 
@@ -218,10 +218,10 @@ mod test {
     #[test]
     fn test_to_string() {
         let e = ExpressionStatement {
-            token: Token {
+            token: Rc::new(Token {
                 token_type: EOF,
                 literal: Rc::new(";".into(),)
-            },
+            }),
             expression: None,
         };
         // println!("{}", e);

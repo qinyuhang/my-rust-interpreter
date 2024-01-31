@@ -10,7 +10,7 @@ use std::rc::Rc;
 // #[derive(PartialEq, Eq, Hash)]
 #[derive(Hash)]
 pub struct IntegerLiteral {
-    pub token: Token,
+    pub token: Rc<Token>,
     pub value: i64,
 }
 
@@ -43,10 +43,10 @@ impl TryFrom<Rc<String>> for IntegerLiteral {
 
         if let Ok(v) = i64::from_str_radix(&v, radix) {
             return Ok(IntegerLiteral {
-                token: Token {
+                token: Rc::new(Token {
                     token_type: INT,
                     literal: value.clone(),
-                },
+                }),
                 value: v,
             });
         }
@@ -117,10 +117,10 @@ mod test {
     #[test]
     fn test_int_literal_print() {
         let s = IntegerLiteral {
-            token: Token {
+            token: Rc::new(Token {
                 literal: Rc::new("5".into()),
                 token_type: INT,
-            },
+            }),
             value: 5,
         };
         assert_eq!(format!("{s}"), "5");

@@ -27,16 +27,16 @@ mod test {
     #[test]
     fn test_prefix_expression() {
         let pe = PrefixExpression {
-            token: Token {
+            token: Rc::new(Token {
                 token_type: INT,
                 literal: Rc::new("1".into()),
-            },
+            }),
             operator: Rc::new("-".into()),
             right: Some(Rc::new(AstExpression::IntegerLiteral(IntegerLiteral {
-                token: Token {
+                token: Rc::new(Token {
                     token_type: INT,
                     literal: Rc::new("1".into()),
-                },
+                }),
                 value: 1,
             }))),
         };
@@ -48,10 +48,10 @@ mod test {
         #[allow(unused)]
         let i = IntegerLiteral {
             value: 5,
-            token: Token {
+            token: Rc::new(Token {
                 token_type: INT,
                 literal: Rc::new("5".to_string()),
-            },
+            }),
         };
     }
 

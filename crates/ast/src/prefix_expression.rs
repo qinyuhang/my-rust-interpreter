@@ -8,7 +8,7 @@ use std::rc::Rc;
 #[derive(Hash)]
 // #[derive(Eq, PartialEq, Hash)]
 pub struct PrefixExpression {
-    pub token: Token,
+    pub token: Rc<Token>,
     pub operator: Rc<String>,
     pub right: Option<Rc<AstExpression>>,
 }
@@ -54,16 +54,16 @@ mod test {
     #[test]
     fn test_prefix_expression_to_string() {
         let s = PrefixExpression {
-            token: Token {
+            token: Rc::new(Token {
                 literal: Rc::new("".into()),
                 token_type: "",
-            },
+            }),
             operator: Rc::new("-".into()),
             right: Some(Rc::new(AstExpression::IntegerLiteral(IntegerLiteral {
-                token: Token {
+                token: Rc::new(Token {
                     literal: Rc::new("".into()),
                     token_type: "",
-                },
+                }),
                 value: 5,
             }))),
         };

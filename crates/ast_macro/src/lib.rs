@@ -27,7 +27,7 @@ pub fn ast_node(
                     fn token_literal(&self) -> std::rc::Rc<String> {
                         self.token.literal.clone()
                     }
-                    fn as_any(&self) -> &dyn Any {
+                    fn as_any(&self) -> &dyn std::any::Any {
                         self
                     }
                 }
@@ -40,7 +40,7 @@ pub fn ast_node(
                     fn token_literal(&self) -> std::rc::Rc<String> {
                         self.token.literal.clone()
                     }
-                    fn as_any(&self) -> &dyn Any {
+                    fn as_any(&self) -> &dyn std::any::Any {
                         self
                     }
                 }
@@ -61,7 +61,7 @@ pub fn ast_node(
                     fn token_literal(&self) -> std::rc::Rc<String> {
                         self.token.literal.clone()
                     }
-                    fn as_any(&self) -> &dyn Any {
+                    fn as_any(&self) -> &dyn std::any::Any {
                         self
                     }
                 }
@@ -150,7 +150,7 @@ pub fn object(args: TokenStream, input: TokenStream) -> TokenStream {
             fn _object_type(&self) -> ObjectType {
                 #attr_args
             }
-            fn _as_any(&self) -> &dyn Any {
+            fn _as_any(&self) -> &dyn std::any::Any {
                 self
             }
         }

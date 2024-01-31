@@ -1,12 +1,13 @@
 use crate::*;
 use ::token::*;
 use std::any::Any;
+use std::rc::Rc;
 
 #[ast_node(Expression)]
 #[ast_node_with_try_from(Expression)]
 #[derive(Hash)]
 pub struct BooleanLiteral {
-    pub token: Token,
+    pub token: Rc<Token>,
     pub value: bool,
 }
 
@@ -21,11 +22,11 @@ impl TryFrom<&str> for BooleanLiteral {
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
             "true" => Ok(BooleanLiteral {
-                token: ToBeToken::from_t(TRUE),
+                token: ToBeToken::from_ttt(TRUE),
                 value: true,
             }),
             "false" => Ok(BooleanLiteral {
-                token: ToBeToken::from_t(FALSE),
+                token: ToBeToken::from_ttt(FALSE),
                 value: false,
             }),
             _ => Err("can't cast {} into BoolLiteral".into()),
@@ -65,10 +66,10 @@ mod test {
     #[test]
     fn test_bool_literal() {
         let s = BooleanLiteral {
-            token: Token {
+            token: Rc::new(Token {
                 token_type: TRUE,
                 literal: Rc::new("true".into()),
-            },
+            }),
             value: true,
         };
         assert_eq!(format!("{}", s), "true");

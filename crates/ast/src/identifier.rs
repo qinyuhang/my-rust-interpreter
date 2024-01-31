@@ -7,8 +7,7 @@ use std::rc::Rc;
 // #[derive(Hash, Eq, PartialEq)]
 #[derive(Hash, Default)]
 pub struct Identifier {
-    pub token: Token,
-    // TODO: 这改成 Rc<String> 更好
+    pub token: Rc<Token>,
     pub value: Rc<String>,
 }
 
@@ -16,10 +15,10 @@ impl From<String> for Identifier {
     fn from(value: String) -> Self {
         let value = Rc::new(value);
         Identifier {
-            token: Token {
+            token: Rc::new(Token {
                 token_type: IDENT,
                 literal: value.clone(),
-            },
+            }),
             value,
         }
     }

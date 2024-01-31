@@ -5,7 +5,7 @@ use {crate::*, std::rc::Rc};
 #[ast_node_with_try_from(Expression)]
 #[derive(Hash)]
 pub struct CallExpression {
-    pub token: Token,
+    pub token: Rc<Token>,
     pub function: Option<Rc<AstExpression>>,
     pub arguments: Option<Vec<Rc<AstExpression>>>,
 }

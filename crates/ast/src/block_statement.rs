@@ -6,7 +6,7 @@ use std::rc::Rc;
 #[ast_node_with_try_from(Expression)]
 #[derive(Hash)]
 pub struct BlockStatement {
-    pub token: Token, // { token
+    pub token: Rc<Token>, // { token
     // FIXME: change Rc RefCell
     pub statement: Vec<Rc<AstExpression>>,
 }

@@ -32,7 +32,7 @@ impl Lexer {
         l.read_char();
         l
     }
-    pub fn next_token(&self) -> Token {
+    pub fn next_token(&self) -> Rc<Token> {
         self.skip_white_space();
         let mut should_read_one_more = true;
         let t = *self.ch.borrow();
@@ -178,10 +178,10 @@ impl Lexer {
             self.read_char();
         }
 
-        Token {
+        Rc::new(Token {
             token_type,
             literal: Rc::new(ch),
-        }
+        })
     }
     pub fn read_char(&self) {
         *self.ch.borrow_mut() = if self.read_position.get() >= self.input_chars.len() {

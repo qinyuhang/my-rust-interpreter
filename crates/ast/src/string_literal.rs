@@ -7,7 +7,7 @@ use std::rc::Rc;
 #[derive(Hash)]
 // #[derive(PartialEq, Eq, Hash)]
 pub struct StringLiteral {
-    pub token: Token,
+    pub token: Rc<Token>,
     pub value: Rc<String>,
 }
 
@@ -17,10 +17,10 @@ impl TryFrom<String> for StringLiteral {
     fn try_from(value: String) -> Result<Self, Self::Error> {
         let value = Rc::new(value);
         Ok(Self {
-            token: Token {
+            token: Rc::new(Token {
                 token_type: STRING,
                 literal: value.clone(),
-            },
+            }),
             value,
         })
     }
@@ -32,10 +32,10 @@ impl TryFrom<Rc<String>> for StringLiteral {
     fn try_from(value: Rc<String>) -> Result<Self, Self::Error> {
         let value = value.clone();
         Ok(Self {
-            token: Token {
+            token: Rc::new(Token {
                 token_type: STRING,
                 literal: value.clone(),
-            },
+            }),
             value,
         })
     }
@@ -76,10 +76,10 @@ mod test {
     #[test]
     fn test_int_literal_print() {
         let s = StringLiteral {
-            token: Token {
+            token: Rc::new(Token {
                 literal: Rc::new("5".into()),
                 token_type: STRING,
-            },
+            }),
             value: Rc::new("5".into()),
         };
         assert_eq!(format!("{s}"), "5");
