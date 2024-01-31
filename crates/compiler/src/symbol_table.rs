@@ -46,4 +46,8 @@ impl SymbolTable {
             .map(|v| v.clone())
             .ok_or(format!("Fail get {}", &name))
     }
+
+    pub fn define_count(&self) -> usize {
+        self.num_definitions.get()
+    }
 }

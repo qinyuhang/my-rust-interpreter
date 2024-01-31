@@ -3,7 +3,7 @@ use ::lexer::*;
 use ::object::*;
 use ::parser::*;
 
-use compiler::Compiler;
+use compiler::{Compiler, SymbolTable};
 use std::cell::RefCell;
 use std::io;
 use std::io::Write;
@@ -71,6 +71,11 @@ pub fn start_with_vm() {
     // readline in
     let stdin = io::stdin();
     let mut input = String::new();
+    
+    let mut external_constants: Vec<Rc<dyn Object>> = Compiler::create_constants();
+    let mut external_symbol_table: SymbolTable = Compiler::create_symbol_table();
+    let mut external_globals: Vec<Rc<dyn Object>> = VM::create_globals();
+
     loop {
         print!("{PROMPT}");
         std::io::stdout().flush().unwrap();
@@ -94,12 +99,15 @@ pub fn start_with_vm() {
 
         let pr = pr.unwrap();
         let compi = Compiler::new();
+        compi.load_external_constants(&mut external_constants).expect("failed to load external constants");
+        compi.load_external_symbol_table(&mut external_symbol_table).expect("failed to load external symbol table");
         if let Err(e) = compi.compile(&pr) {
             eprintln!("Compile failed {}", e);
             continue;
         }
 
         let vm = VM::new(compi.bytecode());
+        vm.load_external_globals(&mut external_globals).expect("failed to load external globals");
         if let Err(e) = vm.run() {
             eprintln!("VM run failed {}", e);
             continue;

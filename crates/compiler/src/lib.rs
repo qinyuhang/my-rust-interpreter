@@ -3,7 +3,7 @@ mod test;
 
 use ::ast::*;
 // use ::parser::*;
-use crate::symbol_table::SymbolTable;
+pub use crate::symbol_table::*;
 use ::object::*;
 #[allow(unused)]
 use byteorder::{BigEndian, ByteOrder};
@@ -14,13 +14,15 @@ use code::{
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
-pub struct Compiler {
+pub struct Compiler<'a> {
     instructions: RefCell<code::Instructions>,
     constants: RefCell<Vec<Rc<dyn Object>>>,
+    external_constants: RefCell<Option<&'a mut Vec<Rc<dyn Object>>>>,
 
     last_instruction: Cell<EmittedInstruction>,
     previous_instruction: Cell<EmittedInstruction>,
     symbol_table: RefCell<SymbolTable>,
+    external_symbol_table: RefCell<Option<&'a mut SymbolTable>>,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -47,16 +49,39 @@ thread_local! {
     static EMPTY_V16: Vec<u16> = vec![];
 }
 
-impl Compiler {
+impl<'a> Compiler<'a> {
     pub fn new() -> Self {
         Self {
             instructions: RefCell::new(vec![]),
             constants: RefCell::new(vec![]),
+            external_constants: RefCell::new(None),
 
             last_instruction: Cell::new(EmittedInstruction::default()),
             previous_instruction: Cell::new(EmittedInstruction::default()),
             symbol_table: RefCell::new(SymbolTable::new()),
+            external_symbol_table: RefCell::new(None),
         }
+    }
+
+    pub fn create_constants() -> Vec<Rc<dyn Object>> { vec![] }
+    pub fn create_symbol_table() -> SymbolTable { SymbolTable::new() }
+
+    /// IF want call this, must call before compile
+    pub fn load_external_constants(&self, external_constants: &'a mut Vec<Rc<dyn Object>>) -> Result<(), String> {
+        if self.constants.borrow().len() != 0 {
+            return Err(format!("call load_external_constants before compiler.compile()"));
+        }
+        *self.external_constants.borrow_mut() = Some(external_constants);
+        Ok(())
+    }
+
+    /// IF want call this, must call before compile
+    pub fn load_external_symbol_table(&self, external_symbol_table: &'a mut SymbolTable) -> Result<(), String> {
+        if self.symbol_table.borrow().define_count() != 0 {
+            return Err(format!("call load_external_symbol_table before compiler.compile()"));
+        }
+        *self.external_symbol_table.borrow_mut() = Some(external_symbol_table);
+        Ok(())
     }
 
     pub fn compile(&self, node: &dyn Node) -> Result<(), String> {
@@ -69,9 +94,9 @@ impl Compiler {
         }
         if n.is::<ExpressionStatement>() {
             if let Some(ExpressionStatement {
-                expression: Some(bbq),
-                ..
-            }) = n.downcast_ref::<ExpressionStatement>()
+                            expression: Some(bbq),
+                            ..
+                        }) = n.downcast_ref::<ExpressionStatement>()
             {
                 let x = bbq.get_expression();
                 let r = self.compile(x.upcast());
@@ -81,11 +106,11 @@ impl Compiler {
         }
         if n.is::<InfixExpression>() {
             if let Some(InfixExpression {
-                left: Some(left),
-                right: Some(right),
-                operator,
-                ..
-            }) = n.downcast_ref::<InfixExpression>()
+                            left: Some(left),
+                            right: Some(right),
+                            operator,
+                            ..
+                        }) = n.downcast_ref::<InfixExpression>()
             {
                 let left = left.get_expression();
                 let right = right.get_expression();
@@ -128,10 +153,10 @@ impl Compiler {
         }
         if n.is::<PrefixExpression>() {
             if let Some(PrefixExpression {
-                right: Some(right),
-                operator,
-                ..
-            }) = n.downcast_ref::<PrefixExpression>()
+                            right: Some(right),
+                            operator,
+                            ..
+                        }) = n.downcast_ref::<PrefixExpression>()
             {
                 self.compile(right.upcast())?;
                 match operator.as_str() {
@@ -216,13 +241,13 @@ impl Compiler {
             if self.last_instruction_is_pop() {
                 self.remove_last_pop();
             }
-            let symbol = self.symbol_table.borrow().define(i.name.clone());
+            let symbol = self.define_symbol(i.name.clone());
             self.emit(OpCode::OpSetGlobal, &vec![symbol.index as u16]);
         }
         if n.is::<Identifier>() {
             let i = n.downcast_ref::<Identifier>().unwrap();
             // FIXME: DRAW BACK CLONE
-            let symbol = self.symbol_table.borrow().resolve(Rc::new(i.clone()))?;
+            let symbol = self.resolve_symbol(Rc::new(i.clone()))?;
             self.emit(OpCode::OpGetGlobal, &vec![symbol.index as u16]);
         }
         // match _node.ty {  }
@@ -254,8 +279,31 @@ impl Compiler {
     }
 
     fn add_constant(&self, obj: Rc<dyn Object>) -> usize {
-        self.constants.borrow_mut().push(obj);
-        self.constants.borrow().len() - 1
+        let has_external = self.external_constants.borrow().is_some();
+        if has_external {
+            self.external_constants.borrow_mut().as_mut().unwrap().push(obj);
+            self.external_constants.borrow().as_ref().unwrap().len() - 1
+        } else {
+            self.constants.borrow_mut().push(obj);
+            self.constants.borrow().len() - 1
+        }
+    }
+
+    fn define_symbol(&self, i: Rc<Identifier>) -> Rc<Symbol> {
+        let has_external = self.external_symbol_table.borrow().is_some();
+        if has_external {
+            self.external_symbol_table.borrow().as_ref().unwrap().define(i)
+        } else {
+            self.symbol_table.borrow().define(i)
+        }
+    }
+    fn resolve_symbol(&self, i: Rc<Identifier>) -> Result<Rc<Symbol>, String> {
+        let has_external = self.external_symbol_table.borrow().is_some();
+        if has_external {
+            self.external_symbol_table.borrow().as_ref().unwrap().resolve(i)
+        } else {
+            self.symbol_table.borrow().resolve(i)
+        }
     }
 
     fn last_instruction_is_pop(&self) -> bool {
@@ -303,9 +351,15 @@ impl Compiler {
     }
 
     pub fn bytecode(&self) -> Rc<ByteCode> {
+        let has_external = self.external_constants.borrow().is_some();
+        let constants = if has_external {
+            RefCell::new(self.external_constants.borrow().as_ref().unwrap().iter().cloned().collect())
+        } else {
+            self.constants.clone()
+        };
         Rc::new(ByteCode {
             instructions: self.instructions.clone(),
-            constants: self.constants.clone(),
+            constants,
         })
     }
 

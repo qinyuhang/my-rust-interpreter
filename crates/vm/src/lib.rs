@@ -17,7 +17,7 @@ thread_local! {
     static NULL: Rc<dyn Object> = Rc::new(Null {});
 }
 
-pub struct VM {
+pub struct VM<'a> {
     pub constants: RefCell<Vec<Rc<dyn Object>>>,
     pub instructions: RefCell<Instructions>,
 
@@ -25,9 +25,15 @@ pub struct VM {
     // stack_pointer always point to the next empty stack of stack_top
     pub sp: Cell<usize>,
     globals: RefCell<Vec<Rc<dyn Object>>>,
+    external_globals: RefCell<Option<&'a mut Vec<Rc<dyn Object>>>>,
 }
 
-impl VM {
+impl<'a> VM<'a> {
+    pub fn create_globals() -> Vec<Rc<dyn Object>> {
+        let ept = Rc::new(Null {});
+        (0..GLOBALS_SIZE).map(|_| ept.clone() as Rc<dyn Object>)
+            .collect()
+    }
     pub fn new(byte_code: Rc<ByteCode>) -> Self {
         let ept = Rc::new(Null {});
         let stack = (0..STACK_SIZE)
@@ -41,7 +47,35 @@ impl VM {
             stack: RefCell::new(stack),
             sp: Cell::new(0),
             globals: RefCell::new(globals),
+            external_globals: RefCell::new(None),
         }
+    }
+
+    /// IF want call this, must call before run
+    pub fn load_external_globals(&self, external_globals: &'a mut Vec<Rc<dyn Object>>) -> Result<(), String> {
+        if self.sp.get() != 0 {
+            return Err(format!("call load external_globals before vm.run()"));
+        }
+        *self.external_globals.borrow_mut() = Some(external_globals);
+        Ok(())
+    }
+
+    fn set_global(&self, index: usize, value: Rc<dyn Object>) {
+        let has_external = self.external_globals.borrow().is_some();
+        if has_external {
+            self.external_globals.borrow_mut().as_mut().unwrap()[index] = value;
+            return;
+        }
+
+        self.globals.borrow_mut()[index] = value;
+    }
+
+    fn get_global(&self, index: usize) -> Rc<dyn Object> {
+        let has_external = self.external_globals.borrow().is_some();
+        if has_external {
+            return self.external_globals.borrow().as_ref().unwrap()[index].clone();
+        }
+        return self.globals.borrow()[index].clone();
     }
 
     // FIXME: type
@@ -109,13 +143,13 @@ impl VM {
                     let global_index = read_uint16(&self.instructions.borrow()[ip + 1..]);
                     ip += 2;
 
-                    self.globals.borrow_mut()[global_index as usize] = self.pop()?;
+                    self.set_global(global_index as usize, self.pop()?);
                 }
                 OpCode::OpGetGlobal => {
                     let global_index = read_uint16(&self.instructions.borrow()[ip + 1..]);
                     ip += 2;
 
-                    self.push(self.globals.borrow()[global_index as usize].clone())?;
+                    self.push(self.get_global(global_index as usize))?;
                 }
                 _ => {
                     dbg!(op);
