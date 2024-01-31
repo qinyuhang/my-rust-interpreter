@@ -7,10 +7,7 @@ pub use crate::symbol_table::*;
 use ::object::*;
 #[allow(unused)]
 use byteorder::{BigEndian, ByteOrder};
-use code::{
-    self, format_display_instructions, format_one_instruction, make, read_operands, Definition,
-    Instructions, OpCode,
-};
+use code::{self, *};
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
@@ -274,7 +271,7 @@ impl<'a> Compiler<'a> {
         if n.is::<ArrayLiteral>() {
             let i = n.downcast_ref::<ArrayLiteral>().unwrap();
             for val in i.elements.iter() {
-                self.compile(val.get_expression().upcast())?;
+                self.compile(val.upcast())?;
             }
             self.emit(OpCode::OpArray, &vec![i.elements.len() as u16]);
         }
@@ -292,6 +289,12 @@ impl<'a> Compiler<'a> {
                 self.compile(v.upcast())?;
             }
             self.emit(OpCode::OpHash, &vec![2 * expressions.len() as u16]);
+        }
+        if n.is::<IndexExpression>() {
+            let i = n.downcast_ref::<IndexExpression>().unwrap();
+            self.compile(i.left.upcast())?;
+            self.compile(i.index.upcast())?;
+            EMPTY_V16.with(|v| self.emit(OpCode::OpIndex, v));
         }
         // match _node.ty {  }
         Ok(())

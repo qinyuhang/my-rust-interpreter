@@ -176,6 +176,11 @@ impl<'a> VM<'a> {
 
                     self.push(hash?)?
                 }
+                OpCode::OpIndex => {
+                    let index = self.pop()?;
+                    let left = self.pop()?;
+                    self.execute_index_expression(left, index)?;
+                }
                 _ => {
                     dbg!(op);
                 }
@@ -364,8 +369,60 @@ impl<'a> VM<'a> {
             .collect::<Vec<_>>();
         let hm: HashMap<Rc<object::HashKey>, Rc<dyn object::Object>, RandomState> =
             HashMap::from_iter(x);
-        let ho = HashObject { pairs: RefCell::new(hm) };
+        let ho = HashObject {
+            pairs: RefCell::new(hm),
+        };
         Ok(Rc::new(ho))
+    }
+
+    fn execute_index_expression(
+        &self,
+        left: Rc<dyn Object>,
+        index: Rc<dyn Object>,
+    ) -> Result<(), String> {
+        if left.object_type() == ARRAY_OBJECT && index.object_type() == INTEGER_OBJECT {
+            return self.execute_array_index_expression(left, index);
+        }
+        if left.object_type() == HASH_OBJECT {
+            return self.execute_hash_index(left, index);
+        }
+        Err("".into())
+    }
+
+    fn execute_array_index_expression(
+        &self,
+        left: Rc<dyn Object>,
+        index: Rc<dyn Object>,
+    ) -> Result<(), String> {
+        let arr = left.as_any().downcast_ref::<ArrayObject>().unwrap();
+        let idx = index.as_any().downcast_ref::<Integer>().unwrap();
+        let max = arr.elements.borrow().len() as i64 - 1;
+        NULL.with(|shared_null| {
+            if idx.value < 0 || idx.value > max {
+                self.push(shared_null.clone())?
+            }
+            let arr = arr.elements.borrow();
+            self.push(
+                arr.get(idx.value as usize)
+                    .map_or(shared_null.clone(), |vv| vv.clone()),
+            )
+        })
+    }
+    fn execute_hash_index(
+        &self,
+        left: Rc<dyn Object>,
+        index: Rc<dyn Object>,
+    ) -> Result<(), String> {
+        let hm = left.as_any().downcast_ref::<HashObject>().unwrap();
+        let key = HashKey::try_from(index)?;
+        let pairs = hm.pairs.borrow();
+        NULL.with(|shared_null| {
+            self.push(
+                pairs
+                    .get(&Rc::new(key))
+                    .map_or(shared_null.clone(), |vv| (vv.clone())),
+            )
+        })
     }
 
     pub fn dump_instruction(&self) -> String {

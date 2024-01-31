@@ -218,15 +218,13 @@ mod vm_test {
                 r#"{1 + 1: 2 * 2}"#,
                 testing_result!(
                     Hash,
-                    HashMap::from([
-                        (
-                            Rc::new(AstExpression::IntegerLiteral(IntegerLiteral {
-                                value: 2,
-                                token: Default::default()
-                            })),
-                            testing_result!(Int, 4)
-                        ),
-                    ])
+                    HashMap::from([(
+                        Rc::new(AstExpression::IntegerLiteral(IntegerLiteral {
+                            value: 2,
+                            token: Default::default()
+                        })),
+                        testing_result!(Int, 4)
+                    ),])
                 ),
             ),
             (
@@ -251,6 +249,24 @@ mod vm_test {
                     ])
                 ),
             ),
+        ];
+
+        run_vm_test(&cases);
+    }
+
+    #[test]
+    fn test_index() {
+        let cases = vec![
+            ("[1, 2, 3][1]", testing_result!(Int, 2)),
+            ("[1, 2, 3][0 + 2]", testing_result!(Int, 3)),
+            ("[[1, 1, 1]][0][0]", testing_result!(Int, 1)),
+            ("[][0]", testing_result!(Nil)),
+            ("[1, 2, 3][99]", testing_result!(Nil)),
+            ("[1][-1]", testing_result!(Nil)),
+            ("{1: 1, 2: 2}[1]", testing_result!(Int, 1)),
+            ("{1: 1, 2: 2}[2]", testing_result!(Int, 2)),
+            ("{1: 1}[0]", testing_result!(Nil)),
+            ("{}[0]", testing_result!(Nil)),
         ];
 
         run_vm_test(&cases);

@@ -632,4 +632,58 @@ got    instructions vec={:?}
         ];
         run_compile_test(cases);
     }
+
+    #[test]
+    fn test_index() {
+        let v = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        let cases = vec![
+            CompileTestCase {
+                input: r#"[1,2,3][1+1]"#,
+                expected_constants: vec![
+                    testing_result!(Int, 1),
+                    testing_result!(Int, 2),
+                    testing_result!(Int, 3),
+                    testing_result!(Int, 1),
+                    testing_result!(Int, 1),
+                ],
+                expected_instruction: vec![
+                    // 表示的是变量的 index
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpConstant, &v[2..3]),
+                    make(&OpCode::OpArray, &v[3..4]),
+                    //
+                    make(&OpCode::OpConstant, &v[3..4]),
+                    make(&OpCode::OpConstant, &v[4..5]),
+                    make(&OpCode::OpAdd, &v[4..4]),
+                    //
+                    make(&OpCode::OpIndex, &vec![]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: r#"{1:2}[2-1]"#,
+                expected_constants: vec![
+                    testing_result!(Int, 1),
+                    testing_result!(Int, 2),
+                    testing_result!(Int, 2),
+                    testing_result!(Int, 1),
+                ],
+                expected_instruction: vec![
+                    // 表示的是变量的 index
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpHash, &vec![2]),
+                    //
+                    make(&OpCode::OpConstant, &v[2..3]),
+                    make(&OpCode::OpConstant, &v[3..4]),
+                    make(&OpCode::OpSub, &vec![]),
+                    //
+                    make(&OpCode::OpIndex, &v[3..3]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+        ];
+        run_compile_test(cases);
+    }
 }
