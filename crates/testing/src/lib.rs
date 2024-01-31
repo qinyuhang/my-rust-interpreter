@@ -1,3 +1,4 @@
+use ast::AstExpression;
 use std::collections::HashMap;
 use std::fmt::Formatter;
 use std::rc::Rc;
@@ -10,7 +11,8 @@ pub enum TestingResult {
     Vec(Vec<i64>),
     Err(String),
     Nil,
-    Hash(HashMap<Rc<String>, Box<TestingResult>>),
+    // FIXME: 改成正确的key type
+    Hash(HashMap<Rc<AstExpression>, TestingResult>),
 }
 
 impl std::fmt::Display for TestingResult {

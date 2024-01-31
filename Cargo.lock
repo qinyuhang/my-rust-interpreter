@@ -255,6 +255,9 @@ dependencies = [
 [[package]]
 name = "testing"
 version = "0.1.0"
+dependencies = [
+ "ast",
+]
 
 [[package]]
 name = "token"

@@ -108,9 +108,9 @@ impl<'a> Compiler<'a> {
         }
         if n.is::<ExpressionStatement>() {
             if let Some(ExpressionStatement {
-                            expression: Some(bbq),
-                            ..
-                        }) = n.downcast_ref::<ExpressionStatement>()
+                expression: Some(bbq),
+                ..
+            }) = n.downcast_ref::<ExpressionStatement>()
             {
                 let x = bbq.get_expression();
                 let r = self.compile(x.upcast());
@@ -120,11 +120,11 @@ impl<'a> Compiler<'a> {
         }
         if n.is::<InfixExpression>() {
             if let Some(InfixExpression {
-                            left: Some(left),
-                            right: Some(right),
-                            operator,
-                            ..
-                        }) = n.downcast_ref::<InfixExpression>()
+                left: Some(left),
+                right: Some(right),
+                operator,
+                ..
+            }) = n.downcast_ref::<InfixExpression>()
             {
                 let left = left.get_expression();
                 let right = right.get_expression();
@@ -167,10 +167,10 @@ impl<'a> Compiler<'a> {
         }
         if n.is::<PrefixExpression>() {
             if let Some(PrefixExpression {
-                            right: Some(right),
-                            operator,
-                            ..
-                        }) = n.downcast_ref::<PrefixExpression>()
+                right: Some(right),
+                operator,
+                ..
+            }) = n.downcast_ref::<PrefixExpression>()
             {
                 self.compile(right.upcast())?;
                 match operator.as_str() {
@@ -283,7 +283,9 @@ impl<'a> Compiler<'a> {
             let p = i.pairs.borrow();
             let mut expressions = p.iter().map(|(&ref k, &ref v)| (k, v)).collect::<Vec<_>>();
             expressions.sort_by(|&ref a, &ref b| {
-                a.0.get_expression().to_string().cmp(&b.0.get_expression().to_string())
+                a.0.get_expression()
+                    .to_string()
+                    .cmp(&b.0.get_expression().to_string())
             });
             for (k, v) in &expressions {
                 self.compile(k.upcast())?;

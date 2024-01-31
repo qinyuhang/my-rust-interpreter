@@ -6,8 +6,11 @@ mod vm_test {
     use ::lexer::*;
     use ::parser::*;
     use ::testing::*;
+    use ast::{AstExpression, IntegerLiteral};
     use interpreter::testing_object::*;
+    use std::collections::HashMap;
     use std::panic::{self, AssertUnwindSafe};
+    use std::rc::Rc;
 
     fn parse(input: &str) -> Option<Program> {
         let l = Lexer::new(input);
@@ -180,6 +183,59 @@ mod vm_test {
             (r#"[]"#, testing_result!(Vec, vec![])),
             (r#"[1,2,3]"#, testing_result!(Vec, vec![1, 2, 3])),
             (r#"[1+2, 3*4, 5+6]"#, testing_result!(Vec, vec![3, 12, 11])),
+        ];
+
+        run_vm_test(&cases);
+    }
+
+    #[test]
+    fn test_hash_literal() {
+        let cases = vec![
+            (r#"{}"#, testing_result!(Hash, HashMap::from([]))),
+            (
+                r#"{1: 2, 2: 3 }"#,
+                testing_result!(
+                    Hash,
+                    HashMap::from([
+                        (
+                            Rc::new(AstExpression::IntegerLiteral(IntegerLiteral {
+                                value: 1,
+                                token: Default::default()
+                            })),
+                            testing_result!(Int, 2)
+                        ),
+                        (
+                            Rc::new(AstExpression::IntegerLiteral(IntegerLiteral {
+                                value: 2,
+                                token: Default::default()
+                            })),
+                            testing_result!(Int, 3)
+                        ),
+                    ])
+                ),
+            ),
+            (
+                r#"{1 + 1: 2 * 2, 3 + 3: 4 * 4}"#,
+                testing_result!(
+                    Hash,
+                    HashMap::from([
+                        (
+                            Rc::new(AstExpression::IntegerLiteral(IntegerLiteral {
+                                value: 2,
+                                token: Default::default()
+                            })),
+                            testing_result!(Int, 6)
+                        ),
+                        (
+                            Rc::new(AstExpression::IntegerLiteral(IntegerLiteral {
+                                value: 6,
+                                token: Default::default()
+                            })),
+                            testing_result!(Int, 16)
+                        ),
+                    ])
+                ),
+            ),
         ];
 
         run_vm_test(&cases);
