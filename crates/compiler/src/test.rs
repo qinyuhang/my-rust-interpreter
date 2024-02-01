@@ -686,4 +686,34 @@ got    instructions vec={:?}
         ];
         run_compile_test(cases);
     }
+
+    // OpConstant 0
+    // OpConstant 1
+    // OpAdd
+    // OpReturnValue
+    #[test]
+    fn test_functions() {
+        let v = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        let cases = vec![
+            // CompileTestCase {
+            //     input: r#"fn () { return 5 + 10; }"#,
+            //     expected_constants: vec![
+            //         testing_result!(Int, 5),
+            //         testing_result!(Int, 10),
+            //         testing_result!(VecInstruction, vec![
+            //             make(&OpCode::OpConstant, &v[0..1]),
+            //             make(&OpCode::OpConstant, &v[1..2]),
+            //             make(&OpCode::OpAdd, &v[0..0]),
+            //             make(&OpCode::OpReturnValue, &v[0..0]),
+            //         ]),
+            //     ],
+            //     expected_instruction: vec![
+            //         // 表示的是变量的 index
+            //         make(&OpCode::OpConstant, &v[2..3]),
+            //         make(&OpCode::OpReturnValue, &v[0..0]),
+            //     ],
+            // },
+        ];
+        run_compile_test(cases);
+    }
 }

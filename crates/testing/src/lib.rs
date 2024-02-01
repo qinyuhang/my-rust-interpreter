@@ -9,6 +9,7 @@ pub enum TestingResult {
     Float(f64),
     Bool(bool),
     Vec(Vec<i64>),
+    VecInstruction(Vec<Vec<u8>>),
     Err(String),
     Nil,
     // FIXME: 改成正确的key type
@@ -25,6 +26,7 @@ impl std::fmt::Display for TestingResult {
             TestingResult::Int(a) => write!(f, "{a}"),
             TestingResult::STRING(a) => write!(f, "{a}"),
             TestingResult::Vec(a) => write!(f, "{:?}", a),
+            TestingResult::VecInstruction(a) => write!(f, "{:?}", a),
             TestingResult::Nil => write!(f, "Nil"),
         }
     }
@@ -46,6 +48,9 @@ macro_rules! testing_result {
     };
     (Vec, $e:expr) => {
         TestingResult::Vec($e)
+    };
+    (VecInstruction, $e:expr) => {
+        TestingResult::VecInstruction($e)
     };
     (Err, $e:expr) => {
         TestingResult::Err($e.to_string())

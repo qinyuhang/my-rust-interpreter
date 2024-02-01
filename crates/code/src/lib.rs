@@ -74,6 +74,9 @@ pub enum OpCode {
     OpArray, // 18
     OpHash,
     OpIndex, // 20
+    OpCall,
+    OpReturnValue, // 21 with return value; etc: fn() { return 1 } or fn() { 1 }
+    OpReturn, // 22; without return value; etc: fn() {}
 }
 
 impl std::fmt::Display for OpCode {
@@ -171,6 +174,18 @@ thread_local! {
         }),
         Rc::new(Definition {
             name: "OpIndex".into(),
+            operand_widths: vec![],
+        }),
+        Rc::new(Definition {
+            name: "OpCall".into(),
+            operand_widths: vec![],
+        }),
+        Rc::new(Definition {
+            name: "OpReturnValue".into(),
+            operand_widths: vec![],
+        }),
+        Rc::new(Definition {
+            name: "OpReturn".into(),
             operand_widths: vec![],
         }),
     ];

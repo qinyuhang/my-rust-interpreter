@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod test {
+mod eval_test {
     use crate::*;
     // use ::ast::*;
     use ::object::*;
@@ -143,7 +143,7 @@ mod test {
                 "let b = 5; let a = fn() { b }; let b = 10; a();",
                 testing_result!(Int, 10),
             ),
-            ("fn () { 1; }();", testing_result!(Int, 1)),
+            ("fn () { 1 }();", testing_result!(Int, 1)),
             // ("fn a() {}", None::<Rc<dyn Object>>),
             // ("fn a(i) {}", None::<Rc<dyn Object>>),
             // ("fn a(x, y) {}", None::<Rc<dyn Object>>),
