@@ -713,6 +713,25 @@ got    instructions vec={:?}
                     make(&OpCode::OpPop, &v[0..0]),
                 ],
             },
+            CompileTestCase {
+                // FIXME: fn () { return 5 + 10 } without the comma, the code won't compile
+                input: r#"fn () { 5 + 10 }"#,
+                expected_constants: vec![
+                    testing_result!(Int, 5),
+                    testing_result!(Int, 10),
+                    testing_result!(VecInstruction, vec![
+                        make(&OpCode::OpConstant, &v[0..1]),
+                        make(&OpCode::OpConstant, &v[1..2]),
+                        make(&OpCode::OpAdd, &v[0..0]),
+                        make(&OpCode::OpReturnValue, &v[0..0]),
+                    ]),
+                ],
+                expected_instruction: vec![
+                    // 表示的是变量的 index
+                    make(&OpCode::OpConstant, &v[2..3]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
         ];
         run_compile_test(cases);
     }

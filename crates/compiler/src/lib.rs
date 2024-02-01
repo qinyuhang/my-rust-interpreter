@@ -14,6 +14,7 @@ use byteorder::{BigEndian, ByteOrder};
 use code::{self, *};
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
+use code::OpCode::OpPop;
 
 #[derive(Debug)]
 pub struct Compiler<'a> {
@@ -208,7 +209,7 @@ impl<'a> Compiler<'a> {
             if let Some(consequence) = &i.consequence {
                 self.compile(consequence.get_expression().upcast())?;
             }
-            if self.last_instruction_is_pop() {
+            if self.last_instruction_is(OpPop) {
                 self.remove_last_pop();
             }
 
@@ -219,7 +220,7 @@ impl<'a> Compiler<'a> {
 
             if let Some(alternative) = &i.alternative {
                 self.compile(alternative.get_expression().upcast())?;
-                if self.last_instruction_is_pop() {
+                if self.last_instruction_is(OpPop) {
                     self.remove_last_pop();
                 }
             } else {
@@ -240,7 +241,7 @@ impl<'a> Compiler<'a> {
             let i = n.downcast_ref::<LetStatement>().unwrap();
             self.compile(i.value.as_ref().unwrap().get_expression().upcast())?;
             // 这里和书不一样
-            if self.last_instruction_is_pop() {
+            if self.last_instruction_is(OpPop) {
                 self.remove_last_pop();
             }
             let symbol = self.define_symbol(i.name.clone());
@@ -388,7 +389,7 @@ impl<'a> Compiler<'a> {
         }
     }
 
-    fn last_instruction_is_pop(&self) -> bool {
+    fn last_instruction_is(&self, op_code: OpCode) -> bool {
         self.scopes
             .borrow()
             .get(self.scope_index.get())
@@ -396,7 +397,7 @@ impl<'a> Compiler<'a> {
             .last_instruction
             .get()
             .op_code
-            == OpCode::OpPop
+            == op_code
     }
 
     fn remove_last_pop(&self) {
