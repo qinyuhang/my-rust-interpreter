@@ -15,6 +15,7 @@ use code::{self, *};
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
+#[derive(Debug)]
 pub struct Compiler<'a> {
     constants: RefCell<Vec<Rc<dyn Object>>>,
     external_constants: RefCell<Option<&'a mut Vec<Rc<dyn Object>>>>,
@@ -26,6 +27,7 @@ pub struct Compiler<'a> {
     scope_index: Cell<usize>,
 }
 
+#[derive(Debug)]
 pub struct ByteCode {
     pub instructions: Instructions,
     pub constants: RefCell<Vec<Rc<dyn Object>>>,
@@ -284,6 +286,23 @@ impl<'a> Compiler<'a> {
             self.compile(i.left.upcast())?;
             self.compile(i.index.upcast())?;
             EMPTY_V16.with(|v| self.emit(OpCode::OpIndex, v));
+        }
+        if n.is::<FunctionLiteral>() {
+            let i = n.downcast_ref::<FunctionLiteral>().unwrap();
+            self.enter_scope();
+            if let Some(body) = i.body.clone() {
+                self.compile(body.upcast())?;
+            }
+            let ins = self.leave_scope();
+            let compiled_fn = CompiledFunction { instructions: Rc::new(ins.take()) };
+            self.emit(OpCode::OpConstant, &vec![self.add_constant(Rc::new(compiled_fn)) as u16]);
+        }
+        if n.is::<ReturnStatement>() {
+            let i = n.downcast_ref::<ReturnStatement>().unwrap();
+            if let Some(r) = i.return_value.clone() {
+                self.compile(r.upcast())?;
+                EMPTY_V16.with(|v| self.emit(OpCode::OpReturnValue, v));
+            }
         }
         // match _node.ty {  }
         Ok(())

@@ -3,7 +3,7 @@ use code::Instructions;
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct CompilationScope {
     pub(crate) instructions: Rc<RefCell<Instructions>>,
     pub(crate) last_instruction: Cell<EmittedInstruction>,
