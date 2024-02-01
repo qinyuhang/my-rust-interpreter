@@ -304,13 +304,11 @@ impl Parser {
 
     pub fn parse_return_statement(&self) -> Option<Rc<AstExpression>> {
         let cur_token = (*self.cur_token.borrow()).clone();
-        #[allow(unused_assignments)]
-        let mut expression = None;
 
         self.next_token();
-        expression = self.parse_expression(ExpressionConst::LOWEST);
+        let expression = self.parse_expression(ExpressionConst::LOWEST);
 
-        while !self.cur_token_is(SEMICOLON) {
+        if self.peek_token_is(SEMICOLON) {
             self.next_token();
         }
         Some(Rc::new(AstExpression::ReturnStatement(ReturnStatement {
