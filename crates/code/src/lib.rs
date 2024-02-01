@@ -76,7 +76,7 @@ pub enum OpCode {
     OpIndex, // 20
     OpCall,
     OpReturnValue, // 21 with return value; etc: fn() { return 1 } or fn() { 1 }
-    OpReturn, // 22; without return value; etc: fn() {}
+    OpReturn,      // 22; without return value; etc: fn() {}
 }
 
 impl std::fmt::Display for OpCode {

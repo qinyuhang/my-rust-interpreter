@@ -2,6 +2,7 @@ use std::{any::Any, fmt::Debug};
 mod array_object;
 mod boolean;
 mod builtin;
+mod compiled_function;
 mod context;
 mod error_object;
 mod float_object;
@@ -12,11 +13,11 @@ mod integer;
 mod null;
 mod return_value;
 mod string_object;
-mod compiled_function;
 
 pub use array_object::*;
 pub use boolean::*;
 pub use builtin::*;
+pub use compiled_function::*;
 pub use context::*;
 pub use error_object::*;
 pub use float_object::*;
@@ -27,7 +28,6 @@ pub use integer::*;
 pub use null::*;
 pub use return_value::*;
 pub use string_object::*;
-pub use compiled_function::*;
 
 pub type ObjectType = &'static str;
 

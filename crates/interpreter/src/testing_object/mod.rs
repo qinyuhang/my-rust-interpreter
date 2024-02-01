@@ -153,6 +153,10 @@ pub fn handle_object(evaluated: Option<Rc<dyn Object>>, out: &TestingResult) {
         TestingResult::Nil => {
             test_null_object(&evaluated);
         }
+        TestingResult::VecInstruction(instruction) => {
+            dbg!(&instruction);
+            dbg!(&evaluated);
+        }
         #[allow(unreachable_patterns)]
         _ => assert!(false),
     }

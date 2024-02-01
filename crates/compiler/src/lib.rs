@@ -1,7 +1,11 @@
+mod compilation_scope;
+mod emitted_instruction;
 mod symbol_table;
 mod test;
 
 use ::ast::*;
+pub use compilation_scope::*;
+pub use emitted_instruction::*;
 // use ::parser::*;
 pub use crate::symbol_table::*;
 use ::object::*;
@@ -12,33 +16,18 @@ use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
 pub struct Compiler<'a> {
-    instructions: RefCell<code::Instructions>,
     constants: RefCell<Vec<Rc<dyn Object>>>,
     external_constants: RefCell<Option<&'a mut Vec<Rc<dyn Object>>>>,
 
-    last_instruction: Cell<EmittedInstruction>,
-    previous_instruction: Cell<EmittedInstruction>,
     symbol_table: RefCell<SymbolTable>,
     external_symbol_table: RefCell<Option<&'a mut SymbolTable>>,
-}
 
-#[derive(Copy, Clone, Debug)]
-pub struct EmittedInstruction {
-    pub op_code: OpCode,
-    pub position: usize,
-}
-
-impl Default for EmittedInstruction {
-    fn default() -> Self {
-        Self {
-            position: 0,
-            op_code: OpCode::OpConstant,
-        }
-    }
+    scopes: RefCell<Vec<Rc<CompilationScope>>>,
+    scope_index: Cell<usize>,
 }
 
 pub struct ByteCode {
-    pub instructions: RefCell<code::Instructions>,
+    pub instructions: Instructions,
     pub constants: RefCell<Vec<Rc<dyn Object>>>,
 }
 
@@ -48,15 +37,15 @@ thread_local! {
 
 impl<'a> Compiler<'a> {
     pub fn new() -> Self {
+        let main_scope = Rc::new(CompilationScope::new());
         Self {
-            instructions: RefCell::new(vec![]),
             constants: RefCell::new(vec![]),
             external_constants: RefCell::new(None),
 
-            last_instruction: Cell::new(EmittedInstruction::default()),
-            previous_instruction: Cell::new(EmittedInstruction::default()),
             symbol_table: RefCell::new(SymbolTable::new()),
             external_symbol_table: RefCell::new(None),
+            scopes: RefCell::new(vec![main_scope]),
+            scope_index: Cell::new(0),
         }
     }
 
@@ -223,7 +212,7 @@ impl<'a> Compiler<'a> {
 
             let jmp_position = self.emit(OpCode::OpJMP, &vec![9999]);
 
-            let after_consequence = self.instructions.borrow().len();
+            let after_consequence = self.current_instructions().borrow().len();
             self.change_operand(jnt_position, after_consequence)?;
 
             if let Some(alternative) = &i.alternative {
@@ -234,7 +223,7 @@ impl<'a> Compiler<'a> {
             } else {
                 EMPTY_V16.with(|v| self.emit(OpCode::OpNull, v));
             }
-            let after_alternative = self.instructions.borrow().len();
+            let after_alternative = self.current_instructions().borrow().len();
             self.change_operand(jmp_position, after_alternative)?;
 
             // dbg!(after_consequence);
@@ -307,20 +296,36 @@ impl<'a> Compiler<'a> {
         pos
     }
 
-    fn set_last_instruction(&self, op: OpCode, pos: usize) {
-        let prev = self.last_instruction.get();
+    fn set_last_instruction(&self, op_code: OpCode, pos: usize) {
+        let scopes = self.scopes.borrow();
+        let previous = scopes
+            .get(self.scope_index.get())
+            .unwrap()
+            .last_instruction
+            .take();
         let last = EmittedInstruction {
-            op_code: op,
+            op_code,
             position: pos,
         };
 
-        self.previous_instruction.set(prev);
-        self.last_instruction.set(last);
+        scopes
+            .get(self.scope_index.get())
+            .unwrap()
+            .previous_instruction
+            .replace(previous);
+        scopes
+            .get(self.scope_index.get())
+            .unwrap()
+            .last_instruction
+            .replace(last);
     }
 
     fn add_instruction(&self, ins: &[u8]) -> usize {
-        let pos_new_instruction = self.instructions.borrow().len();
-        self.instructions.borrow_mut().extend_from_slice(ins);
+        let pos_new_instruction = self.current_instructions().borrow().len();
+        // assert_eq!(self.current_instructions());
+        self.current_instructions()
+            .borrow_mut()
+            .extend_from_slice(ins);
         pos_new_instruction
     }
 
@@ -365,30 +370,61 @@ impl<'a> Compiler<'a> {
     }
 
     fn last_instruction_is_pop(&self) -> bool {
-        self.last_instruction.get().op_code == OpCode::OpPop
+        self.scopes
+            .borrow()
+            .get(self.scope_index.get())
+            .unwrap()
+            .last_instruction
+            .get()
+            .op_code
+            == OpCode::OpPop
     }
 
     fn remove_last_pop(&self) {
-        let last_instruction_position = self.last_instruction.get().position;
+        let last_instruction_position = self
+            .scopes
+            .borrow()
+            .get(self.scope_index.get())
+            .unwrap()
+            .last_instruction
+            .get()
+            .position;
 
-        self.instructions
+        self.current_instructions()
             .borrow_mut()
             .truncate(last_instruction_position);
 
-        let previous_instruction = self.previous_instruction.get();
-        self.last_instruction.set(previous_instruction);
+        let previous_instruction = self
+            .scopes
+            .borrow()
+            .get(self.scope_index.get())
+            .unwrap()
+            .previous_instruction
+            .get();
+        self.scopes
+            .borrow()
+            .get(self.scope_index.get())
+            .unwrap()
+            .last_instruction
+            .replace(previous_instruction);
     }
 
     fn replace_instruction(&self, pos: usize, n: &[u8]) {
         let mut i = 0;
         while i < n.len() {
-            self.instructions.borrow_mut()[pos + i] = n[i];
+            self.current_instructions().borrow_mut()[pos + i] = n[i];
             i += 1;
         }
     }
 
     fn change_operand(&self, op_pos: usize, operand: usize) -> Result<(), String> {
-        let op = OpCode::from(*self.instructions.borrow_mut().get(op_pos).unwrap());
+        let op = OpCode::from(
+            *self
+                .current_instructions()
+                .borrow_mut()
+                .get(op_pos)
+                .unwrap(),
+        );
 
         // look up op to find the op_width
         // convert operand to Vec<u16> limited to op_width
@@ -408,6 +444,39 @@ impl<'a> Compiler<'a> {
         Ok(())
     }
 
+    fn enter_scope(&self) {
+        let scope = CompilationScope {
+            instructions: Rc::new(RefCell::new(vec![])),
+            last_instruction: Cell::new(EmittedInstruction::default()),
+            previous_instruction: Cell::new(EmittedInstruction::default()),
+        };
+        self.scopes.borrow_mut().push(Rc::new(scope));
+        self.scope_index.replace(self.scope_index.get() + 1);
+    }
+
+    fn leave_scope(&self) -> Rc<RefCell<Instructions>> {
+        // let instructions = self.current_instructions();
+        // let instructions = {
+        //     let scopes = self.scopes.borrow();
+        //     let scope = scopes
+        //         .get(self.scope_index.get())
+        //         .expect("Scope index out of bounds");
+        //     scope.instructions.clone()
+        // };
+        let instructions = self.scopes.borrow_mut().pop().unwrap().instructions.clone();
+        self.scope_index.replace(self.scope_index.get() - 1);
+        instructions
+    }
+
+    fn current_instructions(&self) -> Rc<RefCell<Instructions>> {
+        let scopes = self.scopes.borrow();
+        scopes
+            .get(self.scope_index.get())
+            .unwrap()
+            .instructions
+            .clone()
+    }
+
     pub fn bytecode(&self) -> Rc<ByteCode> {
         let has_external = self.external_constants.borrow().is_some();
         let constants = if has_external {
@@ -424,13 +493,15 @@ impl<'a> Compiler<'a> {
             self.constants.clone()
         };
         Rc::new(ByteCode {
-            instructions: self.instructions.clone(),
+            // FIXME: which one should be use?
+            instructions: self.current_instructions().borrow().clone(),
             constants,
         })
     }
 
     pub fn dump_instruction(&self) -> String {
-        let instructions: &Instructions = &*self.instructions.borrow();
-        format_display_instructions(instructions)
+        let instructions = self.current_instructions();
+        let instructions = instructions.borrow();
+        format_display_instructions(&instructions)
     }
 }

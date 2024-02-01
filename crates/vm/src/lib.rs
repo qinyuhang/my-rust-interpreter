@@ -47,7 +47,7 @@ impl<'a> VM<'a> {
             .collect();
         Self {
             constants: RefCell::new(byte_code.constants.borrow().clone()),
-            instructions: RefCell::new(byte_code.instructions.borrow().clone()),
+            instructions: RefCell::new(byte_code.instructions.clone()),
             stack: RefCell::new(stack),
             sp: Cell::new(0),
             globals: RefCell::new(globals),

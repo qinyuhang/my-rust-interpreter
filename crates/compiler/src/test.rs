@@ -6,6 +6,7 @@ mod compiler_test {
     use ::lexer::*;
     use ::parser::*;
     use ::testing::*;
+    use code::OpCode::{OpAdd, OpMul, OpSub};
     use interpreter::testing_object::handle_object;
     use std::collections::HashMap;
     use std::panic::{self, AssertUnwindSafe};
@@ -295,10 +296,7 @@ mod compiler_test {
                 dbg!("compile succeed");
                 dbg!(&compiler.dump_instruction());
                 let bytecode = compiler.bytecode();
-                handle_instructions(
-                    expected_instruction.clone(),
-                    &*bytecode.instructions.borrow(),
-                );
+                handle_instructions(expected_instruction.clone(), &bytecode.instructions);
 
                 handle_constants(expected_constants, &*bytecode.constants.borrow());
             },
@@ -693,27 +691,108 @@ got    instructions vec={:?}
     // OpReturnValue
     #[test]
     fn test_functions() {
-        let v = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-        let cases = vec![
-            // CompileTestCase {
-            //     input: r#"fn () { return 5 + 10; }"#,
-            //     expected_constants: vec![
-            //         testing_result!(Int, 5),
-            //         testing_result!(Int, 10),
-            //         testing_result!(VecInstruction, vec![
-            //             make(&OpCode::OpConstant, &v[0..1]),
-            //             make(&OpCode::OpConstant, &v[1..2]),
-            //             make(&OpCode::OpAdd, &v[0..0]),
-            //             make(&OpCode::OpReturnValue, &v[0..0]),
-            //         ]),
-            //     ],
-            //     expected_instruction: vec![
-            //         // 表示的是变量的 index
-            //         make(&OpCode::OpConstant, &v[2..3]),
-            //         make(&OpCode::OpReturnValue, &v[0..0]),
-            //     ],
-            // },
-        ];
-        run_compile_test(cases);
+        // let v = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        // let cases = vec![
+        //     CompileTestCase {
+        //         // FIXME: fn () { return 5 + 10 } without the comma, the code won't compile
+        //         input: r#"fn () { return 5 + 10; }"#,
+        //         expected_constants: vec![
+        //             testing_result!(Int, 5),
+        //             testing_result!(Int, 10),
+        //             testing_result!(VecInstruction, vec![
+        //                 make(&OpCode::OpConstant, &v[0..1]),
+        //                 make(&OpCode::OpConstant, &v[1..2]),
+        //                 make(&OpCode::OpAdd, &v[0..0]),
+        //                 make(&OpCode::OpReturnValue, &v[0..0]),
+        //             ]),
+        //         ],
+        //         expected_instruction: vec![
+        //             // 表示的是变量的 index
+        //             make(&OpCode::OpConstant, &v[2..3]),
+        //             make(&OpCode::OpReturnValue, &v[0..0]),
+        //         ],
+        //     },
+        // ];
+        // run_compile_test(cases);
+    }
+
+    #[test]
+    fn test_compilation_scopes() {
+        let compiler = Compiler::new();
+        assert_eq!(
+            compiler.scope_index.get(),
+            0,
+            "scope_index wrong. got={}, wanted={}",
+            compiler.scope_index.get(),
+            0
+        );
+        compiler.emit(OpMul, &vec![]);
+        compiler.enter_scope();
+        assert_eq!(
+            compiler.scope_index.get(),
+            1,
+            "scope_index wrong. got={}, wanted={}",
+            compiler.scope_index.get(),
+            1
+        );
+        compiler.emit(OpSub, &vec![]);
+        assert_eq!(
+            compiler.scope_index.get(),
+            1,
+            "scope_index wrong. got={}, wanted={}",
+            compiler.scope_index.get(),
+            1
+        );
+        {
+            let scopes = compiler.scopes.borrow();
+            let scopes = scopes.get(compiler.scope_index.get());
+            assert!(scopes.is_some(), "except got the last scope");
+            let scopes = scopes.unwrap();
+            assert_eq!(
+                scopes.instructions.borrow().len(),
+                1,
+                "instruction lens wrong, got={}",
+                scopes.instructions.borrow().len()
+            );
+            let last = scopes.last_instruction.get();
+            assert_eq!(
+                last.op_code, OpSub,
+                "last_instruction.op_code wrong. got={}, want={}",
+                last.op_code, OpSub
+            );
+        }
+        compiler.leave_scope();
+        assert_eq!(
+            compiler.scope_index.get(),
+            0,
+            "scope_index wrong. got={}, wanted={}",
+            compiler.scope_index.get(),
+            0
+        );
+        compiler.emit(OpAdd, &vec![]);
+
+        let scopes = compiler.scopes.borrow();
+        let scopes = scopes.get(compiler.scope_index.get());
+        assert!(scopes.is_some(), "except got the last scope");
+        let scopes = scopes.unwrap();
+        assert_eq!(
+            scopes.instructions.borrow().len(),
+            2,
+            "instruction lens wrong, got={}",
+            scopes.instructions.borrow().len()
+        );
+        let last = scopes.last_instruction.get();
+        assert_eq!(
+            last.op_code, OpAdd,
+            "last_instruction.op_code wrong. got={}, want={}",
+            last.op_code, OpAdd
+        );
+
+        let previous = scopes.previous_instruction.get();
+        assert_eq!(
+            previous.op_code, OpMul,
+            "last_instruction.op_code wrong. got={}, want={}",
+            last.op_code, OpMul
+        );
     }
 }
