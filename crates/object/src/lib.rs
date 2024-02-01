@@ -12,6 +12,7 @@ mod integer;
 mod null;
 mod return_value;
 mod string_object;
+mod compiled_function;
 
 pub use array_object::*;
 pub use boolean::*;
@@ -26,6 +27,7 @@ pub use integer::*;
 pub use null::*;
 pub use return_value::*;
 pub use string_object::*;
+pub use compiled_function::*;
 
 pub type ObjectType = &'static str;
 
@@ -62,6 +64,7 @@ pub const BUILTIN_OBJECT: &str = "BUILTIN";
 pub const ARRAY_OBJECT: &str = "ARRAY_OBJECT";
 pub const HASH_OBJECT: &str = "HASH_OBJECT";
 pub const WHILE_OBJECT: &str = "WHILE_OBJECT";
+pub const COMPILED_FUNCTION: &str = "COMPILED_FUNCTION";
 
 // #[derive(Eq, PartialEq, Hash, Debug, Clone)]
 // pub enum ObjectEnum {

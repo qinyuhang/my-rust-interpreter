@@ -1,9 +1,8 @@
 #[cfg(test)]
 mod test {
     use crate::*;
-    use ::interpreter::testing_object::*;
-    use ::object::Object;
-    use ::testing::*;
+    // use ::interpreter::testing_object::*;
+    // use ::testing::*;
 
     #[test]
     fn lang_code_canary_test() {
@@ -92,36 +91,36 @@ mod test {
                 })
         });
     }
-    #[allow(dead_code)]
-    fn handle_operands() {}
-    #[allow(dead_code)]
-    fn handle_constants(expected: Vec<TestingResult>, actual: Vec<Rc<dyn Object>>) {
-        assert_eq!(expected.len(), actual.len());
-        expected
-            .iter()
-            .zip(actual.iter())
-            .for_each(|(e, a)| match e {
-                TestingResult::Int(v) => {
-                    test_integer_object(Some(a.clone()), *v);
-                }
-                TestingResult::Bool(v) => {
-                    test_boolean_object(Some(a.clone()), *v);
-                }
-                _ => {}
-            })
-    }
-
-    #[allow(dead_code)]
-    fn handle_instructions(expected: Vec<Instructions>, actual: Instructions) {
-        let concat_instructions_result = concat_instructions(expected);
-        assert_eq!(concat_instructions_result.len(), actual.len());
-        concat_instructions_result
-            .iter()
-            .zip(actual.iter())
-            .for_each(|(e, a)| {
-                assert_eq!(*e, *a);
-            })
-    }
+    // #[allow(dead_code)]
+    // fn handle_operands() {}
+    // #[allow(dead_code)]
+    // fn handle_constants(expected: Vec<TestingResult>, actual: Vec<Rc<dyn Object>>) {
+    //     assert_eq!(expected.len(), actual.len());
+    //     expected
+    //         .iter()
+    //         .zip(actual.iter())
+    //         .for_each(|(e, a)| match e {
+    //             TestingResult::Int(v) => {
+    //                 test_integer_object(Some(a.clone()), *v);
+    //             }
+    //             TestingResult::Bool(v) => {
+    //                 test_boolean_object(Some(a.clone()), *v);
+    //             }
+    //             _ => {}
+    //         })
+    // }
+    //
+    // #[allow(dead_code)]
+    // fn handle_instructions(expected: Vec<Instructions>, actual: Instructions) {
+    //     let concat_instructions_result = concat_instructions(expected);
+    //     assert_eq!(concat_instructions_result.len(), actual.len());
+    //     concat_instructions_result
+    //         .iter()
+    //         .zip(actual.iter())
+    //         .for_each(|(e, a)| {
+    //             assert_eq!(*e, *a);
+    //         })
+    // }
 
     fn concat_instructions(s: Vec<Instructions>) -> Instructions {
         s.iter()

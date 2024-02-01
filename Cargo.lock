@@ -122,10 +122,7 @@ dependencies = [
  "ast",
  "ast_macro",
  "byteorder",
- "interpreter",
- "object",
  "parser",
- "testing",
 ]
 
 [[package]]
@@ -200,6 +197,7 @@ version = "0.1.0"
 dependencies = [
  "ast",
  "ast_macro",
+ "code",
  "lexer",
  "parser",
  "testing",

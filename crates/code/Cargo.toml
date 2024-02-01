@@ -11,8 +11,3 @@ edition = "2021"
 "ast_macro" = { path = "../ast_macro" }
 "byteorder" = "*"
 "parser" = { path = "../parser" }
-"interpreter" = { path = "../interpreter" }
-
-[dev-dependencies]
-"testing" = { path = "../testing" }
-"object" = { path = "../object" }
