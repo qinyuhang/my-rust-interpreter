@@ -1,6 +1,7 @@
 use ast::WrapF64;
 use code::{format_display_instructions, read_uint16, Instructions, OpCode};
 use compiler::ByteCode;
+use frame::Frame;
 use interpreter::*;
 use object::*;
 use std::cell::{Cell, RefCell};
@@ -8,10 +9,12 @@ use std::collections::hash_map::RandomState;
 use std::collections::HashMap;
 use std::rc::Rc;
 
+mod frame;
 mod test;
 
 pub const STACK_SIZE: usize = 2048usize;
 pub const GLOBALS_SIZE: usize = 65536;
+pub const MAX_FRAMES: usize = 1024;
 
 thread_local! {
     static TRUE: Rc<dyn Object> = Rc::new(Boolean { value : true });
@@ -21,13 +24,14 @@ thread_local! {
 
 pub struct VM<'a> {
     pub constants: RefCell<Vec<Rc<dyn Object>>>,
-    pub instructions: RefCell<Instructions>,
 
     pub stack: RefCell<Vec<Rc<dyn Object>>>,
     // stack_pointer always point to the next empty stack of stack_top
     pub sp: Cell<usize>,
     globals: RefCell<Vec<Rc<dyn Object>>>,
     external_globals: RefCell<Option<&'a mut Vec<Rc<dyn Object>>>>,
+    pub frames: RefCell<Vec<Rc<Frame>>>,
+    pub frame_index: Cell<usize>,
 }
 
 impl<'a> VM<'a> {
@@ -39,19 +43,26 @@ impl<'a> VM<'a> {
     }
     pub fn new(byte_code: Rc<ByteCode>) -> Self {
         let ept = Rc::new(Null {});
+        let main_fn = Rc::new(CompiledFunction {
+            instructions: byte_code.instructions.clone(),
+        });
+        let main_frame = Rc::new(Frame::new(main_fn));
+
         let stack = (0..STACK_SIZE)
             .map(|_| ept.clone() as Rc<dyn Object>)
             .collect();
         let globals = (0..GLOBALS_SIZE)
             .map(|_| ept.clone() as Rc<dyn Object>)
             .collect();
+        let frames = (0..MAX_FRAMES).map(|_| main_frame.clone()).collect();
         Self {
             constants: RefCell::new(byte_code.constants.borrow().clone()),
-            instructions: RefCell::new(byte_code.instructions.clone()),
             stack: RefCell::new(stack),
             sp: Cell::new(0),
             globals: RefCell::new(globals),
             external_globals: RefCell::new(None),
+            frames: RefCell::new(frames),
+            frame_index: Cell::new(1),
         }
     }
 
@@ -90,18 +101,25 @@ impl<'a> VM<'a> {
         // ip 表示 [(操作符, 操作数), (操作符, 操作数)] 的一个 范围切片的位置
         // pos 表示[u8, u8] 的位置
         // 虽然都是 [u8] 但是看的颗粒度不一样
-        let mut ip = 0;
-        while ip < self.instructions.borrow().len() {
-            let ins = *self.instructions.borrow().get(ip).unwrap();
-            let op = OpCode::from(ins);
+        let mut ip;
+        let mut ins: Rc<Instructions>;
+        let mut op: OpCode;
+        while self.current_frame().ip.get() < (self.current_frame().instruction().len()) {
+            ip = self.current_frame().ip.get();
+            ins = self.current_frame().instruction();
+            op = OpCode::from(ins[ip as usize]);
+
             match op {
                 OpCode::OpConstant => {
-                    let const_index = read_uint16(&self.instructions.borrow()[ip + 1..]);
-                    ip += 2;
+                    let const_index = read_uint16(&ins[((ip + 1) as usize)..]);
+                    self.current_frame()
+                        .ip
+                        .replace(self.current_frame().ip.get() + 2);
                     assert!(
                         self.constants.borrow().get(const_index as usize).is_some(),
-                        "expect can get constants from vm, vm.constants.len={}",
-                        self.constants.borrow().len()
+                        "expect can get constants from vm, vm.constants.len={}, index={}",
+                        self.constants.borrow().len(),
+                        const_index
                     );
                     if let Some(c) = self.constants.borrow().get(const_index as usize) {
                         if let Err(e) = self.push(c.clone()) {
@@ -131,36 +149,44 @@ impl<'a> VM<'a> {
                     self.execute_minus_operator()?;
                 }
                 OpCode::OpJMP => {
-                    let pos = read_uint16(&self.instructions.borrow()[ip + 1..]);
-                    ip = (pos as usize) - 1;
+                    let pos = read_uint16(&ins[((ip + 1) as usize)..]);
+                    self.current_frame().ip.replace((pos as usize) - 1);
                 }
                 OpCode::OpJNT => {
-                    let pos = read_uint16(&self.instructions.borrow()[ip + 1..]);
-                    ip += 2;
+                    let pos = read_uint16(&ins[((ip + 1) as usize)..]);
+                    self.current_frame()
+                      .ip
+                      .replace(self.current_frame().ip.get() + 2);
 
                     let condition = self.pop()?;
                     if !is_truthy(Some(condition)) {
-                        ip = (pos as usize) - 1;
+                        self.current_frame().ip.replace((pos as usize) - 1);
                     }
                 }
                 OpCode::OpNull => {
                     NULL.with(|v| self.push(v.clone()))?;
                 }
                 OpCode::OpSetGlobal => {
-                    let global_index = read_uint16(&self.instructions.borrow()[ip + 1..]);
-                    ip += 2;
+                    let global_index = read_uint16(&ins[((ip + 1) as usize)..]);
+                    self.current_frame()
+                        .ip
+                        .replace(self.current_frame().ip.get() + 2);
 
                     self.set_global(global_index as usize, self.pop()?);
                 }
                 OpCode::OpGetGlobal => {
-                    let global_index = read_uint16(&self.instructions.borrow()[ip + 1..]);
-                    ip += 2;
+                    let global_index = read_uint16(&ins[((ip + 1) as usize)..]);
+                    self.current_frame()
+                        .ip
+                        .replace(self.current_frame().ip.get() + 2);
 
                     self.push(self.get_global(global_index as usize))?;
                 }
                 OpCode::OpArray => {
-                    let num_els = read_uint16(&self.instructions.borrow()[ip + 1..]) as usize;
-                    ip += 2;
+                    let num_els = read_uint16(&ins[((ip + 1) as usize)..]) as usize;
+                    self.current_frame()
+                        .ip
+                        .replace(self.current_frame().ip.get() + 2);
 
                     let arr = self.build_array(self.sp.get() - num_els, self.sp.get());
                     self.sp.set(self.sp.get() - num_els);
@@ -168,8 +194,10 @@ impl<'a> VM<'a> {
                     self.push(arr)?
                 }
                 OpCode::OpHash => {
-                    let num_els = read_uint16(&self.instructions.borrow()[ip + 1..]) as usize;
-                    ip += 2;
+                    let num_els = read_uint16(&ins[((ip + 1) as usize)..]) as usize;
+                    self.current_frame()
+                        .ip
+                        .replace(self.current_frame().ip.get() + 2);
 
                     let hash = self.build_hash(self.sp.get() - num_els, self.sp.get());
                     self.sp.set(self.sp.get() - num_els);
@@ -187,7 +215,9 @@ impl<'a> VM<'a> {
                 }
             }
 
-            ip += 1;
+            self.current_frame()
+                .ip
+                .replace(self.current_frame().ip.get() + 1);
         }
         Ok(Rc::new(Null {}))
     }
@@ -426,8 +456,30 @@ impl<'a> VM<'a> {
         })
     }
 
+    fn current_frame(&self) -> Rc<Frame> {
+        self.frames
+            .borrow()
+            .get(self.frame_index.get() - 1)
+            .unwrap()
+            .clone()
+    }
+
+    fn push_frame(&self, frame: Rc<Frame>) {
+        self.frames.borrow_mut().push(frame);
+        self.frame_index.replace(self.frame_index.get() + 1);
+    }
+
+    fn pop_frame(&self) -> Rc<Frame> {
+        self.frame_index.replace(self.frame_index.get() - 1);
+        self.frames
+            .borrow()
+            .get(self.frame_index.get())
+            .unwrap()
+            .clone()
+    }
+
     pub fn dump_instruction(&self) -> String {
-        let instruction = &*self.instructions.borrow();
+        let instruction = &*self.current_frame().instruction();
         format_display_instructions(instruction)
     }
 }

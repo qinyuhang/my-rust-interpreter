@@ -30,7 +30,7 @@ pub struct Compiler<'a> {
 
 #[derive(Debug)]
 pub struct ByteCode {
-    pub instructions: Instructions,
+    pub instructions: Rc<Instructions>,
     pub constants: RefCell<Vec<Rc<dyn Object>>>,
 }
 
@@ -550,7 +550,7 @@ impl<'a> Compiler<'a> {
         };
         Rc::new(ByteCode {
             // FIXME: which one should be use?
-            instructions: self.current_instructions().borrow().clone(),
+            instructions: Rc::new((*self.current_instructions()).borrow().clone()),
             constants,
         })
     }
