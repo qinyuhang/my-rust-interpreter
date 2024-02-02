@@ -11,10 +11,10 @@ pub use crate::symbol_table::*;
 use ::object::*;
 #[allow(unused)]
 use byteorder::{BigEndian, ByteOrder};
+use code::OpCode::OpPop;
 use code::{self, *};
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
-use code::OpCode::OpPop;
 
 #[derive(Debug)]
 pub struct Compiler<'a> {
@@ -295,8 +295,13 @@ impl<'a> Compiler<'a> {
                 self.compile(body.upcast())?;
             }
             let ins = self.leave_scope();
-            let compiled_fn = CompiledFunction { instructions: Rc::new(ins.take()) };
-            self.emit(OpCode::OpConstant, &vec![self.add_constant(Rc::new(compiled_fn)) as u16]);
+            let compiled_fn = CompiledFunction {
+                instructions: Rc::new(ins.take()),
+            };
+            self.emit(
+                OpCode::OpConstant,
+                &vec![self.add_constant(Rc::new(compiled_fn)) as u16],
+            );
         }
         if n.is::<ReturnStatement>() {
             let i = n.downcast_ref::<ReturnStatement>().unwrap();

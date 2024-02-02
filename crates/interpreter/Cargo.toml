@@ -14,3 +14,4 @@ edition = "2021"
 "object" = { path = "../object" }
 "token" = { path = "../token" }
 "testing" = { path = "../testing" }
+"code" = { path = "../code" }

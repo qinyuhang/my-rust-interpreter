@@ -1,6 +1,7 @@
 use crate::*;
 use ::testing::*;
 use ast::Program;
+use code::*;
 use lexer::Lexer;
 use object::*;
 use parser::Parser;
@@ -154,8 +155,42 @@ pub fn handle_object(evaluated: Option<Rc<dyn Object>>, out: &TestingResult) {
             test_null_object(&evaluated);
         }
         TestingResult::VecInstruction(instruction) => {
-            dbg!(&instruction);
+            // assert!(evaluated.is_some());
+            // let evaluated = evaluated.unwrap();
+            // assert_eq!(instruction.len(), evaluated.len(), "wrong instruction length want={}, got={}", evaluated.len(), instruction.len());
             dbg!(&evaluated);
+            dbg!(&instruction);
+            // panic!();
+            assert!(false);
+        }
+        TestingResult::CompiledFunction(instruction) => {
+            assert!(evaluated.is_some());
+            let evaluated = evaluated.unwrap();
+            let i = evaluated
+                .as_any()
+                .downcast_ref::<CompiledFunction>()
+                .unwrap();
+            format_display_instructions(&i.instructions);
+            assert_eq!(
+                instruction.iter().map(|v| v.len()).fold(0, |a, b| a + b),
+                i.instructions.len()
+            );
+            dbg!(&i);
+            dbg!(&instruction);
+            let instruction = instruction
+                .into_iter()
+                .flatten()
+                .map(|&val| val)
+                .collect::<Vec<u8>>();
+            assert_eq!(
+                instruction,
+                *i.instructions,
+                "wrong instruction\n want={:?}\n  got={:?}",
+                format_display_instructions(&instruction),
+                format_display_instructions(&i.instructions)
+            );
+            // panic!();
+            // assert!(false);
         }
         #[allow(unreachable_patterns)]
         _ => assert!(false),

@@ -14,6 +14,7 @@ pub enum TestingResult {
     Nil,
     // FIXME: 改成正确的key type
     Hash(HashMap<Rc<AstExpression>, TestingResult>),
+    CompiledFunction(Vec<Vec<u8>>),
 }
 
 impl std::fmt::Display for TestingResult {
@@ -27,6 +28,7 @@ impl std::fmt::Display for TestingResult {
             TestingResult::STRING(a) => write!(f, "{a}"),
             TestingResult::Vec(a) => write!(f, "{:?}", a),
             TestingResult::VecInstruction(a) => write!(f, "{:?}", a),
+            TestingResult::CompiledFunction(a) => write!(f, "{:?}", a),
             TestingResult::Nil => write!(f, "Nil"),
         }
     }
@@ -51,6 +53,9 @@ macro_rules! testing_result {
     };
     (VecInstruction, $e:expr) => {
         TestingResult::VecInstruction($e)
+    };
+    (CompiledFunction, $e:expr) => {
+        TestingResult::CompiledFunction($e)
     };
     (Err, $e:expr) => {
         TestingResult::Err($e.to_string())
