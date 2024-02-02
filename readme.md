@@ -1,6 +1,9 @@
-# My Rust Interpreter
+[![CI](https://github.com/qinyuhang/my-rust-interpreter/actions/workflows/ci.yaml/badge.svg?branch=master)](https://github.com/qinyuhang/my-rust-interpreter/actions/workflows/ci.yaml)
+# Monkey Lang -RS (My Rust Interpreter)
 
-参考《用Go语言自制解释器》，使用 rust 编写的解释器
+参考《用Go语言自制解释器》《用Go语言自制编译器》，使用 rust 编写的解释器
+
+Rust implementation of the Monkey programming language designed in [_Writing An Interpreter In Go_](https://interpreterbook.com) and [_Writing a Compiler in Go_](https://compilerbook.com) by [Thorsten Ball](https://github.com/mrnugget). I **_highly_** recommend picking up a copy of his books.
 
 # 一些感悟
 
@@ -17,9 +20,6 @@
 
 这本书的第二部分叫做《用Go语言自制编译器》，~~设计到了把源码编译成为机器二进制的部分。我推测这里可能会使用一个业界已经有的
 语言后端。主要的工作应该是生成中间产物交给后端（比如llvm）~~ 是要实现一个虚拟机。
-
-# Status
-[![CI](https://github.com/qinyuhang/my-rust-interpreter/actions/workflows/ci.yaml/badge.svg?branch=master)](https://github.com/qinyuhang/my-rust-interpreter/actions/workflows/ci.yaml)
 
 # 补充
 用到的工具
