@@ -861,4 +861,52 @@ got    instructions vec={:?}
             last.op_code, OpMul
         );
     }
+
+    #[test]
+    fn test_function_calls() {
+        let v = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        let cases = vec![
+            CompileTestCase {
+                input: r#"fn () { 24 }()"#,
+                expected_constants: vec![
+                    testing_result!(Int, 24),
+                    testing_result!(
+                        CompiledFunction,
+                        vec![
+                            make(&OpCode::OpConstant, &v[0..1]),
+                            make(&OpCode::OpReturnValue, &v[0..0]),
+                        ]
+                    ),
+                ],
+                expected_instruction: vec![
+                    // 表示的是变量的 index
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpCall, &v[0..0]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: r#"let noArg = fn () { 24 }; noArg();"#,
+                expected_constants: vec![
+                    testing_result!(Int, 24),
+                    testing_result!(
+                        CompiledFunction,
+                        vec![
+                            make(&OpCode::OpConstant, &v[0..1]),
+                            make(&OpCode::OpReturnValue, &v[0..0]),
+                        ]
+                    ),
+                ],
+                expected_instruction: vec![
+                    // 表示的是变量的 index
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpSetGlobal, &v[0..1]),
+                    make(&OpCode::OpGetGlobal, &v[0..1]),
+                    make(&OpCode::OpCall, &v[0..0]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+        ];
+        run_compile_test(cases);
+    }
 }

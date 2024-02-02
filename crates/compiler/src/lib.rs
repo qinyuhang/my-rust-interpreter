@@ -295,7 +295,7 @@ impl<'a> Compiler<'a> {
                 self.compile(body.upcast())?;
             }
             if self.last_instruction_is(OpCode::OpPop) {
-              EMPTY_V16.with(|v| self.replace_last_instruction(OpCode::OpReturnValue, v));
+                EMPTY_V16.with(|v| self.replace_last_instruction(OpCode::OpReturnValue, v));
             }
             let ins = self.leave_scope();
             let compiled_fn = CompiledFunction {
@@ -312,6 +312,13 @@ impl<'a> Compiler<'a> {
                 self.compile(r.upcast())?;
                 EMPTY_V16.with(|v| self.emit(OpCode::OpReturnValue, v));
             }
+        }
+        if n.is::<CallExpression>() {
+            let i = n.downcast_ref::<CallExpression>().unwrap();
+            if let Some(r) = i.function.clone() {
+                self.compile(r.upcast())?;
+            }
+            EMPTY_V16.with(|v| self.emit(OpCode::OpCall, v));
         }
         // match _node.ty {  }
         Ok(())
