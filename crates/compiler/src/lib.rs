@@ -294,6 +294,9 @@ impl<'a> Compiler<'a> {
             if let Some(body) = i.body.clone() {
                 self.compile(body.upcast())?;
             }
+            if self.last_instruction_is(OpCode::OpPop) {
+              EMPTY_V16.with(|v| self.replace_last_instruction(OpCode::OpReturnValue, v));
+            }
             let ins = self.leave_scope();
             let compiled_fn = CompiledFunction {
                 instructions: Rc::new(ins.take()),
@@ -440,6 +443,27 @@ impl<'a> Compiler<'a> {
             self.current_instructions().borrow_mut()[pos + i] = n[i];
             i += 1;
         }
+    }
+
+    fn replace_last_instruction(&self, op: OpCode, operands: &Vec<u16>) -> usize {
+        let ins = make(&op, operands);
+        let pos = self.current_instructions().borrow().len() - 1;
+        self.replace_instruction(pos, &ins);
+        let mut last = self
+            .scopes
+            .borrow()
+            .get(self.scope_index.get())
+            .unwrap()
+            .last_instruction
+            .get();
+        last.op_code = op;
+        self.scopes
+            .borrow()
+            .get(self.scope_index.get())
+            .unwrap()
+            .last_instruction
+            .replace(last);
+        pos
     }
 
     fn change_operand(&self, op_pos: usize, operand: usize) -> Result<(), String> {
