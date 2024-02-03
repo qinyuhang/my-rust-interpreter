@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod test {
+mod code_test {
     use crate::*;
     // use ::interpreter::testing_object::*;
     // use ::testing::*;
@@ -18,6 +18,11 @@ mod test {
                 vec![OpCode::OpConstant as u8, 255, 254],
             ),
             (OpCode::OpAdd, vec![], vec![OpCode::OpAdd as u8]),
+            (
+                OpCode::OpGetLocal,
+                vec![254],
+                vec![OpCode::OpGetLocal as u8, 254],
+            ),
         ];
         cases.iter().for_each(|(op, operands, expected)| {
             let instruction = make(op, &operands);
@@ -39,11 +44,13 @@ mod test {
             make(&OpCode::OpConstant, &v[0..1]),
             make(&OpCode::OpConstant, &v[1..2]),
             make(&OpCode::OpConstant, &v[2..3]),
+            make(&OpCode::OpSetLocal, &v[0..1]),
         ];
 
         let expected = r#"0000 OpConstant 1
 0003 OpConstant 2
 0006 OpConstant 65535
+0009 OpSetLocal 1
 "#;
 
         let c = concat_instructions(cases);
@@ -70,7 +77,10 @@ mod test {
 
     #[test]
     fn test_read_operands() {
-        let cases = vec![(OpCode::OpConstant, vec![65535], 2)];
+        let cases = vec![
+            (OpCode::OpConstant, vec![65535], 2),
+            (OpCode::OpGetLocal, vec![254], 1),
+        ];
         cases.iter().for_each(|(op, operands, bytes_read)| {
             let ins = make(op, &operands);
             let z = Definition::look_up(op);

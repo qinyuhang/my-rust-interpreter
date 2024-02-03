@@ -77,6 +77,9 @@ pub enum OpCode {
     OpCall,
     OpReturnValue, // 21 with return value; etc: fn() { return 1 } or fn() { 1 }
     OpReturn,      // 22; without return value; etc: fn() {}
+
+    OpSetLocal, // 23
+    OpGetLocal, // 24
 }
 
 impl std::fmt::Display for OpCode {
@@ -188,6 +191,14 @@ thread_local! {
             name: "OpReturn".into(),
             operand_widths: vec![],
         }),
+        Rc::new(Definition {
+            name: "OpSetLocal".into(),
+            operand_widths: vec![1],
+        }),
+        Rc::new(Definition {
+            name: "OpGetLocal".into(),
+            operand_widths: vec![1],
+        }),
     ];
 }
 
@@ -217,6 +228,9 @@ pub fn make(op: &OpCode, operands: &[u16]) -> Vec<u8> {
                     instruction.push(buf[0]);
                     instruction.push(buf[1]);
                 }
+                1 => {
+                    instruction.push(*operand as u8);
+                }
                 _ => {}
             }
         }
@@ -234,6 +248,11 @@ pub fn read_operands(def: Rc<Definition>, ins: &[u8]) -> (/* operands */ Vec<u16
                 operands[i] = read_uint16(&ins);
                 offset += width;
             }
+            1 => {
+                operands[i] = read_uint8(&ins) as u16;
+                offset += width;
+            }
+
             _ => {}
         }
     }
@@ -243,5 +262,7 @@ pub fn read_operands(def: Rc<Definition>, ins: &[u8]) -> (/* operands */ Vec<u16
 pub fn read_uint16(instructions: &[u8]) -> u16 {
     BigEndian::read_u16(instructions)
 }
-
+pub fn read_uint8(instructions: &[u8]) -> u8 {
+    instructions[0]
+}
 mod test;
