@@ -155,8 +155,8 @@ impl<'a> VM<'a> {
                 OpCode::OpJNT => {
                     let pos = read_uint16(&ins[((ip + 1) as usize)..]);
                     self.current_frame()
-                      .ip
-                      .replace(self.current_frame().ip.get() + 2);
+                        .ip
+                        .replace(self.current_frame().ip.get() + 2);
 
                     let condition = self.pop()?;
                     if !is_truthy(Some(condition)) {
@@ -208,6 +208,33 @@ impl<'a> VM<'a> {
                     let index = self.pop()?;
                     let left = self.pop()?;
                     self.execute_index_expression(left, index)?;
+                }
+                OpCode::OpCall => {
+                    let func = self.stack_top().unwrap();
+                    if !func.as_any().is::<CompiledFunction>() {
+                        return Err("calling non-function".into());
+                    }
+                    let func = func.as_any().downcast_ref::<CompiledFunction>().unwrap();
+                    // FIXME: here we made a clone
+                    // 1. performance
+                    // 2. it may have side effect when we want closure
+                    let frame = Frame::new(Rc::new(func.clone()));
+                    self.push_frame(Rc::new(frame));
+                    // !DIFFERENT FROM THE BOOK. because I want keep ip as usize instead of isize
+                    continue;
+                }
+                OpCode::OpReturnValue => {
+                    let rt = self.pop()?;
+                    self.pop_frame();
+                    self.pop()?;
+                    self.push(rt)?;
+                }
+                // it seems without this branch, it still works
+                // because get stack will return Null as fallback
+                OpCode::OpReturn => {
+                    self.pop_frame();
+                    self.pop()?;
+                    self.push(Rc::new(Null {}))?;
                 }
                 #[allow(unreachable_patterns)]
                 _ => {
@@ -465,7 +492,7 @@ impl<'a> VM<'a> {
     }
 
     fn push_frame(&self, frame: Rc<Frame>) {
-        self.frames.borrow_mut().push(frame);
+        self.frames.borrow_mut()[self.frame_index.get()] = frame;
         self.frame_index.replace(self.frame_index.get() + 1);
     }
 

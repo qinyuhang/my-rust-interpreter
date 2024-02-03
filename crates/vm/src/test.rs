@@ -271,4 +271,77 @@ mod vm_test {
 
         run_vm_test(&cases);
     }
+
+    #[test]
+    fn test_function_calls_no_arg() {
+        let cases = vec![
+            (
+                "let fivePlusTen = fn() { 5 + 10 }; fivePlusTen()",
+                testing_result!(Int, 15),
+            ),
+            (
+                r#"let one = fn() { 1 };
+let two = fn() { 2 };
+one() + two()"#,
+                testing_result!(Int, 3),
+            ),
+            (
+                r#"let a = fn() { 1 };
+let b = fn() { a() + 1 };
+let c = fn() { b() + 1 };
+c()"#,
+                testing_result!(Int, 3),
+            ),
+        ];
+
+        run_vm_test(&cases);
+    }
+
+    #[test]
+    fn test_function_calls_with_return() {
+        let cases = vec![
+            (
+                "let earlyExit = fn() { return 99; 100 }; earlyExit()",
+                testing_result!(Int, 99),
+            ),
+            (
+                "let earlyExit = fn() { return 99; return 100; }; earlyExit()",
+                testing_result!(Int, 99),
+            ),
+        ];
+
+        run_vm_test(&cases);
+    }
+
+    #[test]
+    fn test_function_calls_without_return_value() {
+        let cases = vec![
+            ("let noReturn = fn() { }; noReturn()", testing_result!(Nil)),
+            (
+                r#"
+let noReturn = fn() { };
+let n = fn() { noReturn(); };
+noReturn();
+n();
+"#,
+                testing_result!(Nil),
+            ),
+        ];
+
+        run_vm_test(&cases);
+    }
+
+    #[test]
+    fn test_first_class_function() {
+        let cases = vec![(
+            r#"
+let fOne = fn() { 1 };
+let fTwo = fn() { fOne };
+fTwo()();
+"#,
+            testing_result!(Int, 1),
+        )];
+
+        run_vm_test(&cases);
+    }
 }
