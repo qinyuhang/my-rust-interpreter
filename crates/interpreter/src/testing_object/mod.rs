@@ -193,6 +193,10 @@ pub fn handle_object(evaluated: Option<Rc<dyn Object>>, out: &TestingResult) {
             // assert!(false);
         }
         #[allow(unreachable_patterns)]
-        _ => assert!(false),
+        _ => {
+            dbg!("YOU HAVE REACH UNREACHABLE PATTERN");
+            // dbg!();
+            assert!(false)
+        }
     }
 }

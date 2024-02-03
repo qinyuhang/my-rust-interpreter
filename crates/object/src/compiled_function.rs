@@ -8,6 +8,7 @@ use std::rc::Rc;
 #[derive(Hash, Eq, PartialEq)]
 pub struct CompiledFunction {
     pub instructions: Rc<Instructions>,
+    pub num_locals: usize,
 }
 
 impl ObjectInspect for CompiledFunction {

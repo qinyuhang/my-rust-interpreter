@@ -54,7 +54,18 @@ mod vm_test {
                 panic::catch_unwind(AssertUnwindSafe(|| {
                     handle_object(Some(stack_el), expected);
                 }))
-                .expect(format!("Case failed: index={}, input={}", index, input).as_str());
+                .map_err(|e| {
+                    println!("panic: {:?}", e);
+                })
+                .expect(
+                    format!(
+                        "Case failed:\n index={},\n input={},\n instruction={}",
+                        index,
+                        input,
+                        comp.dump_instruction()
+                    )
+                    .as_str(),
+                );
             });
     }
 
@@ -333,15 +344,73 @@ n();
 
     #[test]
     fn test_first_class_function() {
-        let cases = vec![(
-            r#"
+        let cases = vec![
+            (
+                r#"
 let fOne = fn() { 1 };
 let fTwo = fn() { fOne };
 fTwo()();
 "#,
-            testing_result!(Int, 1),
-        )];
+                testing_result!(Int, 1),
+            ),
+            (
+                r#"let returnOneReturner = fn() {
+let returnsOne = fn () { 1 };
+returnsOne;
+};
+returnOneReturner()()
+}"#,
+                testing_result!(Int, 1),
+            ),
+        ];
 
+        run_vm_test(&cases);
+    }
+
+    //            │              │
+    // VM SP  ───►│              │
+    //            ├──────────────┤
+    //            │Local 2       │◄────┐
+    //            ├──────────────┤     │Reserved for Local bindings
+    //            │Local 1       │◄────┘
+    //            ├──────────────┤
+    //            │Function      │
+    //            ├──────────────┤
+    //            │Other Value 2 │◄────┐
+    //            ├──────────────┤     │Pushed before call fn
+    //            │Other Value 1 │◄────┘
+    //            └──────────────┘
+    #[test]
+    fn test_calling_functions_with_bindings() {
+        let cases = vec![
+            (
+                r#"let one = fn() { let one = 1; one }; one()"#,
+                testing_result!(Int, 1),
+            ),
+            (
+                r#"let oneAndTwo = fn() { let one = 1; let two = 2; one + two }; oneAndTwo()"#,
+                testing_result!(Int, 3),
+            ),
+            (
+                r#"let oneAndTwo = fn() { let one = 1; let two = 2; one + two };
+let threeAndFour = fn() { let three = 3; let four = 4; three + four };
+oneAndTwo() + threeAndFour()"#,
+                testing_result!(Int, 10),
+            ),
+            (
+                r#"let firstFoobar = fn() { let foobar = 50; foobar };
+let secondFoobar = fn() { let foobar = 100; foobar };
+firstFoobar() + secondFoobar()"#,
+                testing_result!(Int, 150),
+            ),
+            (
+                r#"let globalSeed = 50;
+let minOne = fn() { let num = 1; globalSeed - num }
+let minTwo = fn() { let num = 2; globalSeed - num }
+minOne() + minTwo()"#,
+                testing_result!(Int, 97),
+            ),
+        ];
         run_vm_test(&cases);
     }
 }

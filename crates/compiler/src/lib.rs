@@ -307,9 +307,11 @@ impl<'a> Compiler<'a> {
             if self.last_instruction_is(OpCode::OpPop) {
                 EMPTY_V16.with(|v| self.replace_last_instruction(OpCode::OpReturnValue, v));
             }
+            let num_locals = self.symbol_table.borrow().define_count();
             let ins = self.leave_scope();
             let compiled_fn = CompiledFunction {
                 instructions: Rc::new(ins.take()),
+                num_locals,
             };
             self.emit(
                 OpCode::OpConstant,

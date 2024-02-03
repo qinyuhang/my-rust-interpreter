@@ -1,5 +1,5 @@
 use ast::WrapF64;
-use code::{format_display_instructions, read_uint16, Instructions, OpCode};
+use code::{format_display_instructions, read_uint16, read_uint8, Instructions, OpCode};
 use compiler::ByteCode;
 use frame::Frame;
 use interpreter::*;
@@ -45,8 +45,9 @@ impl<'a> VM<'a> {
         let ept = Rc::new(Null {});
         let main_fn = Rc::new(CompiledFunction {
             instructions: byte_code.instructions.clone(),
+            num_locals: 0,
         });
-        let main_frame = Rc::new(Frame::new(main_fn));
+        let main_frame = Rc::new(Frame::new(main_fn, 0));
 
         let stack = (0..STACK_SIZE)
             .map(|_| ept.clone() as Rc<dyn Object>)
@@ -112,9 +113,7 @@ impl<'a> VM<'a> {
             match op {
                 OpCode::OpConstant => {
                     let const_index = read_uint16(&ins[((ip + 1) as usize)..]);
-                    self.current_frame()
-                        .ip
-                        .replace(self.current_frame().ip.get() + 2);
+                    self.current_frame().bump_ip_by(2);
                     assert!(
                         self.constants.borrow().get(const_index as usize).is_some(),
                         "expect can get constants from vm, vm.constants.len={}, index={}",
@@ -154,9 +153,7 @@ impl<'a> VM<'a> {
                 }
                 OpCode::OpJNT => {
                     let pos = read_uint16(&ins[((ip + 1) as usize)..]);
-                    self.current_frame()
-                        .ip
-                        .replace(self.current_frame().ip.get() + 2);
+                    self.current_frame().bump_ip_by(2);
 
                     let condition = self.pop()?;
                     if !is_truthy(Some(condition)) {
@@ -168,25 +165,19 @@ impl<'a> VM<'a> {
                 }
                 OpCode::OpSetGlobal => {
                     let global_index = read_uint16(&ins[((ip + 1) as usize)..]);
-                    self.current_frame()
-                        .ip
-                        .replace(self.current_frame().ip.get() + 2);
+                    self.current_frame().bump_ip_by(2);
 
                     self.set_global(global_index as usize, self.pop()?);
                 }
                 OpCode::OpGetGlobal => {
                     let global_index = read_uint16(&ins[((ip + 1) as usize)..]);
-                    self.current_frame()
-                        .ip
-                        .replace(self.current_frame().ip.get() + 2);
+                    self.current_frame().bump_ip_by(2);
 
                     self.push(self.get_global(global_index as usize))?;
                 }
                 OpCode::OpArray => {
                     let num_els = read_uint16(&ins[((ip + 1) as usize)..]) as usize;
-                    self.current_frame()
-                        .ip
-                        .replace(self.current_frame().ip.get() + 2);
+                    self.current_frame().bump_ip_by(2);
 
                     let arr = self.build_array(self.sp.get() - num_els, self.sp.get());
                     self.sp.set(self.sp.get() - num_els);
@@ -195,9 +186,7 @@ impl<'a> VM<'a> {
                 }
                 OpCode::OpHash => {
                     let num_els = read_uint16(&ins[((ip + 1) as usize)..]) as usize;
-                    self.current_frame()
-                        .ip
-                        .replace(self.current_frame().ip.get() + 2);
+                    self.current_frame().bump_ip_by(2);
 
                     let hash = self.build_hash(self.sp.get() - num_els, self.sp.get());
                     self.sp.set(self.sp.get() - num_els);
@@ -218,23 +207,59 @@ impl<'a> VM<'a> {
                     // FIXME: here we made a clone
                     // 1. performance
                     // 2. it may have side effect when we want closure
-                    let frame = Frame::new(Rc::new(func.clone()));
+                    let frame = Frame::new(Rc::new(func.clone()), self.sp.get());
+                    let base_pointer = frame.base_pointer.get();
                     self.push_frame(Rc::new(frame));
+                    self.sp.replace(base_pointer + func.num_locals);
+                    //
+                    // dbg!(self.dump_stack());
                     // !DIFFERENT FROM THE BOOK. because I want keep ip as usize instead of isize
                     continue;
                 }
                 OpCode::OpReturnValue => {
                     let rt = self.pop()?;
-                    self.pop_frame();
-                    self.pop()?;
+                    let frame = self.pop_frame();
+                    self.sp.replace(frame.base_pointer.get() - 1);
                     self.push(rt)?;
                 }
                 // it seems without this branch, it still works
                 // because get stack will return Null as fallback
                 OpCode::OpReturn => {
-                    self.pop_frame();
-                    self.pop()?;
+                    let frame = self.pop_frame();
+                    self.sp.replace(frame.base_pointer.get() - 1);
                     self.push(Rc::new(Null {}))?;
+                }
+                //                 │              │
+                // VM SP   ───────►│              │
+                //   │             ├──────────────┤
+                //   │ after call  │Local 2       │◄────┐
+                //   │ reset to    ├──────────────┤     │Reserved for Local bindings
+                //   │             │Local 1       │◄────┘
+                //   ▼             ├──────────────┤
+                // base_pointer───►│Function      │
+                //                 ├──────────────┤
+                //                 │Other Value 2 │◄────┐
+                //                 ├──────────────┤     │Pushed before call fn
+                //                 │Other Value 1 │◄────┘
+                //                 └──────────────┘
+                OpCode::OpSetLocal => {
+                    let local_index = read_uint8(&ins[((ip + 1) as usize)..]);
+                    self.current_frame().bump_ip_by(1);
+                    let frame = self.current_frame();
+                    self.stack.borrow_mut()[frame.base_pointer.get() + local_index as usize] =
+                        self.pop()?;
+                }
+                OpCode::OpGetLocal => {
+                    let local_index = read_uint8(&ins[((ip + 1) as usize)..]);
+                    self.current_frame().bump_ip_by(1);
+                    let frame = self.current_frame();
+                    let object_to_push = self
+                        .stack
+                        .borrow()
+                        .get(frame.base_pointer.get() + local_index as usize)
+                        .unwrap()
+                        .clone();
+                    self.push(object_to_push)?;
                 }
                 #[allow(unreachable_patterns)]
                 _ => {
@@ -242,9 +267,7 @@ impl<'a> VM<'a> {
                 }
             }
 
-            self.current_frame()
-                .ip
-                .replace(self.current_frame().ip.get() + 1);
+            self.current_frame().bump_ip_by(1);
         }
         Ok(Rc::new(Null {}))
     }
@@ -508,5 +531,16 @@ impl<'a> VM<'a> {
     pub fn dump_instruction(&self) -> String {
         let instruction = &*self.current_frame().instruction();
         format_display_instructions(instruction)
+    }
+
+    // for debug use
+    pub fn dump_stack(&self) -> String {
+        let stack = self.stack.borrow().clone();
+        stack
+            .iter()
+            .filter(|v| !v.as_any().is::<Null>())
+            .map(|obj| format!("{}", obj))
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 }
