@@ -21,7 +21,7 @@ pub struct Compiler<'a> {
     constants: RefCell<Vec<Rc<dyn Object>>>,
     external_constants: RefCell<Option<&'a mut Vec<Rc<dyn Object>>>>,
 
-    symbol_table: RefCell<SymbolTable>,
+    symbol_table: RefCell<Rc<SymbolTable>>,
     external_symbol_table: RefCell<Option<&'a mut SymbolTable>>,
 
     scopes: RefCell<Vec<Rc<CompilationScope>>>,
@@ -45,7 +45,7 @@ impl<'a> Compiler<'a> {
             constants: RefCell::new(vec![]),
             external_constants: RefCell::new(None),
 
-            symbol_table: RefCell::new(SymbolTable::new()),
+            symbol_table: RefCell::new(Rc::new(SymbolTable::new())),
             external_symbol_table: RefCell::new(None),
             scopes: RefCell::new(vec![main_scope]),
             scope_index: Cell::new(0),
@@ -245,13 +245,23 @@ impl<'a> Compiler<'a> {
                 self.remove_last_pop();
             }
             let symbol = self.define_symbol(i.name.clone());
-            self.emit(OpCode::OpSetGlobal, &vec![symbol.index as u16]);
+            let op = match symbol.scope {
+                GLOBAL_SCOPE => OpCode::OpSetGlobal,
+                LOCAL_SCOPE => OpCode::OpSetLocal,
+                _ => return Err("unsupported SCOPE".to_string()),
+            };
+            self.emit(op, &vec![symbol.index as u16]);
         }
         if n.is::<Identifier>() {
             let i = n.downcast_ref::<Identifier>().unwrap();
             // FIXME: DRAW BACK CLONE
             let symbol = self.resolve_symbol(Rc::new(i.clone()))?;
-            self.emit(OpCode::OpGetGlobal, &vec![symbol.index as u16]);
+            let op = match symbol.scope {
+                GLOBAL_SCOPE => OpCode::OpGetGlobal,
+                LOCAL_SCOPE => OpCode::OpGetLocal,
+                _ => return Err("unsupported SCOPE".to_string()),
+            };
+            self.emit(op, &vec![symbol.index as u16]);
         }
         if n.is::<StringLiteral>() {
             let i = n.downcast_ref::<StringLiteral>().unwrap();
@@ -508,6 +518,9 @@ impl<'a> Compiler<'a> {
         };
         self.scopes.borrow_mut().push(Rc::new(scope));
         self.scope_index.replace(self.scope_index.get() + 1);
+        let pre = self.symbol_table.take();
+        let new = Rc::new(SymbolTable::new_enclosed(pre));
+        self.symbol_table.replace(new);
     }
 
     fn leave_scope(&self) -> Rc<RefCell<Instructions>> {
@@ -521,6 +534,9 @@ impl<'a> Compiler<'a> {
         // };
         let instructions = self.scopes.borrow_mut().pop().unwrap().instructions.clone();
         self.scope_index.replace(self.scope_index.get() - 1);
+        let outer = self.symbol_table.take();
+        let outer = outer.outer.take().unwrap();
+        self.symbol_table.replace(outer);
         instructions
     }
 

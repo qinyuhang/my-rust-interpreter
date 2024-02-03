@@ -290,12 +290,12 @@ mod compiler_test {
                 let pr = p.parse_program();
                 assert!(pr.is_some(), "parse program failed");
                 let pr = pr.unwrap();
-                dbg!(&pr);
+                // dbg!(&pr);
                 let compiler = Compiler::new();
                 let r = compiler.compile(&pr);
                 assert!(r.is_ok(), "compile failed: {}", r.unwrap_err());
                 dbg!("compile succeed");
-                dbg!(&compiler.dump_instruction());
+                // dbg!(&compiler.dump_instruction());
                 let bytecode = compiler.bytecode();
                 handle_instructions(expected_instruction.clone(), &bytecode.instructions);
 
@@ -785,6 +785,8 @@ got    instructions vec={:?}
     #[test]
     fn test_compilation_scopes() {
         let compiler = Compiler::new();
+        let binding = compiler.symbol_table.borrow().clone();
+        let global_symbol_table = binding.as_ref();
         assert_eq!(
             compiler.scope_index.get(),
             0,
@@ -827,6 +829,30 @@ got    instructions vec={:?}
                 last.op_code, OpSub
             );
         }
+        {
+            assert!(
+                compiler
+                    .symbol_table
+                    .borrow()
+                    .outer
+                    .borrow()
+                    .as_ref()
+                    .is_some(),
+                "compiler did not enclose symbol table"
+            );
+            assert_eq!(
+                *global_symbol_table,
+                *(compiler
+                    .symbol_table
+                    .borrow()
+                    .outer
+                    .borrow()
+                    .as_ref()
+                    .unwrap()
+                    .clone()),
+                "compiler did not enclose symbol table"
+            );
+        }
         compiler.leave_scope();
         assert_eq!(
             compiler.scope_index.get(),
@@ -835,31 +861,49 @@ got    instructions vec={:?}
             compiler.scope_index.get(),
             0
         );
+        {
+            assert!(
+                compiler
+                    .symbol_table
+                    .borrow()
+                    .outer
+                    .borrow()
+                    .as_ref()
+                    .is_none(),
+                "compiler did not enclose symbol table"
+            );
+            assert_eq!(
+                *global_symbol_table,
+                **compiler.symbol_table.borrow(),
+                "compiler did not enclose symbol table"
+            );
+        }
         compiler.emit(OpAdd, &vec![]);
+        {
+            let scopes = compiler.scopes.borrow();
+            let scopes = scopes.get(compiler.scope_index.get());
+            assert!(scopes.is_some(), "except got the last scope");
+            let scopes = scopes.unwrap();
+            assert_eq!(
+                scopes.instructions.borrow().len(),
+                2,
+                "instruction lens wrong, got={}",
+                scopes.instructions.borrow().len()
+            );
+            let last = scopes.last_instruction.get();
+            assert_eq!(
+                last.op_code, OpAdd,
+                "last_instruction.op_code wrong. got={}, want={}",
+                last.op_code, OpAdd
+            );
 
-        let scopes = compiler.scopes.borrow();
-        let scopes = scopes.get(compiler.scope_index.get());
-        assert!(scopes.is_some(), "except got the last scope");
-        let scopes = scopes.unwrap();
-        assert_eq!(
-            scopes.instructions.borrow().len(),
-            2,
-            "instruction lens wrong, got={}",
-            scopes.instructions.borrow().len()
-        );
-        let last = scopes.last_instruction.get();
-        assert_eq!(
-            last.op_code, OpAdd,
-            "last_instruction.op_code wrong. got={}, want={}",
-            last.op_code, OpAdd
-        );
-
-        let previous = scopes.previous_instruction.get();
-        assert_eq!(
-            previous.op_code, OpMul,
-            "last_instruction.op_code wrong. got={}, want={}",
-            last.op_code, OpMul
-        );
+            let previous = scopes.previous_instruction.get();
+            assert_eq!(
+                previous.op_code, OpMul,
+                "last_instruction.op_code wrong. got={}, want={}",
+                last.op_code, OpMul
+            );
+        }
     }
 
     #[test]
@@ -908,5 +952,355 @@ got    instructions vec={:?}
             },
         ];
         run_compile_test(cases);
+    }
+
+    #[test]
+    fn test_let_statement_scope() {
+        let v = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        let cases = vec![
+            CompileTestCase {
+                input: r#"let num = 55;
+fn() { num };
+"#,
+                expected_constants: vec![
+                    testing_result!(Int, 55),
+                    testing_result!(
+                        CompiledFunction,
+                        vec![
+                            make(&OpCode::OpGetGlobal, &v[0..1]),
+                            make(&OpCode::OpReturnValue, &v[0..0]),
+                        ]
+                    ),
+                ],
+                expected_instruction: vec![
+                    // 表示的是变量的 index
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpSetGlobal, &v[0..1]),
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: r#"fn() { let num = 55; num };"#,
+                expected_constants: vec![
+                    testing_result!(Int, 55),
+                    testing_result!(
+                        CompiledFunction,
+                        vec![
+                            make(&OpCode::OpConstant, &v[0..1]),
+                            make(&OpCode::OpSetLocal, &v[0..1]),
+                            make(&OpCode::OpGetLocal, &v[0..1]),
+                            make(&OpCode::OpReturnValue, &v[0..0]),
+                        ]
+                    ),
+                ],
+                expected_instruction: vec![
+                    // 表示的是变量的 index
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: r#"fn() { let a = 55; let b = 77; a+b };"#,
+                expected_constants: vec![
+                    testing_result!(Int, 55),
+                    testing_result!(Int, 77),
+                    testing_result!(
+                        CompiledFunction,
+                        vec![
+                            // a
+                            make(&OpCode::OpConstant, &v[0..1]),
+                            make(&OpCode::OpSetLocal, &v[0..1]),
+                            // b
+                            make(&OpCode::OpConstant, &v[1..2]),
+                            make(&OpCode::OpSetLocal, &v[1..2]),
+                            // a + b
+                            make(&OpCode::OpGetLocal, &v[0..1]),
+                            make(&OpCode::OpGetLocal, &v[1..2]),
+                            make(&OpCode::OpAdd, &v[0..0]),
+                            // return
+                            make(&OpCode::OpReturnValue, &v[0..0]),
+                        ]
+                    ),
+                ],
+                expected_instruction: vec![
+                    // 表示的是变量的 index
+                    make(&OpCode::OpConstant, &v[2..3]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+        ];
+        run_compile_test(cases);
+    }
+
+    #[test]
+    fn test_compiler_scopes() {
+        let compiler = Compiler::new();
+        assert_eq!(
+            compiler.scope_index.get(),
+            0,
+            "scope_index wrong. got={}, wanted={}",
+            compiler.scope_index.get(),
+            0
+        );
+
+        // let g = compiler.symbol_table.as_ref();
+        compiler.emit(OpCode::OpMul, &vec![]);
+
+        compiler.enter_scope();
+    }
+}
+
+#[cfg(test)]
+mod symbol_table_test {
+
+    use crate::{Symbol, SymbolTable, GLOBAL_SCOPE, LOCAL_SCOPE};
+    use ::ast::*;
+    use std::rc::Rc;
+
+    #[test]
+    fn test_resolve_local() {
+        let global = Rc::new(SymbolTable::new());
+        let a = Rc::new(Identifier::from("a".to_string()));
+        let b = Rc::new(Identifier::from("b".to_string()));
+        global.define(a.clone());
+        global.define(b.clone());
+
+        let local = Rc::new(SymbolTable::new_enclosed(global.clone()));
+        let c = Rc::new(Identifier::from("c".to_string()));
+        let d = Rc::new(Identifier::from("d".to_string()));
+        local.define(c.clone());
+        local.define(d.clone());
+
+        let tests = vec![
+            (
+                a.clone(),
+                0,
+                global.clone(),
+                Symbol {
+                    name: a.clone(),
+                    scope: GLOBAL_SCOPE,
+                    index: 0,
+                },
+            ),
+            (
+                b.clone(),
+                1,
+                global.clone(),
+                Symbol {
+                    name: b.clone(),
+                    scope: GLOBAL_SCOPE,
+                    index: 1,
+                },
+            ),
+            (
+                c.clone(),
+                0,
+                local.clone(),
+                Symbol {
+                    name: c.clone(),
+                    scope: LOCAL_SCOPE,
+                    index: 0,
+                },
+            ),
+            (
+                d.clone(),
+                1,
+                local.clone(),
+                Symbol {
+                    name: d.clone(),
+                    scope: LOCAL_SCOPE,
+                    index: 1,
+                },
+            ),
+        ];
+
+        tests
+            .iter()
+            .for_each(|(name, expected, symbol_table, symbol)| {
+                let r = symbol_table.resolve(name.clone());
+                assert!(r.is_ok(), "name {} not resolvable", name);
+                let r = r.unwrap();
+                assert_eq!(
+                    *r, *symbol,
+                    "expected {} to resolve to {:?}, got={:?}",
+                    symbol.name, symbol, r
+                );
+                assert_eq!(
+                    r.index, *expected,
+                    "expected {} to resolve to {}, got={:?}",
+                    name, expected, *r
+                );
+            });
+    }
+
+    #[test]
+    fn test_nested_resolve_local() {
+        let global = Rc::new(SymbolTable::new());
+        let a = Rc::new(Identifier::from("a".to_string()));
+        let b = Rc::new(Identifier::from("b".to_string()));
+        global.define(a.clone());
+        global.define(b.clone());
+
+        let local = Rc::new(SymbolTable::new_enclosed(global.clone()));
+        let c = Rc::new(Identifier::from("c".to_string()));
+        let d = Rc::new(Identifier::from("d".to_string()));
+        local.define(c.clone());
+        local.define(d.clone());
+
+        let local1 = Rc::new(SymbolTable::new_enclosed(local.clone()));
+        let e = Rc::new(Identifier::from("e".to_string()));
+        let f = Rc::new(Identifier::from("f".to_string()));
+        local1.define(e.clone());
+        local1.define(f.clone());
+
+        let sa = Rc::new(Symbol {
+            name: a.clone(),
+            scope: GLOBAL_SCOPE,
+            index: 0,
+        });
+        let sb = Rc::new(Symbol {
+            name: b.clone(),
+            scope: GLOBAL_SCOPE,
+            index: 1,
+        });
+        let sc = Rc::new(Symbol {
+            name: c.clone(),
+            scope: LOCAL_SCOPE,
+            index: 0,
+        });
+        let sd = Rc::new(Symbol {
+            name: d.clone(),
+            scope: LOCAL_SCOPE,
+            index: 1,
+        });
+        let se = Rc::new(Symbol {
+            name: e.clone(),
+            scope: LOCAL_SCOPE,
+            index: 0,
+        });
+        let sf = Rc::new(Symbol {
+            name: f.clone(),
+            scope: LOCAL_SCOPE,
+            index: 1,
+        });
+
+        let tests = vec![
+            (a.clone(), 0, global.clone(), sa.clone()),
+            (b.clone(), 1, global.clone(), sb.clone()),
+            (c.clone(), 0, local.clone(), sc.clone()),
+            (d.clone(), 1, local.clone(), sd.clone()),
+            (e.clone(), 0, local1.clone(), se.clone()),
+            (f.clone(), 1, local1.clone(), sf.clone()),
+        ];
+
+        tests
+            .iter()
+            .for_each(|(name, expected, symbol_table, symbol)| {
+                let r = symbol_table.resolve(name.clone());
+                assert!(r.is_ok(), "name {} not resolvable", name);
+                let r = r.unwrap();
+                assert_eq!(
+                    *r,
+                    *symbol.clone(),
+                    "expected {} to resolve to {:?}, got={:?}",
+                    symbol.name,
+                    symbol,
+                    r
+                );
+                assert_eq!(
+                    r.index, *expected,
+                    "expected {} to resolve to {}, got={:?}",
+                    name, expected, *r
+                );
+            });
+
+        let tests = vec![
+            (
+                local.clone(),
+                vec![sa.clone(), sb.clone(), sc.clone(), sd.clone()],
+            ),
+            (
+                local1.clone(),
+                vec![sa.clone(), sb.clone(), se.clone(), sf.clone()],
+            ),
+        ];
+        tests.iter().for_each(|(symbol_table, symbols)| {
+            symbols.iter().for_each(|symbol| {
+                let r = symbol_table.resolve(symbol.name.clone());
+                assert!(r.is_ok(), "name {} not resolvable", symbol.name.clone());
+                let r = r.unwrap();
+                assert_eq!(
+                    *r,
+                    *symbol.clone(),
+                    "expected {} to resolve to {:?}, got={:?}",
+                    symbol.name.clone(),
+                    symbol,
+                    *r
+                );
+            });
+        });
+    }
+    #[test]
+    fn test_define() {
+        let global = Rc::new(SymbolTable::new());
+
+        let local = Rc::new(SymbolTable::new_enclosed(global.clone()));
+
+        let local1 = Rc::new(SymbolTable::new_enclosed(local.clone()));
+
+        let a = Rc::new(Identifier::from("a".to_string()));
+        let b = Rc::new(Identifier::from("b".to_string()));
+        let c = Rc::new(Identifier::from("c".to_string()));
+        let d = Rc::new(Identifier::from("d".to_string()));
+        let e = Rc::new(Identifier::from("e".to_string()));
+        let f = Rc::new(Identifier::from("f".to_string()));
+
+        let sa = Rc::new(Symbol {
+            name: a.clone(),
+            scope: GLOBAL_SCOPE,
+            index: 0,
+        });
+        let sb = Rc::new(Symbol {
+            name: b.clone(),
+            scope: GLOBAL_SCOPE,
+            index: 1,
+        });
+        let sc = Rc::new(Symbol {
+            name: c.clone(),
+            scope: LOCAL_SCOPE,
+            index: 0,
+        });
+        let sd = Rc::new(Symbol {
+            name: d.clone(),
+            scope: LOCAL_SCOPE,
+            index: 1,
+        });
+        let se = Rc::new(Symbol {
+            name: e.clone(),
+            scope: LOCAL_SCOPE,
+            index: 0,
+        });
+        let sf = Rc::new(Symbol {
+            name: f.clone(),
+            scope: LOCAL_SCOPE,
+            index: 1,
+        });
+
+        let tests = vec![
+            (a.clone(), 0, global.clone(), sa.clone()),
+            (b.clone(), 1, global.clone(), sb.clone()),
+            (c.clone(), 0, local.clone(), sc.clone()),
+            (d.clone(), 1, local.clone(), sd.clone()),
+            (e.clone(), 0, local1.clone(), se.clone()),
+            (f.clone(), 1, local1.clone(), sf.clone()),
+        ];
+
+        tests
+            .iter()
+            .for_each(|(name, expected, symbol_table, symbol)| {
+                let d = symbol_table.define(name.clone());
+                assert_eq!(*symbol.clone(), *d, "expected c={:?}, got={:?}", symbol, d);
+            });
     }
 }
