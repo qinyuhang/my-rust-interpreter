@@ -403,10 +403,11 @@ let secondFoobar = fn() { let foobar = 100; foobar };
 firstFoobar() + secondFoobar()"#,
                 testing_result!(Int, 150),
             ),
+            // FIXME: why without comma, compile failed
             (
                 r#"let globalSeed = 50;
-let minOne = fn() { let num = 1; globalSeed - num }
-let minTwo = fn() { let num = 2; globalSeed - num }
+let minOne = fn() { let num = 1; globalSeed - num };
+let minTwo = fn() { let num = 2; globalSeed - num };
 minOne() + minTwo()"#,
                 testing_result!(Int, 97),
             ),
