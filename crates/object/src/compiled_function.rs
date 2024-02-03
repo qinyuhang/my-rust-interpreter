@@ -9,6 +9,7 @@ use std::rc::Rc;
 pub struct CompiledFunction {
     pub instructions: Rc<Instructions>,
     pub num_locals: usize,
+    pub num_parameters: usize,
 }
 
 impl ObjectInspect for CompiledFunction {

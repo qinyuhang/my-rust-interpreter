@@ -313,10 +313,12 @@ impl<'a> Compiler<'a> {
                 EMPTY_V16.with(|v| self.replace_last_instruction(OpCode::OpReturnValue, v));
             }
             let num_locals = self.symbol_table.borrow().define_count();
+            let num_parameters = i.parameters.as_ref().map_or(0, |v| v.len());
             let ins = self.leave_scope();
             let compiled_fn = CompiledFunction {
                 instructions: Rc::new(ins.take()),
                 num_locals,
+                num_parameters,
             };
             self.emit(
                 OpCode::OpConstant,

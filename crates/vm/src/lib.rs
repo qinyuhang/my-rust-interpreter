@@ -46,6 +46,7 @@ impl<'a> VM<'a> {
         let main_fn = Rc::new(CompiledFunction {
             instructions: byte_code.instructions.clone(),
             num_locals: 0,
+            num_parameters: 0,
         });
         let main_frame = Rc::new(Frame::new(main_fn, 0));
 
@@ -542,6 +543,12 @@ impl<'a> VM<'a> {
             return Err("calling non-function".into());
         }
         let func = func.as_any().downcast_ref::<CompiledFunction>().unwrap();
+        if num_args != func.num_parameters {
+            return Err(format!(
+                "wrong number of arguments: want={}, got={}",
+                func.num_parameters, num_args
+            ));
+        }
         // FIXME: here we made a clone
         // 1. performance
         // 2. it may have side effect when we want closure

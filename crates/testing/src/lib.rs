@@ -10,11 +10,14 @@ pub enum TestingResult {
     Bool(bool),
     Vec(Vec<i64>),
     VecInstruction(Vec<Vec<u8>>),
+    // ErrorObject
     Err(String),
     Nil,
     // FIXME: 改成正确的key type
     Hash(HashMap<Rc<AstExpression>, TestingResult>),
     CompiledFunction(Vec<Vec<u8>>),
+    // run Result is Err
+    Throw(String),
 }
 
 impl std::fmt::Display for TestingResult {
@@ -30,6 +33,7 @@ impl std::fmt::Display for TestingResult {
             TestingResult::VecInstruction(a) => write!(f, "{:?}", a),
             TestingResult::CompiledFunction(a) => write!(f, "{:?}", a),
             TestingResult::Nil => write!(f, "Nil"),
+            TestingResult::Throw(e) => write!(f, "Throw: {e}"),
         }
     }
 }
@@ -65,5 +69,8 @@ macro_rules! testing_result {
     };
     (Hash, $e:expr) => {
         TestingResult::Hash($e)
+    };
+    (Throw, $e:expr) => {
+        TestingResult::Throw($e.to_string())
     };
 }

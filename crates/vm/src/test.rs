@@ -37,6 +37,11 @@ mod vm_test {
                 let vm = VM::new(comp.bytecode());
 
                 let r = vm.run();
+                if let TestingResult::Throw(str) = expected {
+                    assert!(r.is_err());
+                    assert_eq!(r.unwrap_err(), str.to_string());
+                    return;
+                }
                 assert!(
                     r.is_ok(),
                     "vm error: {} \nVM Instructions: {}Compiler Instructions: {}",
@@ -462,6 +467,25 @@ let outer = fn() {
 };
 outer() + globalNum"#,
                 testing_result!(Int, 50),
+            ),
+        ];
+        run_vm_test(&cases);
+    }
+
+    #[test]
+    fn test_calling_function_with_wrong_args() {
+        let cases = vec![
+            (
+                r#"fn() {1}(1)"#,
+                testing_result!(Throw, "wrong number of arguments: want=0, got=1"),
+            ),
+            (
+                r#"fn(a) {a}()"#,
+                testing_result!(Throw, "wrong number of arguments: want=1, got=0"),
+            ),
+            (
+                r#"fn(a, b) {a + b}(1)"#,
+                testing_result!(Throw, "wrong number of arguments: want=2, got=1"),
             ),
         ];
         run_vm_test(&cases);
