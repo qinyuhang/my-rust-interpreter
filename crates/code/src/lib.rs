@@ -181,7 +181,8 @@ thread_local! {
         }),
         Rc::new(Definition {
             name: "OpCall".into(),
-            operand_widths: vec![],
+            // number of parameters
+            operand_widths: vec![1],
         }),
         Rc::new(Definition {
             name: "OpReturnValue".into(),

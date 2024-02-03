@@ -925,7 +925,7 @@ got    instructions vec={:?}
                 expected_instruction: vec![
                     // 表示的是变量的 index
                     make(&OpCode::OpConstant, &v[1..2]),
-                    make(&OpCode::OpCall, &v[0..0]),
+                    make(&OpCode::OpCall, &v[0..1]),
                     make(&OpCode::OpPop, &v[0..0]),
                 ],
             },
@@ -946,7 +946,59 @@ got    instructions vec={:?}
                     make(&OpCode::OpConstant, &v[1..2]),
                     make(&OpCode::OpSetGlobal, &v[0..1]),
                     make(&OpCode::OpGetGlobal, &v[0..1]),
-                    make(&OpCode::OpCall, &v[0..0]),
+                    make(&OpCode::OpCall, &v[0..1]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: r#"let oneArg = fn (a) { a }; oneArg(24);"#,
+                expected_constants: vec![
+                    testing_result!(
+                        CompiledFunction,
+                        vec![
+                            make(&OpCode::OpGetLocal, &v[0..1]),
+                            make(&OpCode::OpReturnValue, &v[0..0]),
+                        ]
+                    ),
+                    testing_result!(Int, 24),
+                ],
+                expected_instruction: vec![
+                    // 表示的是变量的 index
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpSetGlobal, &v[0..1]),
+                    make(&OpCode::OpGetGlobal, &v[0..1]),
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpCall, &v[1..2]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: r#"let manyArg = fn (a, b, c) { a; b; c }; manyArg(24, 25, 26);"#,
+                expected_constants: vec![
+                    testing_result!(
+                        CompiledFunction,
+                        vec![
+                            make(&OpCode::OpGetLocal, &v[0..1]),
+                            make(&OpCode::OpPop, &v[0..0]),
+                            make(&OpCode::OpGetLocal, &v[1..2]),
+                            make(&OpCode::OpPop, &v[0..0]),
+                            make(&OpCode::OpGetLocal, &v[2..3]),
+                            make(&OpCode::OpReturnValue, &v[0..0]),
+                        ]
+                    ),
+                    testing_result!(Int, 24),
+                    testing_result!(Int, 25),
+                    testing_result!(Int, 26),
+                ],
+                expected_instruction: vec![
+                    // 表示的是变量的 index
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpSetGlobal, &v[0..1]),
+                    make(&OpCode::OpGetGlobal, &v[0..1]),
+                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpConstant, &v[2..3]),
+                    make(&OpCode::OpConstant, &v[3..4]),
+                    make(&OpCode::OpCall, &v[3..4]),
                     make(&OpCode::OpPop, &v[0..0]),
                 ],
             },

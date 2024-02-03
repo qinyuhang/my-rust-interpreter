@@ -301,6 +301,11 @@ impl<'a> Compiler<'a> {
         if n.is::<FunctionLiteral>() {
             let i = n.downcast_ref::<FunctionLiteral>().unwrap();
             self.enter_scope();
+            if let Some(params) = i.parameters.as_ref() {
+                for p in params.iter() {
+                    self.define_symbol(p.clone());
+                }
+            }
             if let Some(body) = i.body.clone() {
                 self.compile(body.upcast())?;
             }
@@ -330,7 +335,15 @@ impl<'a> Compiler<'a> {
             if let Some(r) = i.function.clone() {
                 self.compile(r.upcast())?;
             }
-            EMPTY_V16.with(|v| self.emit(OpCode::OpCall, v));
+            if let Some(args) = i.arguments.as_ref() {
+                for arg in args.iter() {
+                    self.compile(arg.upcast())?;
+                }
+            };
+            self.emit(
+                OpCode::OpCall,
+                &vec![i.arguments.as_ref().map_or(0, |v| v.len() as u16)],
+            );
         }
         // match _node.ty {  }
         Ok(())

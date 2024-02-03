@@ -198,7 +198,22 @@ impl<'a> VM<'a> {
                     let left = self.pop()?;
                     self.execute_index_expression(left, index)?;
                 }
+                //   | ...        |
+                //   | Caller's Frame |
+                //   | ...        |
+                //   | Return Address |
+                //   | Function Object (fn) |
+                //   | Argument 1 (arg1)   |
+                //   | Argument 2 (arg2)   |
+                //   | ...        |
+                //   | Argument N (argN)   |
+                //   | Local Variable 1 (local_var1) |
+                //   | Local Variable 2 (local_var2) |
+                //   | ...        |
+                //   | Local Variable M (local_varM) |
+                //   | Call Frame Boundary |
                 OpCode::OpCall => {
+                    self.current_frame().bump_ip_by(1);
                     let func = self.stack_top().unwrap();
                     if !func.as_any().is::<CompiledFunction>() {
                         return Err("calling non-function".into());
