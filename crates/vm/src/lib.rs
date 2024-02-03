@@ -213,19 +213,10 @@ impl<'a> VM<'a> {
                 //   | Local Variable M (local_varM) |
                 //   | Call Frame Boundary |
                 OpCode::OpCall => {
+                    let num_args = read_uint8(&ins[((ip + 1) as usize)..]);
                     self.current_frame().bump_ip_by(1);
-                    let func = self.stack_top().unwrap();
-                    if !func.as_any().is::<CompiledFunction>() {
-                        return Err("calling non-function".into());
-                    }
-                    let func = func.as_any().downcast_ref::<CompiledFunction>().unwrap();
-                    // FIXME: here we made a clone
-                    // 1. performance
-                    // 2. it may have side effect when we want closure
-                    let frame = Frame::new(Rc::new(func.clone()), self.sp.get());
-                    let base_pointer = frame.base_pointer.get();
-                    self.push_frame(Rc::new(frame));
-                    self.sp.replace(base_pointer + func.num_locals);
+
+                    self.call_function(num_args as usize)?;
                     //
                     // dbg!(self.dump_stack());
                     // !DIFFERENT FROM THE BOOK. because I want keep ip as usize instead of isize
@@ -541,6 +532,24 @@ impl<'a> VM<'a> {
             .get(self.frame_index.get())
             .unwrap()
             .clone()
+    }
+
+    fn call_function(&self, num_args: usize) -> Result<(), String> {
+        let stacks = self.stack.borrow();
+        // FIXME not in stack top
+        let func = stacks.get(self.sp.get() - 1 - num_args as usize).unwrap();
+        if !func.as_any().is::<CompiledFunction>() {
+            return Err("calling non-function".into());
+        }
+        let func = func.as_any().downcast_ref::<CompiledFunction>().unwrap();
+        // FIXME: here we made a clone
+        // 1. performance
+        // 2. it may have side effect when we want closure
+        let frame = Frame::new(Rc::new(func.clone()), self.sp.get() - num_args);
+        let base_pointer = frame.base_pointer.get();
+        self.push_frame(Rc::new(frame));
+        self.sp.replace(base_pointer + func.num_locals);
+        Ok(())
     }
 
     pub fn dump_instruction(&self) -> String {

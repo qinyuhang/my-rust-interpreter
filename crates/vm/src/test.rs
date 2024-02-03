@@ -414,4 +414,56 @@ minOne() + minTwo()"#,
         ];
         run_vm_test(&cases);
     }
+    #[test]
+    fn test_calling_functions_with_args_and_bindings() {
+        let cases = vec![
+            (
+                r#"let identity = fn(a) { a; };
+identity(4);"#,
+                testing_result!(Int, 4),
+            ),
+            (
+                r#"let sum = fn(a, b) { a + b; }; sum(1, 2);"#,
+                testing_result!(Int, 3),
+            ),
+            (
+                r#"let sum = fn(a, b) {
+let c = a + b;
+c; };
+sum(1, 2);"#,
+                testing_result!(Int, 3),
+            ),
+            (
+                r#"let sum = fn(a, b) {
+let c = a + b;
+c; };
+sum(1, 2) + sum(3, 4);"#,
+                testing_result!(Int, 10),
+            ),
+            (
+                r#"let sum = fn(a, b) {
+    let c = a + b;
+c; };
+let outer = fn() {
+    sum(1, 2) + sum(3, 4)
+};
+outer()"#,
+                testing_result!(Int, 10),
+            ),
+            (
+                r#"
+let globalNum = 10;
+let sum = fn(a, b) {
+    let c = a + b;
+    c + globalNum;
+};
+let outer = fn() {
+    sum(1, 2) + sum(3, 4) + globalNum
+};
+outer() + globalNum"#,
+                testing_result!(Int, 50),
+            ),
+        ];
+        run_vm_test(&cases);
+    }
 }
