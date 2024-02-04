@@ -312,6 +312,9 @@ impl<'a> Compiler<'a> {
             if self.last_instruction_is(OpCode::OpPop) {
                 EMPTY_V16.with(|v| self.replace_last_instruction(OpCode::OpReturnValue, v));
             }
+            if !self.last_instruction_is(OpCode::OpReturnValue) {
+                EMPTY_V16.with(|v| self.emit(OpCode::OpReturn, v));
+            }
             let num_locals = self.symbol_table.borrow().define_count();
             let num_parameters = i.parameters.as_ref().map_or(0, |v| v.len());
             let ins = self.leave_scope();
