@@ -1101,12 +1101,55 @@ fn() { num };
 
         compiler.enter_scope();
     }
+
+    #[test]
+    fn test_builtins() {
+        let v = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        let cases = vec![
+            CompileTestCase {
+                input: r#"len([]);
+push([],1);
+"#,
+                expected_constants: vec![testing_result!(Int, 1)],
+                expected_instruction: vec![
+                    // 表示的是变量的 index
+                    make(&OpCode::OpGetBuiltin, &v[0..1]),
+                    make(&OpCode::OpArray, &v[0..1]),
+                    make(&OpCode::OpCall, &v[1..2]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                    make(&OpCode::OpGetBuiltin, &v[5..6]),
+                    make(&OpCode::OpArray, &v[0..1]),
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpCall, &v[2..3]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: r#"fn() { len([]) };"#,
+                expected_constants: vec![testing_result!(
+                    CompiledFunction,
+                    vec![
+                        make(&OpCode::OpGetBuiltin, &v[0..1]),
+                        make(&OpCode::OpArray, &v[0..1]),
+                        make(&OpCode::OpCall, &v[1..2]),
+                        make(&OpCode::OpReturnValue, &v[0..0]),
+                    ]
+                )],
+                expected_instruction: vec![
+                    // 表示的是变量的 index
+                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+        ];
+        run_compile_test(cases);
+    }
 }
 
 #[cfg(test)]
 mod symbol_table_test {
 
-    use crate::{Symbol, SymbolTable, GLOBAL_SCOPE, LOCAL_SCOPE};
+    use crate::{Symbol, SymbolTable, BUILTIN_SCOPE, GLOBAL_SCOPE, LOCAL_SCOPE};
     use ::ast::*;
     use std::rc::Rc;
 
@@ -1353,6 +1396,65 @@ mod symbol_table_test {
             .for_each(|(name, expected, symbol_table, symbol)| {
                 let d = symbol_table.define(name.clone());
                 assert_eq!(*symbol.clone(), *d, "expected c={:?}, got={:?}", symbol, d);
+            });
+    }
+
+    #[test]
+    fn test_define_resolve_builtins() {
+        let global = Rc::new(SymbolTable::new());
+        let first_local = Rc::new(SymbolTable::new_enclosed(global.clone()));
+        let second_local = Rc::new(SymbolTable::new_enclosed(first_local.clone()));
+        let expected = vec![
+            Rc::new(Symbol {
+                name: Rc::new(Identifier::from("a".to_string())),
+                scope: BUILTIN_SCOPE,
+                index: 0,
+            }),
+            Rc::new(Symbol {
+                name: Rc::new(Identifier::from("b".to_string())),
+                scope: BUILTIN_SCOPE,
+                index: 1,
+            }),
+            Rc::new(Symbol {
+                name: Rc::new(Identifier::from("c".to_string())),
+                scope: BUILTIN_SCOPE,
+                index: 2,
+            }),
+            Rc::new(Symbol {
+                name: Rc::new(Identifier::from("d".to_string())),
+                scope: BUILTIN_SCOPE,
+                index: 3,
+            }),
+            Rc::new(Symbol {
+                name: Rc::new(Identifier::from("e".to_string())),
+                scope: BUILTIN_SCOPE,
+                index: 4,
+            }),
+            Rc::new(Symbol {
+                name: Rc::new(Identifier::from("f".to_string())),
+                scope: BUILTIN_SCOPE,
+                index: 5,
+            }),
+        ];
+        expected.iter().enumerate().for_each(|(i, f)| {
+            global.clone().define_builtin(i, f.name.clone());
+        });
+        vec![global, first_local, second_local]
+            .iter()
+            .for_each(|scope| {
+                expected.iter().for_each(|sym| {
+                    let r = scope.resolve(sym.name.clone());
+                    assert!(r.is_ok(), "name {} not resolvable", sym.name.clone());
+                    let r = r.unwrap();
+                    assert_eq!(
+                        *r,
+                        *sym.clone(),
+                        "expected {} to resolve to {:?}, got={:?}",
+                        sym.name.clone(),
+                        sym,
+                        *r
+                    );
+                })
             });
     }
 }

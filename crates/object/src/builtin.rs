@@ -22,7 +22,7 @@ thread_local! {
     pub static TRUEOBJ: Rc<dyn Object> = Rc::new(Boolean { value: true });
     pub static FALSEOBJ:Rc<dyn Object> = Rc::new(Boolean { value: false });
 
-    pub static BUILTINS:Rc<HashMap<&'static str, Rc<dyn Object>>> = Rc::new([
+    pub static BUILTINS:Rc<Vec<(&'static str, Rc<dyn Object>)>> = Rc::new(vec![
         (
             "len",
             Rc::new(BuiltinObject { func: Rc::new(|args: Vec<Rc<dyn Object>>| {
@@ -42,6 +42,15 @@ thread_local! {
                     },
                 }
             }) }) as Rc<dyn Object>
+        ),
+        (
+            "puts",
+            Rc::new(BuiltinObject { func: Rc::new(|args: Vec<Rc<dyn Object>>| {
+                for arg in args.iter() {
+                    println!("{}", arg.inspect());
+                }
+                None
+            })}),
         ),
         (
             "first",
@@ -128,14 +137,15 @@ thread_local! {
                 }
             })}),
         ),
-        (
-            "puts",
-            Rc::new(BuiltinObject { func: Rc::new(|args: Vec<Rc<dyn Object>>| {
-                for arg in args.iter() {
-                    println!("{}", arg.inspect());
-                }
-                None
-            })}),
-        )
-    ].iter().cloned().collect::<HashMap<&'static str, Rc<dyn Object>>>()); // Rc::new(HashMap::new());
+
+    ]);
+}
+
+pub fn get_builtin_by_name<'a>(name: &'a str) -> Option<Rc<dyn Object>> {
+    BUILTINS.with(|b| {
+        b.as_ref()
+            .iter()
+            .find(|(n, _)| *n == name)
+            .map(|(_, o)| o.clone())
+    })
 }

@@ -61,8 +61,7 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
 
             let idf = &n.value;
 
-            let hm = BUILTINS.with(|hm| hm.clone());
-            if let Some(val) = hm.get(idf.as_str()) {
+            if let Some(val) = get_builtin_by_name(idf.as_str()) {
                 return Some(val.clone());
             }
 

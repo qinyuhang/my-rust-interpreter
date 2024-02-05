@@ -15,6 +15,7 @@ use code::OpCode::OpPop;
 use code::{self, *};
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
+use token::*;
 
 #[derive(Debug)]
 pub struct Compiler<'a> {
@@ -41,15 +42,36 @@ thread_local! {
 impl<'a> Compiler<'a> {
     pub fn new() -> Self {
         let main_scope = Rc::new(CompilationScope::new());
+
+        let mut symbol_table = SymbolTable::new();
+        Self::define_builtin_to(&mut symbol_table);
+
         Self {
             constants: RefCell::new(vec![]),
             external_constants: RefCell::new(None),
 
-            symbol_table: RefCell::new(Rc::new(SymbolTable::new())),
+            symbol_table: RefCell::new(Rc::new(symbol_table)),
             external_symbol_table: RefCell::new(None),
             scopes: RefCell::new(vec![main_scope]),
             scope_index: Cell::new(0),
         }
+    }
+
+    fn define_builtin_to(symbol_table: &mut SymbolTable) {
+        BUILTINS.with(|b| {
+            b.iter().enumerate().for_each(|(idx, (name, _))| {
+                symbol_table.define_builtin(
+                    idx,
+                    Rc::new(Identifier {
+                        token: Rc::new(Token {
+                            literal: Rc::new(name.to_string()),
+                            token_type: IDENT,
+                        }),
+                        value: Rc::new(name.to_string()),
+                    }),
+                );
+            });
+        });
     }
 
     pub fn create_constants() -> Vec<Rc<dyn Object>> {
@@ -78,11 +100,12 @@ impl<'a> Compiler<'a> {
         &self,
         external_symbol_table: &'a mut SymbolTable,
     ) -> Result<(), String> {
-        if self.symbol_table.borrow().define_count() != 0 {
+        if self.symbol_table.borrow().outer.borrow().is_some() {
             return Err(format!(
                 "call load_external_symbol_table before compiler.compile()"
             ));
         }
+        Self::define_builtin_to(external_symbol_table);
         *self.external_symbol_table.borrow_mut() = Some(external_symbol_table);
         Ok(())
     }
@@ -259,6 +282,7 @@ impl<'a> Compiler<'a> {
             let op = match symbol.scope {
                 GLOBAL_SCOPE => OpCode::OpGetGlobal,
                 LOCAL_SCOPE => OpCode::OpGetLocal,
+                BUILTIN_SCOPE => OpCode::OpGetBuiltin,
                 _ => return Err("unsupported SCOPE".to_string()),
             };
             self.emit(op, &vec![symbol.index as u16]);
@@ -334,6 +358,7 @@ impl<'a> Compiler<'a> {
                 self.compile(r.upcast())?;
                 EMPTY_V16.with(|v| self.emit(OpCode::OpReturnValue, v));
             }
+            // FIXME: OpReturn
         }
         if n.is::<CallExpression>() {
             let i = n.downcast_ref::<CallExpression>().unwrap();

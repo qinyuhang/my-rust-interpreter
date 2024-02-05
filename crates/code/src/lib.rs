@@ -80,6 +80,8 @@ pub enum OpCode {
 
     OpSetLocal, // 23
     OpGetLocal, // 24
+
+    OpGetBuiltin, // 25
 }
 
 impl std::fmt::Display for OpCode {
@@ -198,6 +200,10 @@ thread_local! {
         }),
         Rc::new(Definition {
             name: "OpGetLocal".into(),
+            operand_widths: vec![1],
+        }),
+        Rc::new(Definition {
+            name: "OpGetBuiltin".into(),
             operand_widths: vec![1],
         }),
     ];

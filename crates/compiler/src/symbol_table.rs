@@ -8,6 +8,7 @@ pub type SymbolScope = &'static str;
 
 pub const GLOBAL_SCOPE: SymbolScope = "GLOBAL";
 pub const LOCAL_SCOPE: SymbolScope = "LOCAL";
+pub const BUILTIN_SCOPE: SymbolScope = "BUILTIN";
 
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
 pub struct Symbol {
@@ -70,5 +71,15 @@ impl SymbolTable {
         let r = Self::new();
         r.outer.borrow_mut().replace(outer);
         r
+    }
+
+    pub fn define_builtin(&self, index: usize, name: Rc<Identifier>) -> Rc<Symbol> {
+        let symbol = Rc::new(Symbol {
+            name: name.clone(),
+            index,
+            scope: BUILTIN_SCOPE,
+        });
+        self.store.borrow_mut().insert(name, symbol.clone());
+        symbol
     }
 }

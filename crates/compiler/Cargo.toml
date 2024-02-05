@@ -15,6 +15,7 @@ edition = "2021"
 "code" = { path = "../code" }
 "lexer" = { path = "../lexer" }
 "object" = { path = "../object" }
+"token" = { path = "../token" }
 
 [dev-dependencies]
 "testing" = { path = "../testing" }
