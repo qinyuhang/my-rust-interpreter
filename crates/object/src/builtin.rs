@@ -1,10 +1,10 @@
 use crate::*;
 use ast_macro::object;
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::rc::Rc;
 
-pub type BuiltinFunction = fn(args: Vec<Rc<dyn Object>>) -> Option<Rc<dyn Object>>;
+// maybe Rc<Vec<Rc<dyn Object>>> is better
+pub type BuiltinFunction = fn(args: Rc<Vec<Rc<dyn Object>>>) -> Option<Rc<dyn Object>>;
 #[object(BUILTIN_OBJECT)]
 pub struct BuiltinObject {
     // function
@@ -25,7 +25,7 @@ thread_local! {
     pub static BUILTINS:Rc<Vec<(&'static str, Rc<dyn Object>)>> = Rc::new(vec![
         (
             "len",
-            Rc::new(BuiltinObject { func: Rc::new(|args: Vec<Rc<dyn Object>>| {
+            Rc::new(BuiltinObject { func: Rc::new(|args: Rc<Vec<Rc<dyn Object>>>| {
                 match args.as_slice() {
                     &[]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
                     [_, _, ..]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
@@ -45,16 +45,16 @@ thread_local! {
         ),
         (
             "puts",
-            Rc::new(BuiltinObject { func: Rc::new(|args: Vec<Rc<dyn Object>>| {
+            Rc::new(BuiltinObject { func: Rc::new(|args: Rc<Vec<Rc<dyn Object>>>| {
                 for arg in args.iter() {
                     println!("{}", arg.inspect());
                 }
-                None
+                Some(Rc::new(Null {}))
             })}),
         ),
         (
             "first",
-            Rc::new(BuiltinObject { func: Rc::new(|args: Vec<Rc<dyn Object>>| {
+            Rc::new(BuiltinObject { func: Rc::new(|args: Rc<Vec<Rc<dyn Object>>>| {
                 match args.as_slice() {
                     &[]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
                     [_, _, ..]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
@@ -68,7 +68,7 @@ thread_local! {
         ),
         (
             "last",
-            Rc::new(BuiltinObject { func: Rc::new(|args: Vec<Rc<dyn Object>>| {
+            Rc::new(BuiltinObject { func: Rc::new(|args: Rc<Vec<Rc<dyn Object>>>| {
                 match args.as_slice() {
                     &[]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
                     [_, _, ..]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
@@ -76,7 +76,7 @@ thread_local! {
                         let inner = a.as_any().downcast_ref::<ArrayObject>().unwrap();
                         return Some(inner.elements.borrow().last().unwrap_or(&NULLOBJ.with(|n| n.clone())).clone());
                     },
-                    [a] => Some(Rc::new(ErrorObject { message: format!("argument to `first` must be ARRAY, got {}", a.object_type())}))
+                    [a] => Some(Rc::new(ErrorObject { message: format!("argument to `last` must be ARRAY, got {}", a.object_type())}))
                 }
             })})
         ),
@@ -84,7 +84,7 @@ thread_local! {
             // returns the other data in a new Array
             // etc: rest([1,2,3]) -> [2,3]
             "rest",
-            Rc::new(BuiltinObject { func: Rc::new(|args: Vec<Rc<dyn Object>>| {
+            Rc::new(BuiltinObject { func: Rc::new(|args: Rc<Vec<Rc<dyn Object>>>| {
                 match args.as_slice() {
                     &[]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
                     [_, _, ..]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
@@ -116,7 +116,7 @@ thread_local! {
             // push(a, 4);
             // a // -> [1,2,3,4]
             "push",
-            Rc::new(BuiltinObject { func: Rc::new(|args: Vec<Rc<dyn Object>>| {
+            Rc::new(BuiltinObject { func: Rc::new(|args: Rc<Vec<Rc<dyn Object>>>| {
                 match args.as_slice() {
                     &[_] | &[]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=2", args.len()) })),
                     [_, _, _, ..]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=2", args.len()) })),

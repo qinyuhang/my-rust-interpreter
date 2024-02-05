@@ -1,3 +1,5 @@
+pub mod cases;
+
 use ast::AstExpression;
 use std::collections::HashMap;
 use std::fmt::Formatter;

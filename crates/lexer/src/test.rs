@@ -1,6 +1,7 @@
 #[cfg(test)]
-mod test {
+mod lexer_test {
     use crate::lexer::Lexer;
+    use token::TokenType;
 
     #[test]
     fn canary_test() {
@@ -301,17 +302,15 @@ if ( 5 < 10 ) {
 
     #[test]
     fn test_string_literal() {
-        let input = r#""foobar""#;
-
-        let tests = vec![(token::STRING, "foobar"), (token::EOF, "\0")];
-
-        let lex = Lexer::new(input);
-
-        tests.iter().for_each(|test| {
-            let p_token = lex.next_token();
-            // println!("Running Test: {:?}, lexer.next_token: {:?}", test, p_token);
-            assert_eq!(p_token.token_type, test.0);
-            assert_eq!(*p_token.literal, test.1);
+        let cases = vec![
+            (
+                r#""foobar""#,
+                vec![(token::STRING, "foobar"), (token::EOF, "\0")],
+            ),
+            (r#""""#, vec![(token::STRING, ""), (token::EOF, "\0")]),
+        ];
+        cases.iter().for_each(|(input, result)| {
+            handle_one_case(*input, result);
         });
     }
 
@@ -624,4 +623,14 @@ if ( 5 < 10 ) {
     //         // FIXME: 等待 is_letter 方法支持unicode更多字符
     //         assert_eq!(count, 10);
     //     }
+
+    fn handle_one_case(input: &str, result: &Vec<(TokenType, &str)>) {
+        let lex = Lexer::new(&*input);
+        result.iter().for_each(|test| {
+            let p_token = lex.next_token();
+            // println!("Running Test: {:?}, lexer.next_token: {:?}", test, p_token);
+            assert_eq!(p_token.token_type, test.0);
+            assert_eq!(*p_token.literal, test.1);
+        });
+    }
 }

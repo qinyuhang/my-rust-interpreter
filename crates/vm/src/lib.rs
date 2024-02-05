@@ -217,7 +217,7 @@ impl<'a> VM<'a> {
                     let num_args = read_uint8(&ins[((ip + 1) as usize)..]);
                     self.current_frame().bump_ip_by(1);
 
-                    self.call_function(num_args as usize)?;
+                    self.exec_function(num_args as usize)?;
                     //
                     // dbg!(self.dump_stack());
                     // !DIFFERENT FROM THE BOOK. because I want keep ip as usize instead of isize
@@ -267,6 +267,16 @@ impl<'a> VM<'a> {
                         .unwrap()
                         .clone();
                     self.push(object_to_push)?;
+                }
+                OpCode::OpGetBuiltin => {
+                    let builtin_index = read_uint8(&ins[ip + 1..]);
+                    self.current_frame().bump_ip_by(1);
+
+                    let bti = BUILTINS.with(|bti| bti.clone());
+                    let bti = bti
+                        .get(builtin_index as usize)
+                        .ok_or("fail get builtin definition")?;
+                    self.push(bti.1.clone())?;
                 }
                 #[allow(unreachable_patterns)]
                 _ => {
@@ -535,10 +545,62 @@ impl<'a> VM<'a> {
             .clone()
     }
 
-    fn call_function(&self, num_args: usize) -> Result<(), String> {
-        let stacks = self.stack.borrow();
-        // FIXME not in stack top
-        let func = stacks.get(self.sp.get() - 1 - num_args as usize).unwrap();
+    fn exec_function(&self, num_args: usize) -> Result<(), String> {
+        enum TMP {
+            OBJ(Rc<dyn Object>),
+            EMPTY(()),
+            Err(String),
+        }
+        let to_be_pushed = {
+            // FIXME not in stack top
+            let func = self
+                .stack
+                .borrow()
+                .get(self.sp.get() - 1 - num_args)
+                .cloned()
+                .ok_or(format!(
+                    "stack pointer wrong, got={}",
+                    self.sp.get() - 1 - num_args
+                ))?;
+            match func.object_type() {
+                BUILTIN_OBJECT => {
+                    let r = TMP::OBJ(self.call_builtin(func.clone(), num_args)?);
+                    self.current_frame().bump_ip_by(1);
+                    r
+                }
+                COMPILED_FUNCTION => TMP::EMPTY(self.call_function(func.clone(), num_args)?),
+                &_ => TMP::Err("calling non-function and no-builtin".into()),
+            }
+        };
+
+        match to_be_pushed {
+            TMP::OBJ(res) => self.push(res),
+            TMP::Err(message) => Err(message),
+            _ => Ok(()),
+        }
+    }
+
+    fn call_builtin(
+        &self,
+        func: Rc<dyn Object>,
+        num_args: usize,
+    ) -> Result<Rc<dyn Object>, String> {
+        let args = self.stack.borrow()[self.sp.get() - num_args..self.sp.get()]
+            .iter()
+            .map(|v| v.clone())
+            .collect::<Vec<_>>();
+        let func = func
+            .as_any()
+            .downcast_ref::<BuiltinObject>()
+            .ok_or("fail to convert to built-in object")?;
+        self.sp.replace(self.sp.get() - num_args - 1);
+        match (func.func)(Rc::new(args)) {
+            Some(r) => Ok(r),
+            _ => NULL.with(|n| Ok(n.clone())),
+        }
+    }
+
+    fn call_function(&self, func: Rc<dyn Object>, num_args: usize) -> Result<(), String> {
         if !func.as_any().is::<CompiledFunction>() {
             return Err("calling non-function".into());
         }

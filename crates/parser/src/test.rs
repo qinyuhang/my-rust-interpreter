@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod test {
+mod parser_test {
     use ::token::*;
     use ast::{AstExpression, *};
     use lexer::Lexer;
@@ -733,6 +733,18 @@ let mf = fn(x, y) { return x + y; };"#;
         //     dbg!(&x);
         //     assert!(x.is::<StringLiteral>());
         // }
+
+        let input = r#""""#;
+        let l = Lexer::new(input);
+
+        let p = Parser::new(l);
+
+        let pr = p.parse_program();
+
+        assert!(pr.is_some());
+
+        let pr = pr.unwrap();
+        println!("test_string_literal: pr: {:?}", pr);
     }
 
     #[test]

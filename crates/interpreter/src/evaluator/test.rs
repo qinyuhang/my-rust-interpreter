@@ -367,6 +367,15 @@ mod eval_test {
             handle_test_case(case, out);
         });
     }
+
+    #[test]
+    fn test_builtin_fn() {
+        testing::cases::BUILTIN_CASES.with(|cases| {
+            cases.iter().for_each(|(case, out)| {
+                handle_test_case(*case, out);
+            });
+        })
+    }
     #[test]
     fn test_first_builtin_fn() {
         let cases = vec![

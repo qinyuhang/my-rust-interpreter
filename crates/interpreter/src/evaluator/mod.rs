@@ -1,7 +1,6 @@
 use ::ast::*;
 use ::object::*;
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::rc::Rc;
 use std::vec::Vec;
 
@@ -144,7 +143,7 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
                         n.arguments.as_ref().unwrap_or(&vec![]),
                         context.clone(),
                     ) {
-                        Ok(args) => apply_function(r, args),
+                        Ok(args) => apply_function(r, Rc::new(args)),
                         Err(id) => Some(Rc::new(ErrorObject {
                             message: format!("Cannot eval arguments at position: {}", id),
                         })),
@@ -235,7 +234,10 @@ pub fn is_error(object: &Rc<dyn Object>) -> bool {
     object.object_type() == ERROR_OBJECT
 }
 
-pub fn apply_function(func: Rc<dyn Object>, args: Vec<Rc<dyn Object>>) -> Option<Rc<dyn Object>> {
+pub fn apply_function(
+    func: Rc<dyn Object>,
+    args: Rc<Vec<Rc<dyn Object>>>,
+) -> Option<Rc<dyn Object>> {
     if let Some(f) = func.as_any().downcast_ref::<FunctionObject>() {
         let extended_context = extend_function_context(f, &args);
         if let Some(ref body) = f.body {

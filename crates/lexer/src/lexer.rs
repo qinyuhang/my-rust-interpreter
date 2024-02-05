@@ -252,7 +252,7 @@ impl Lexer {
     }
     pub fn read_string(&self) -> String {
         let position = self.position.get();
-        self.read_char();
+        // self.read_char();
         while is_valid_identifier_char(*self.ch.borrow()) {
             self.read_char();
         }

@@ -490,4 +490,11 @@ outer() + globalNum"#,
         ];
         run_vm_test(&cases);
     }
+
+    #[test]
+    fn test_builtin_functions() {
+        testing::cases::BUILTIN_CASES.with(|cases| {
+            run_vm_test(&cases);
+        });
+    }
 }
