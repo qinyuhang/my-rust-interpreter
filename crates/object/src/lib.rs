@@ -2,6 +2,7 @@ use std::{any::Any, fmt::Debug};
 mod array_object;
 mod boolean;
 mod builtin;
+mod closure;
 mod compiled_function;
 mod context;
 mod error_object;
@@ -17,6 +18,7 @@ mod string_object;
 pub use array_object::*;
 pub use boolean::*;
 pub use builtin::*;
+pub use closure::*;
 pub use compiled_function::*;
 pub use context::*;
 pub use error_object::*;
@@ -65,6 +67,7 @@ pub const ARRAY_OBJECT: &str = "ARRAY_OBJECT";
 pub const HASH_OBJECT: &str = "HASH_OBJECT";
 pub const WHILE_OBJECT: &str = "WHILE_OBJECT";
 pub const COMPILED_FUNCTION: &str = "COMPILED_FUNCTION";
+pub const CLOSURE_OBJECT: &str = "CLOSURE";
 
 // #[derive(Eq, PartialEq, Hash, Debug, Clone)]
 // pub enum ObjectEnum {

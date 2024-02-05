@@ -23,6 +23,11 @@ mod code_test {
                 vec![254],
                 vec![OpCode::OpGetLocal as u8, 254],
             ),
+            (
+                OpCode::OpClosure,
+                vec![65534, 255],
+                vec![OpCode::OpClosure as u8, 255, 254, 255],
+            ),
         ];
         cases.iter().for_each(|(op, operands, expected)| {
             let instruction = make(op, &operands);
@@ -39,18 +44,20 @@ mod code_test {
 
     #[test]
     fn test_proper_format_instructions() {
-        let v = vec![1, 2, 65535];
+        let v = vec![1, 2, 65535, 255];
         let cases = vec![
             make(&OpCode::OpConstant, &v[0..1]),
             make(&OpCode::OpConstant, &v[1..2]),
             make(&OpCode::OpConstant, &v[2..3]),
             make(&OpCode::OpSetLocal, &v[0..1]),
+            make(&OpCode::OpClosure, &v[2..4]),
         ];
 
         let expected = r#"0000 OpConstant 1
 0003 OpConstant 2
 0006 OpConstant 65535
 0009 OpSetLocal 1
+0011 OpClosure 65535 255
 "#;
 
         let c = concat_instructions(cases);
@@ -80,6 +87,7 @@ mod code_test {
         let cases = vec![
             (OpCode::OpConstant, vec![65535], 2),
             (OpCode::OpGetLocal, vec![254], 1),
+            (OpCode::OpClosure, vec![65535, 255], 3),
         ];
         cases.iter().for_each(|(op, operands, bytes_read)| {
             let ins = make(op, &operands);

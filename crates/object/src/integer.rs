@@ -1,7 +1,5 @@
 use crate::*;
 use ast_macro::{object, object_with_try_from};
-#[allow(unused)]
-use std::rc::Rc;
 
 #[object(INTEGER_OBJECT)]
 #[object_with_try_from(INTEGER_OBJECT)]

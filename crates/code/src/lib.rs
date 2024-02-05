@@ -35,6 +35,7 @@ pub fn format_one_instruction(def: Rc<Definition>, operands: &Vec<u16>) -> Strin
     return match op_count {
         0 => format!("{}", def.name),
         1 => format!("{} {}", def.name, operands[0]),
+        2 => format!("{} {} {}", def.name, operands[0], operands[1]),
         other => format!("unsupported format op_count {other}"),
     };
 }
@@ -82,6 +83,7 @@ pub enum OpCode {
     OpGetLocal, // 24
 
     OpGetBuiltin, // 25
+    OpClosure,    // 26
 }
 
 impl std::fmt::Display for OpCode {
@@ -205,6 +207,10 @@ thread_local! {
         Rc::new(Definition {
             name: "OpGetBuiltin".into(),
             operand_widths: vec![1],
+        }),
+        Rc::new(Definition {
+            name: "OpClosure".into(),
+            operand_widths: vec![/* 常量索引 */2, /* 自由变量个数 */1],
         }),
     ];
 }

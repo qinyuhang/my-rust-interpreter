@@ -171,7 +171,7 @@ pub fn object_with_try_from(_args: TokenStream, input: TokenStream) -> TokenStre
     // let attr_args = syn::parse_macro_input!(args as syn::Ident);
     let s = quote! {
         #ipt
-        impl TryFrom<Rc<dyn Object>> for #name {
+        impl TryFrom<std::rc::Rc<dyn Object>> for #name {
             type Error = String;
 
             fn try_from(value: std::rc::Rc<dyn Object>) -> std::result::Result<Self, Self::Error> {
