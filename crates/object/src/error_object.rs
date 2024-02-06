@@ -1,6 +1,5 @@
 use crate::*;
 use ast_macro::{object, object_with_try_from};
-use std::rc::Rc;
 
 #[object(ERROR_OBJECT)]
 #[object_with_try_from(ERROR_OBJECT)]

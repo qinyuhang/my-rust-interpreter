@@ -328,44 +328,20 @@ mod eval_test {
 
     #[test]
     fn test_array_literal() {
-        let cases = vec![
-            ("[1,2,3];", testing_result!(Vec, vec![1, 2, 3])),
-            ("[1,2+1,3];", testing_result!(Vec, vec![1, 3, 3])),
-            ("[1,2+5,3];", testing_result!(Vec, vec![1, 7, 3])),
-            (
-                "let a = fn() { 5 }; [1,a(),3];",
-                testing_result!(Vec, vec![1, 5, 3]),
-            ),
-            (
-                "let b = 5; let a = fn() { b }; [1,a(),3];",
-                testing_result!(Vec, vec![1, 5, 3]),
-            ),
-        ];
-
-        cases.iter().for_each(|(case, out)| {
-            handle_test_case(case, out);
+        testing::cases::ARRAY_LITERAL_CASE.with(|cases| {
+            cases.iter().for_each(|(case, out)| {
+                handle_test_case(case, out);
+            });
         });
     }
 
     #[test]
     fn test_index_expression() {
-        let cases = vec![
-            ("[1,2,3][0]", testing_result!(Int, 1)),
-            ("[1,2,3][1]", testing_result!(Int, 2)),
-            ("[1,2,3][2]", testing_result!(Int, 3)),
-            ("let i = 0; [1][i]", testing_result!(Int, 1)),
-            ("[1,2,3][1+1]", testing_result!(Int, 3)),
-            ("let arr=[1,2,3]; arr[2]", testing_result!(Int, 3)),
-            (
-                "let arr=[1,2,3]; arr[0] + arr[1] + arr[2]",
-                testing_result!(Int, 6),
-            ),
-            ("[1,2,3][3]", TestingResult::Nil),
-            ("[1,2,3][-1]", TestingResult::Nil),
-        ];
-        cases.iter().for_each(|(case, out)| {
-            handle_test_case(case, out);
-        });
+        testing::cases::INDEX_EXPRESSION_CASE.with(|cases| {
+            cases.iter().for_each(|(case, out)| {
+                handle_test_case(*case, out);
+            });
+        })
     }
 
     #[test]
@@ -436,245 +412,82 @@ mod eval_test {
 
     #[test]
     fn test_compose_builtin_array_fn() {
-        let cases = vec![
-            (
-                r#"
-        let map = fn(arr, f) {
-            let iter = fn(arr, acc) {
-                if (len(arr) == 0) {
-                    acc
-                } else {
-                    iter(rest(arr), push(acc, f(first(arr))));
-                }
-            };
-
-            iter(arr, []);
-        };
-
-        let a = [1,2,3];
-        map(a, fn(x) { x * 2 })
-"#,
-                testing_result!(Vec, vec![2, 4, 6]),
-            ),
-            (
-                r#"
-            let reduce = fn(arr, initial, f) {
-            let iter = fn(arr, result) {
-                if (len(arr) == 0) {
-                    result
-                } else {
-                    iter(rest(arr), f(result, first(arr)));
-                }
-            };
-
-            iter(arr, initial);
-
-        };
-
-        let a = [1,2,3];
-        reduce(a, 0, fn(x,y) { x + y })"#,
-                testing_result!(Int, 6),
-            ),
-            (
-                r#"
-            let reduce = fn(arr, initial, f) {
-            let iter = fn(arr, result) {
-                if (len(arr) == 0) {
-                    result
-                } else {
-                    iter(rest(arr), f(result, first(arr)));
-                }
-            };
-
-            iter(arr, initial);
-
-        };
-
-        let sum = fn(arr) {
-            reduce(arr, 0, fn(x, y) { x + y })
-        };
-
-        let a = [1,2,3];
-        sum(a)"#,
-                testing_result!(Int, 6),
-            ),
-        ];
-        cases.iter().for_each(|(case, out)| {
-            handle_test_case(case, out);
+        testing::cases::COMPOSE_BUILTIN_ARRAY_FN_CASE.with(|cases| {
+            cases.iter().for_each(|(case, out)| {
+                handle_test_case(case, out);
+            });
         });
     }
 
     #[test]
     fn test_hash_eval() {
-        let cases = vec![
-            ("{}", testing_result!(Hash, HashMap::new())),
-            (r#"{"one": 1}"#, testing_result!(Hash, HashMap::new())),
-            (
-                r#"{"one": 1, "two": 1 + 1}"#,
-                testing_result!(Hash, HashMap::new()),
-            ),
-            (
-                r#"{"on" + "e": 1, "two": 1 + 1}"#,
-                testing_result!(Hash, HashMap::new()),
-            ),
-        ];
-        cases.iter().for_each(|(case, _out)| {
-            test_eval(case);
-            // handle_test(case, out);
+        testing::cases::HASH_EVAL_CASE.with(|cases| {
+            cases.iter().for_each(|(case, out)| {
+                handle_test_case(case, out);
+            });
         });
     }
 
     #[test]
     fn test_hash_index() {
-        let cases = vec![
-            (r#"{"one": 1}["one"]"#, testing_result!(Int, 1)),
-            (r#"{"foo": 5}["bar"]"#, testing_result!(Nil)),
-            (
-                r#"let key = "foo"; {"foo": 5}[key]"#,
-                testing_result!(Int, 5),
-            ),
-            (r#"{}["foo"]"#, testing_result!(Nil)),
-            (r#"{5:5}[5]"#, testing_result!(Int, 5)),
-            (r#"{true: 5}[true]"#, testing_result!(Int, 5)),
-            (r#"{false: 5}[false]"#, testing_result!(Int, 5)),
-            (
-                r#"{"name": 5}[fn(x) {x} ]"#,
-                testing_result!(Err, "unusable as hash key: FUNCTION_OBJECT"),
-            ),
-        ];
-        cases.iter().for_each(|(case, out)| {
-            handle_test_case(case, out);
+        testing::cases::HASH_INDEX_CASE.with(|cases| {
+            cases.iter().for_each(|(case, out)| {
+                handle_test_case(case, out);
+            });
         });
     }
 
     #[test]
     fn test_add_return_value() {
-        let cases = vec![
-            (r#"fn() { true }() == true;"#, testing_result!(Bool, true)),
-            (r#"fn() { 5 }() == 5;"#, testing_result!(Bool, true)),
-            (r#"fn() { 5 }() + 5;"#, testing_result!(Int, 10)),
-            (r#"fn() { 5 }() - 5;"#, testing_result!(Int, 0)),
-            (r#"fn() { 5 }() * 5;"#, testing_result!(Int, 25)),
-            (r#"fn() { 5 }() / 5;"#, testing_result!(Int, 1)),
-        ];
-        cases.iter().for_each(|(case, out)| {
-            handle_test_case(case, out);
+        testing::cases::ADD_RETURN_VALUE_CASE.with(|cases| {
+            cases.iter().for_each(|(case, out)| {
+                handle_test_case(case, out);
+            });
         });
     }
 
     #[test]
     fn test_float_value() {
-        let cases = vec![
-            (r#"3.14"#, testing_result!(Float, 3.14)),
-            (r#"3.0 + 5.1"#, testing_result!(Float, 8.1)),
-            (r#"3.0 - 5.1"#, testing_result!(Float, 3.0 - 5.1)),
-            (r#"3.0 * 5.1"#, testing_result!(Float, 3.0 * 5.1)),
-            (r#"3.0 / 5.1"#, testing_result!(Float, 3.0 / 5.1)),
-            (r#"3 + 5.1"#, testing_result!(Float, 3f64 + 5.1)),
-            (r#"3 - 5.1"#, testing_result!(Float, 3f64 - 5.1)),
-            (r#"3 * 5.1"#, testing_result!(Float, 3f64 * 5.1)),
-            (r#"3 / 5.1"#, testing_result!(Float, 3f64 / 5.1)),
-        ];
-        cases.iter().for_each(|(case, out)| {
-            handle_test_case(case, out);
+        testing::cases::FLOAT_CASE.with(|cases| {
+            cases.iter().for_each(|(case, out)| {
+                handle_test_case(case, out);
+            });
         });
     }
 
     #[test]
     fn test_assign() {
-        let cases = vec![
-            (r#"let a = 0; a = 1; a;"#, testing_result!(Int, 1)),
-            (
-                r#"let a = 0; if (true) { a = 1;}; a;"#,
-                testing_result!(Int, 1),
-            ),
-            (
-                r#"let a = 0; let b = fn() { a = 1;}; b(); a;"#,
-                testing_result!(Int, 1),
-            ),
-        ];
-        cases.iter().for_each(|(case, out)| {
-            handle_test_case(case, out);
+        testing::cases::ASSIGN_CASE.with(|cases| {
+            cases.iter().for_each(|(case, out)| {
+                handle_test_case(case, out);
+            });
         });
     }
 
     #[test]
     fn test_update() {
-        let cases = vec![
-            (r#"let a = 0; a += 1; a;"#, testing_result!(Int, 1)),
-            (
-                r#"let a = 0; if (true) { a += 1;}; a;"#,
-                testing_result!(Int, 1),
-            ),
-            (
-                r#"let a = 0; let b = fn() { a += 1;}; b(); a;"#,
-                testing_result!(Int, 1),
-            ),
-            (r#"let a = 0; a -= 1; a;"#, testing_result!(Int, -1)),
-            (
-                r#"let a = 0; if (true) { a -= 1;}; a;"#,
-                testing_result!(Int, -1),
-            ),
-            (
-                r#"let a = 0; let b = fn() { a -= 1;}; b(); a;"#,
-                testing_result!(Int, -1),
-            ),
-            (r#"let a = 2; a *= 5; a;"#, testing_result!(Int, 10)),
-            (
-                r#"let a = 2; if (true) { a *= 5;}; a;"#,
-                testing_result!(Int, 10),
-            ),
-            (
-                r#"let a = 2; let b = fn() { a *= 5;}; b(); a;"#,
-                testing_result!(Int, 10),
-            ),
-            (r#"let a = 10; a /= 2; a;"#, testing_result!(Int, 5)),
-            (
-                r#"let a = 10; if (true) { a /= 2;}; a;"#,
-                testing_result!(Int, 5),
-            ),
-            (
-                r#"let a = 10; let b = fn() { a /= 2;}; b(); a;"#,
-                testing_result!(Int, 5),
-            ),
-        ];
-        cases.iter().for_each(|(case, out)| {
-            handle_test_case(case, out);
+        testing::cases::UPDATE_CASE.with(|cases| {
+            cases.iter().for_each(|(case, out)| {
+                handle_test_case(case, out);
+            });
         });
     }
 
     #[test]
     fn test_while_loop() {
-        let cases = vec![
-            (
-                r#"let a = 0; while (a < 1) { a += 1; break; }; a;"#,
-                testing_result!(Int, 1),
-            ),
-            (
-                r#"let a = 0; while (a < 1) { break; }; a;"#,
-                testing_result!(Int, 0),
-            ),
-            (
-                r#"
-let a = 0;
-let b = fn() {
-  while (a < 5) { a += 1; };
-  return a;
-};
-b();
-            "#,
-                testing_result!(Int, 5),
-            ),
-            // (r#"3.0 - 5.1"#, testing_result!(Float, 3.0 - 5.1)),
-            // (r#"3.0 * 5.1"#, testing_result!(Float, 3.0 * 5.1)),
-            // (r#"3.0 / 5.1"#, testing_result!(Float, 3.0 / 5.1)),
-            // (r#"3 + 5.1"#, testing_result!(Float, 3f64 + 5.1)),
-            // (r#"3 - 5.1"#, testing_result!(Float, 3f64 - 5.1)),
-            // (r#"3 * 5.1"#, testing_result!(Float, 3f64 * 5.1)),
-            // (r#"3 / 5.1"#, testing_result!(Float, 3f64 / 5.1)),
-        ];
-        cases.iter().for_each(|(case, out)| {
-            handle_test_case(case, out);
+        testing::cases::WHILE_CASE.with(|cases| {
+            cases.iter().for_each(|(case, out)| {
+                handle_test_case(case, out);
+            });
+        });
+    }
+
+    #[test]
+    fn test_closure() {
+        testing::cases::CLOSURE_CASE.with(|cases| {
+            cases.iter().for_each(|(case, out)| {
+                handle_test_case(case, out);
+            });
         });
     }
 }
