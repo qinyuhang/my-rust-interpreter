@@ -185,9 +185,11 @@ pub fn handle_object(evaluated: Option<Rc<dyn Object>>, out: &TestingResult) {
             assert_eq!(
                 instruction,
                 *i.instructions,
-                "wrong instruction\n want={:?}\n  got={:?}",
+                "wrong instruction\n want={:?}\n  got={:?}\n want={:?}\n  got={:?}",
                 format_display_instructions(&instruction),
-                format_display_instructions(&i.instructions)
+                format_display_instructions(&i.instructions),
+                &instruction,
+                &i.instructions.iter().collect::<Vec<_>>()
             );
             // panic!();
             // assert!(false);

@@ -43,6 +43,7 @@ pub fn format_one_instruction(def: Rc<Definition>, operands: &Vec<u16>) -> Strin
 #[derive(Clone, Copy, Debug, FromU8, Eq, PartialEq)]
 #[repr(u8)]
 pub enum OpCode {
+    /// [the_index_of the constant]
     OpConstant = 0u8,
     OpAdd,
     OpPop,
@@ -63,27 +64,41 @@ pub enum OpCode {
     // OpLessThan, // 11
     OpMinus, // - 11
     OpBang,  // ! 12
-    /// JumpNotTrue
+    /// JumpNotTrue [Addr High bits, Addr Low bits]
     OpJNT,
-    /// Jump
+    /// Jump [Addr High bits, Addr Low bits]
     OpJMP,
     OpNull, // 15
 
-    OpGetGlobal,
-    OpSetGlobal,
+    /// [global_constant index High bits, global_constant index Low bits]
+    OpGetGlobal, // 16
+    /// [global_constant index High bits, global_constant index Low bits]
+    OpSetGlobal, // 17
 
+    ///
     OpArray, // 18
+    ///
     OpHash,
     OpIndex, // 20
+    ///
     OpCall,
     OpReturnValue, // 21 with return value; etc: fn() { return 1 } or fn() { 1 }
     OpReturn,      // 22; without return value; etc: fn() {}
 
+    /// [the index of local constants]
     OpSetLocal, // 23
+    /// [the index of local constants]
     OpGetLocal, // 24
 
+    /// [the index of builtin fn]
     OpGetBuiltin, // 25
-    OpClosure,    // 26
+    /// [
+    ///  index of constants,
+    ///  number of `free` constants/variable
+    /// ]
+    OpClosure, // 26
+    /// [count of `free` variable for closure]
+    OpGetFree, // 27 get free variable for closure which was captured/referenced by the closure
 }
 
 impl std::fmt::Display for OpCode {
@@ -211,6 +226,10 @@ thread_local! {
         Rc::new(Definition {
             name: "OpClosure".into(),
             operand_widths: vec![/* 常量索引 */2, /* 自由变量个数 */1],
+        }),
+        Rc::new(Definition {
+            name: "OpGetFree".into(),
+            operand_widths: vec![/* 自由变量个数 */1],
         }),
     ];
 }

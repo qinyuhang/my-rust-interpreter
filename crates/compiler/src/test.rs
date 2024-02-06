@@ -1144,12 +1144,155 @@ push([],1);
         ];
         run_compile_test(cases);
     }
+
+    #[test]
+    fn test_closures() {
+        let v = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        let cases = vec![
+            CompileTestCase {
+                input: r#"fn (a) {
+  fn (b) { a + b }
+}
+"#,
+                expected_constants: vec![
+                    testing_result!(
+                        CompiledFunction,
+                        vec![
+                            make(&OpCode::OpGetFree, &v[0..1]),
+                            make(&OpCode::OpGetLocal, &v[0..1]),
+                            make(&OpCode::OpAdd, &v[0..0]),
+                            make(&OpCode::OpReturnValue, &v[0..0]),
+                        ]
+                    ),
+                    testing_result!(
+                        CompiledFunction,
+                        vec![
+                            make(&OpCode::OpGetLocal, &v[0..1]),
+                            make(&OpCode::OpClosure, &vec![0, 1]),
+                            make(&OpCode::OpReturnValue, &v[0..0]),
+                        ]
+                    ),
+                ],
+                expected_instruction: vec![
+                    // 表示的是变量的 index
+                    make(&OpCode::OpClosure, &vec![1, 0]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: r#"fn (a) {
+  fn (b) { fn(c) {a + b + c} }
+}
+"#,
+                expected_constants: vec![
+                    testing_result!(
+                        CompiledFunction,
+                        vec![
+                            make(&OpCode::OpGetFree, &v[0..1]),
+                            make(&OpCode::OpGetFree, &v[1..2]),
+                            make(&OpCode::OpAdd, &v[0..0]),
+                            make(&OpCode::OpGetLocal, &v[0..1]),
+                            make(&OpCode::OpAdd, &v[0..0]),
+                            make(&OpCode::OpReturnValue, &v[0..0]),
+                        ]
+                    ),
+                    testing_result!(
+                        CompiledFunction,
+                        vec![
+                            make(&OpCode::OpGetFree, &v[0..1]),
+                            make(&OpCode::OpGetLocal, &v[0..1]),
+                            make(&OpCode::OpClosure, &vec![0, 2]),
+                            make(&OpCode::OpReturnValue, &v[0..0]),
+                        ]
+                    ),
+                    testing_result!(
+                        CompiledFunction,
+                        vec![
+                            make(&OpCode::OpGetLocal, &v[0..1]),
+                            make(&OpCode::OpClosure, &vec![1, 1]),
+                            make(&OpCode::OpReturnValue, &v[0..0]),
+                        ]
+                    ),
+                ],
+                expected_instruction: vec![
+                    // 表示的是变量的 index
+                    make(&OpCode::OpClosure, &vec![2, 0]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: r#"
+let global = 55;
+fn () {
+  let a = 66;
+  fn () {
+    let b = 77;
+    fn () {
+      let c = 88;
+      global + a + b + c;
+    }
+  }
+}
+"#,
+                expected_constants: vec![
+                    testing_result!(Int, 55),
+                    testing_result!(Int, 66),
+                    testing_result!(Int, 77),
+                    testing_result!(Int, 88),
+                    testing_result!(
+                        CompiledFunction,
+                        vec![
+                            make(&OpCode::OpConstant, &v[3..4]),
+                            make(&OpCode::OpSetLocal, &v[0..1]), // c = 88
+                            make(&OpCode::OpGetGlobal, &v[0..1]), // global
+                            make(&OpCode::OpGetFree, &v[0..1]),  // a
+                            make(&OpCode::OpAdd, &v[0..0]),      // global + a -> stack_top
+                            make(&OpCode::OpGetFree, &v[1..2]),  // b
+                            make(&OpCode::OpAdd, &v[0..0]),      // stack_top + b -> stack_top
+                            make(&OpCode::OpGetLocal, &v[0..1]), // c
+                            make(&OpCode::OpAdd, &v[0..0]),      // stack_top + c -> stack_top
+                            make(&OpCode::OpReturnValue, &v[0..0]), // return stack_top
+                        ]
+                    ),
+                    testing_result!(
+                        CompiledFunction,
+                        vec![
+                            make(&OpCode::OpConstant, &v[2..3]),   // 77
+                            make(&OpCode::OpSetLocal, &v[0..1]),   // b = 77
+                            make(&OpCode::OpGetFree, &v[0..1]),    // a -> stack_top
+                            make(&OpCode::OpGetLocal, &v[0..1]),   // b -> stack_top
+                            make(&OpCode::OpClosure, &vec![4, 2]), // ?
+                            make(&OpCode::OpReturnValue, &v[0..0]),
+                        ]
+                    ),
+                    testing_result!(
+                        CompiledFunction,
+                        vec![
+                            make(&OpCode::OpConstant, &v[1..2]), // 66
+                            make(&OpCode::OpSetLocal, &v[0..1]), // a = 66
+                            make(&OpCode::OpGetLocal, &v[0..1]), // a -> stack_top
+                            make(&OpCode::OpClosure, &vec![5, 1]),
+                            make(&OpCode::OpReturnValue, &v[0..0]),
+                        ]
+                    ),
+                ],
+                expected_instruction: vec![
+                    make(&OpCode::OpConstant, &v[0..1]),  // 55
+                    make(&OpCode::OpSetGlobal, &v[0..1]), // var global = 66
+                    // 表示的是变量的 index
+                    make(&OpCode::OpClosure, &vec![6, 0]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+        ];
+        run_compile_test(cases);
+    }
 }
 
 #[cfg(test)]
 mod symbol_table_test {
 
-    use crate::{Symbol, SymbolTable, BUILTIN_SCOPE, GLOBAL_SCOPE, LOCAL_SCOPE};
+    use crate::{Symbol, SymbolTable, BUILTIN_SCOPE, FREE_SCOPE, GLOBAL_SCOPE, LOCAL_SCOPE};
     use ::ast::*;
     use std::rc::Rc;
 
@@ -1269,6 +1412,16 @@ mod symbol_table_test {
             scope: LOCAL_SCOPE,
             index: 1,
         });
+        // let fc = Rc::new(Symbol {
+        //     name: c.clone(),
+        //     scope: FREE_SCOPE,
+        //     index: 0,
+        // });
+        // let fd = Rc::new(Symbol {
+        //     name: d.clone(),
+        //     scope: FREE_SCOPE,
+        //     index: 1,
+        // });
         let se = Rc::new(Symbol {
             name: e.clone(),
             scope: LOCAL_SCOPE,
@@ -1285,6 +1438,8 @@ mod symbol_table_test {
             (b.clone(), 1, global.clone(), sb.clone()),
             (c.clone(), 0, local.clone(), sc.clone()),
             (d.clone(), 1, local.clone(), sd.clone()),
+            // (c.clone(), 0, local1.clone(), fc.clone()),
+            // (d.clone(), 1, local1.clone(), fd.clone()),
             (e.clone(), 0, local1.clone(), se.clone()),
             (f.clone(), 1, local1.clone(), sf.clone()),
         ];
@@ -1456,5 +1611,125 @@ mod symbol_table_test {
                     );
                 })
             });
+    }
+
+    #[test]
+    fn test_free() {
+        let global = Rc::new(SymbolTable::new());
+        let a = Rc::new(Identifier::from("a".to_string()));
+        let b = Rc::new(Identifier::from("b".to_string()));
+        global.define(a.clone());
+        global.define(b.clone());
+
+        let local = Rc::new(SymbolTable::new_enclosed(global.clone()));
+        let c = Rc::new(Identifier::from("c".to_string()));
+        let d = Rc::new(Identifier::from("d".to_string()));
+        local.define(c.clone());
+        local.define(d.clone());
+
+        let local1 = Rc::new(SymbolTable::new_enclosed(local.clone()));
+        let e = Rc::new(Identifier::from("e".to_string()));
+        let f = Rc::new(Identifier::from("f".to_string()));
+        local1.define(e.clone());
+        local1.define(f.clone());
+
+        let sa = Rc::new(Symbol {
+            name: a.clone(),
+            scope: GLOBAL_SCOPE,
+            index: 0,
+        });
+        let sb = Rc::new(Symbol {
+            name: b.clone(),
+            scope: GLOBAL_SCOPE,
+            index: 1,
+        });
+        let sc = Rc::new(Symbol {
+            name: c.clone(),
+            scope: LOCAL_SCOPE,
+            index: 0,
+        });
+        let sd = Rc::new(Symbol {
+            name: d.clone(),
+            scope: LOCAL_SCOPE,
+            index: 1,
+        });
+        let fc = Rc::new(Symbol {
+            name: c.clone(),
+            scope: FREE_SCOPE,
+            index: 0,
+        });
+        let fd = Rc::new(Symbol {
+            name: d.clone(),
+            scope: FREE_SCOPE,
+            index: 1,
+        });
+        let se = Rc::new(Symbol {
+            name: e.clone(),
+            scope: LOCAL_SCOPE,
+            index: 0,
+        });
+        let sf = Rc::new(Symbol {
+            name: f.clone(),
+            scope: LOCAL_SCOPE,
+            index: 1,
+        });
+
+        let tests = vec![
+            (a.clone(), 0, global.clone(), sa.clone()),
+            (b.clone(), 1, global.clone(), sb.clone()),
+            (c.clone(), 0, local.clone(), sc.clone()),
+            (d.clone(), 1, local.clone(), sd.clone()),
+            (c.clone(), 0, local1.clone(), fc.clone()),
+            (d.clone(), 1, local1.clone(), fd.clone()),
+            (e.clone(), 0, local1.clone(), se.clone()),
+            (f.clone(), 1, local1.clone(), sf.clone()),
+        ];
+
+        tests
+            .iter()
+            .for_each(|(name, expected, symbol_table, symbol)| {
+                let r = symbol_table.resolve(name.clone());
+                assert!(r.is_ok(), "name {} not resolvable", name);
+                let r = r.unwrap();
+                assert_eq!(
+                    *r,
+                    *symbol.clone(),
+                    "expected {} to resolve to {:?}, got={:?}",
+                    symbol.name,
+                    symbol,
+                    r
+                );
+                assert_eq!(
+                    r.index, *expected,
+                    "expected {} to resolve to {}, got={:?}",
+                    name, expected, *r
+                );
+            });
+
+        let tests = vec![
+            (
+                local.clone(),
+                vec![sa.clone(), sb.clone(), sc.clone(), sd.clone()],
+            ),
+            (
+                local1.clone(),
+                vec![sa.clone(), sb.clone(), se.clone(), sf.clone()],
+            ),
+        ];
+        tests.iter().for_each(|(symbol_table, symbols)| {
+            symbols.iter().for_each(|symbol| {
+                let r = symbol_table.resolve(symbol.name.clone());
+                assert!(r.is_ok(), "name {} not resolvable", symbol.name.clone());
+                let r = r.unwrap();
+                assert_eq!(
+                    *r,
+                    *symbol.clone(),
+                    "expected {} to resolve to {:?}, got={:?}",
+                    symbol.name.clone(),
+                    symbol,
+                    *r
+                );
+            });
+        });
     }
 }

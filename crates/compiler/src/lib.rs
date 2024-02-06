@@ -279,13 +279,7 @@ impl<'a> Compiler<'a> {
             let i = n.downcast_ref::<Identifier>().unwrap();
             // FIXME: DRAW BACK CLONE
             let symbol = self.resolve_symbol(Rc::new(i.clone()))?;
-            let op = match symbol.scope {
-                GLOBAL_SCOPE => OpCode::OpGetGlobal,
-                LOCAL_SCOPE => OpCode::OpGetLocal,
-                BUILTIN_SCOPE => OpCode::OpGetBuiltin,
-                _ => return Err("unsupported SCOPE".to_string()),
-            };
-            self.emit(op, &vec![symbol.index as u16]);
+            self.load_symbol(symbol)?;
         }
         if n.is::<StringLiteral>() {
             let i = n.downcast_ref::<StringLiteral>().unwrap();
@@ -339,18 +333,32 @@ impl<'a> Compiler<'a> {
             if !self.last_instruction_is(OpCode::OpReturnValue) {
                 EMPTY_V16.with(|v| self.emit(OpCode::OpReturn, v));
             }
+
+            // must do a collect here. otherwise after called leave_scope, get a symbol_table is
+            // not the one we wanted
+            let free_symbols = self
+                .symbol_table
+                .borrow()
+                .free_symbols
+                .borrow()
+                .iter()
+                .map(|v| v.clone())
+                .collect::<Vec<_>>();
             let num_locals = self.symbol_table.borrow().define_count();
             let num_parameters = i.parameters.as_ref().map_or(0, |v| v.len());
             let ins = self.leave_scope();
+            for s in &free_symbols {
+                self.load_symbol(s.clone())?;
+            }
+
             let compiled_fn = CompiledFunction {
                 instructions: Rc::new(ins.take()),
                 num_locals,
                 num_parameters,
             };
-            self.emit(
-                OpCode::OpClosure,
-                &vec![self.add_constant(Rc::new(compiled_fn)) as u16, 0u16],
-            );
+            let func_index = self.add_constant(Rc::new(compiled_fn)) as u16;
+            let free_symbol_len = free_symbols.len() as u16;
+            self.emit(OpCode::OpClosure, &vec![func_index, free_symbol_len]);
         }
         if n.is::<ReturnStatement>() {
             let i = n.downcast_ref::<ReturnStatement>().unwrap();
@@ -432,6 +440,17 @@ impl<'a> Compiler<'a> {
             self.constants.borrow_mut().push(obj);
             self.constants.borrow().len() - 1
         }
+    }
+
+    fn load_symbol(&self, symbol: Rc<Symbol>) -> Result<usize, String> {
+        let op = match symbol.scope {
+            GLOBAL_SCOPE => OpCode::OpGetGlobal,
+            LOCAL_SCOPE => OpCode::OpGetLocal,
+            BUILTIN_SCOPE => OpCode::OpGetBuiltin,
+            FREE_SCOPE => OpCode::OpGetFree,
+            _ => return Err("unsupported SCOPE".to_string()),
+        };
+        Ok(self.emit(op, &vec![symbol.index as u16]))
     }
 
     fn define_symbol(&self, i: Rc<Identifier>) -> Rc<Symbol> {

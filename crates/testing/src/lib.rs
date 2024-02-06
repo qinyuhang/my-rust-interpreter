@@ -18,6 +18,7 @@ pub enum TestingResult {
     // FIXME: 改成正确的key type
     Hash(HashMap<Rc<AstExpression>, TestingResult>),
     CompiledFunction(Vec<Vec<u8>>),
+    Closure(Vec<Vec<u8>>),
     // run Result is Err
     Throw(String),
 }
@@ -34,6 +35,7 @@ impl std::fmt::Display for TestingResult {
             TestingResult::Vec(a) => write!(f, "{:?}", a),
             TestingResult::VecInstruction(a) => write!(f, "{:?}", a),
             TestingResult::CompiledFunction(a) => write!(f, "{:?}", a),
+            TestingResult::Closure(a) => write!(f, "{:?}", a),
             TestingResult::Nil => write!(f, "Nil"),
             TestingResult::Throw(e) => write!(f, "Throw: {e}"),
         }
@@ -62,6 +64,9 @@ macro_rules! testing_result {
     };
     (CompiledFunction, $e:expr) => {
         TestingResult::CompiledFunction($e)
+    };
+    (Closure, $e:expr) => {
+        TestingResult::Closure($e)
     };
     (Err, $e:expr) => {
         TestingResult::Err($e.to_string())
