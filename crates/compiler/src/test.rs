@@ -711,7 +711,7 @@ got    instructions vec={:?}
                 ],
                 expected_instruction: vec![
                     // 表示的是变量的 index
-                    make(&OpCode::OpConstant, &v[2..3]),
+                    make(&OpCode::OpClosure, &vec![2, 0]),
                     make(&OpCode::OpPop, &v[0..0]),
                 ],
             },
@@ -732,7 +732,7 @@ got    instructions vec={:?}
                 ],
                 expected_instruction: vec![
                     // 表示的是变量的 index
-                    make(&OpCode::OpConstant, &v[2..3]),
+                    make(&OpCode::OpClosure, &vec![2, 0]),
                     make(&OpCode::OpPop, &v[0..0]),
                 ],
             },
@@ -753,7 +753,7 @@ got    instructions vec={:?}
                 ],
                 expected_instruction: vec![
                     // 表示的是变量的 index
-                    make(&OpCode::OpConstant, &v[2..3]),
+                    make(&OpCode::OpClosure, &vec![2, 0]),
                     make(&OpCode::OpPop, &v[0..0]),
                 ],
             },
@@ -774,7 +774,7 @@ got    instructions vec={:?}
                 ],
                 expected_instruction: vec![
                     // 表示的是变量的 index
-                    make(&OpCode::OpConstant, &v[2..3]),
+                    make(&OpCode::OpClosure, &vec![2, 0]),
                     make(&OpCode::OpPop, &v[0..0]),
                 ],
             },
@@ -924,7 +924,7 @@ got    instructions vec={:?}
                 ],
                 expected_instruction: vec![
                     // 表示的是变量的 index
-                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpClosure, &vec![1, 0]),
                     make(&OpCode::OpCall, &v[0..1]),
                     make(&OpCode::OpPop, &v[0..0]),
                 ],
@@ -943,7 +943,7 @@ got    instructions vec={:?}
                 ],
                 expected_instruction: vec![
                     // 表示的是变量的 index
-                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpClosure, &vec![1, 0]),
                     make(&OpCode::OpSetGlobal, &v[0..1]),
                     make(&OpCode::OpGetGlobal, &v[0..1]),
                     make(&OpCode::OpCall, &v[0..1]),
@@ -964,7 +964,7 @@ got    instructions vec={:?}
                 ],
                 expected_instruction: vec![
                     // 表示的是变量的 index
-                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpClosure, &vec![0, 0]),
                     make(&OpCode::OpSetGlobal, &v[0..1]),
                     make(&OpCode::OpGetGlobal, &v[0..1]),
                     make(&OpCode::OpConstant, &v[1..2]),
@@ -992,7 +992,7 @@ got    instructions vec={:?}
                 ],
                 expected_instruction: vec![
                     // 表示的是变量的 index
-                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpClosure, &vec![0, 0]),
                     make(&OpCode::OpSetGlobal, &v[0..1]),
                     make(&OpCode::OpGetGlobal, &v[0..1]),
                     make(&OpCode::OpConstant, &v[1..2]),
@@ -1028,7 +1028,7 @@ fn() { num };
                     // 表示的是变量的 index
                     make(&OpCode::OpConstant, &v[0..1]),
                     make(&OpCode::OpSetGlobal, &v[0..1]),
-                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpClosure, &vec![1, 0]),
                     make(&OpCode::OpPop, &v[0..0]),
                 ],
             },
@@ -1048,7 +1048,7 @@ fn() { num };
                 ],
                 expected_instruction: vec![
                     // 表示的是变量的 index
-                    make(&OpCode::OpConstant, &v[1..2]),
+                    make(&OpCode::OpClosure, &vec![1, 0]),
                     make(&OpCode::OpPop, &v[0..0]),
                 ],
             },
@@ -1077,7 +1077,7 @@ fn() { num };
                 ],
                 expected_instruction: vec![
                     // 表示的是变量的 index
-                    make(&OpCode::OpConstant, &v[2..3]),
+                    make(&OpCode::OpClosure, &vec![2, 0]),
                     make(&OpCode::OpPop, &v[0..0]),
                 ],
             },
@@ -1137,7 +1137,7 @@ push([],1);
                 )],
                 expected_instruction: vec![
                     // 表示的是变量的 index
-                    make(&OpCode::OpConstant, &v[0..1]),
+                    make(&OpCode::OpClosure, &vec![0, 0]),
                     make(&OpCode::OpPop, &v[0..0]),
                 ],
             },

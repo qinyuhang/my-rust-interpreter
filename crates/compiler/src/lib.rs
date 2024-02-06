@@ -348,8 +348,8 @@ impl<'a> Compiler<'a> {
                 num_parameters,
             };
             self.emit(
-                OpCode::OpConstant,
-                &vec![self.add_constant(Rc::new(compiled_fn)) as u16],
+                OpCode::OpClosure,
+                &vec![self.add_constant(Rc::new(compiled_fn)) as u16, 0u16],
             );
         }
         if n.is::<ReturnStatement>() {

@@ -48,7 +48,11 @@ impl<'a> VM<'a> {
             num_locals: 0,
             num_parameters: 0,
         });
-        let main_frame = Rc::new(Frame::new(main_fn, 0));
+        let main_closure = Rc::new(ClosureObject {
+            func: main_fn,
+            free: Rc::new(RefCell::new(vec![])),
+        });
+        let main_frame = Rc::new(Frame::new(main_closure, 0));
 
         let stack = (0..STACK_SIZE)
             .map(|_| ept.clone() as Rc<dyn Object>)
@@ -217,7 +221,7 @@ impl<'a> VM<'a> {
                     let num_args = read_uint8(&ins[((ip + 1) as usize)..]);
                     self.current_frame().bump_ip_by(1);
 
-                    self.exec_function(num_args as usize)?;
+                    self.exec_call(num_args as usize)?;
                     //
                     // dbg!(self.dump_stack());
                     // !DIFFERENT FROM THE BOOK. because I want keep ip as usize instead of isize
@@ -278,6 +282,12 @@ impl<'a> VM<'a> {
                         .ok_or("fail get builtin definition")?;
                     self.push(bti.1.clone())?;
                 }
+                OpCode::OpClosure => {
+                    let const_index = read_uint16(&ins[((ip + 1) as usize)..]);
+                    let num_free = read_uint8(&ins[((ip + 3) as usize)..]);
+                    self.current_frame().bump_ip_by(3);
+                    self.push_closure(const_index as usize)?;
+                }
                 #[allow(unreachable_patterns)]
                 _ => {
                     dbg!(op);
@@ -287,6 +297,30 @@ impl<'a> VM<'a> {
             self.current_frame().bump_ip_by(1);
         }
         Ok(Rc::new(Null {}))
+    }
+
+    fn push_closure(&self, const_index: usize) -> Result<(), String> {
+        let c = self
+            .constants
+            .borrow()
+            .get(const_index as usize)
+            .cloned()
+            .ok_or("failed get c".to_string())?;
+        let c = c
+            .as_any()
+            .downcast_ref::<CompiledFunction>()
+            .ok_or("convert callee to closure fail!".to_string())?;
+        let free = vec![];
+        // let free = self.stack.borrow()[self.sp.get() - num_free..self.sp.get()]
+        //     .iter()
+        //     .map(|v| v.clone())
+        //     .collect();
+        // self.sp.set(self.sp.get() - num_free);
+        let closure = Rc::new(ClosureObject {
+            func: Rc::new(c.clone()),
+            free: Rc::new(RefCell::new(free)),
+        });
+        self.push(closure)
     }
 
     pub fn stack_top(&self) -> Option<Rc<dyn Object>> {
@@ -545,7 +579,7 @@ impl<'a> VM<'a> {
             .clone()
     }
 
-    fn exec_function(&self, num_args: usize) -> Result<(), String> {
+    fn exec_call(&self, num_args: usize) -> Result<(), String> {
         enum TMP {
             OBJ(Rc<dyn Object>),
             EMPTY(()),
@@ -553,7 +587,7 @@ impl<'a> VM<'a> {
         }
         let to_be_pushed = {
             // FIXME not in stack top
-            let func = self
+            let callee = self
                 .stack
                 .borrow()
                 .get(self.sp.get() - 1 - num_args)
@@ -562,14 +596,14 @@ impl<'a> VM<'a> {
                     "stack pointer wrong, got={}",
                     self.sp.get() - 1 - num_args
                 ))?;
-            match func.object_type() {
+            match callee.object_type() {
                 BUILTIN_OBJECT => {
-                    let r = TMP::OBJ(self.call_builtin(func.clone(), num_args)?);
+                    let r = TMP::OBJ(self.call_builtin(callee.clone(), num_args)?);
                     self.current_frame().bump_ip_by(1);
                     r
                 }
-                COMPILED_FUNCTION => TMP::EMPTY(self.call_function(func.clone(), num_args)?),
-                &_ => TMP::Err("calling non-function and no-builtin".into()),
+                CLOSURE_OBJECT => TMP::EMPTY(self.call_closure(callee.clone(), num_args)?),
+                &_ => TMP::Err("calling non-closure and no-builtin".into()),
             }
         };
 
@@ -600,24 +634,24 @@ impl<'a> VM<'a> {
         }
     }
 
-    fn call_function(&self, func: Rc<dyn Object>, num_args: usize) -> Result<(), String> {
-        if !func.as_any().is::<CompiledFunction>() {
-            return Err("calling non-function".into());
+    fn call_closure(&self, func: Rc<dyn Object>, num_args: usize) -> Result<(), String> {
+        if !func.as_any().is::<ClosureObject>() {
+            return Err("calling non-closure".into());
         }
-        let func = func.as_any().downcast_ref::<CompiledFunction>().unwrap();
-        if num_args != func.num_parameters {
+        let closure = func.as_any().downcast_ref::<ClosureObject>().unwrap();
+        if num_args != closure.func.num_parameters {
             return Err(format!(
                 "wrong number of arguments: want={}, got={}",
-                func.num_parameters, num_args
+                closure.func.num_parameters, num_args
             ));
         }
         // FIXME: here we made a clone
         // 1. performance
         // 2. it may have side effect when we want closure
-        let frame = Frame::new(Rc::new(func.clone()), self.sp.get() - num_args);
+        let frame = Frame::new(Rc::new(closure.clone()), self.sp.get() - num_args);
         let base_pointer = frame.base_pointer.get();
         self.push_frame(Rc::new(frame));
-        self.sp.replace(base_pointer + func.num_locals);
+        self.sp.replace(base_pointer + closure.func.num_locals);
         Ok(())
     }
 
