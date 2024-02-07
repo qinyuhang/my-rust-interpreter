@@ -286,7 +286,24 @@ impl<'a> VM<'a> {
                     let const_index = read_uint16(&ins[((ip + 1) as usize)..]);
                     let num_free = read_uint8(&ins[((ip + 3) as usize)..]);
                     self.current_frame().bump_ip_by(3);
-                    self.push_closure(const_index as usize)?;
+                    self.push_closure(const_index as usize, num_free as usize)?;
+                }
+                OpCode::OpGetFree => {
+                    let free_index = read_uint8(&ins[((ip + 1) as usize)..]);
+                    self.current_frame().bump_ip_by(1);
+                    let current_closure = self.current_frame().closure.clone();
+                    let tbp = current_closure
+                        .free
+                        .clone()
+                        .borrow()
+                        .get(free_index as usize)
+                        .cloned()
+                        .ok_or("failed to get free param".to_string())?;
+                    self.push(tbp)?;
+                }
+                OpCode::OpCurrentClosure => {
+                    let current_closure = self.current_frame().closure.clone();
+                    self.push(current_closure as Rc<dyn Object>)?;
                 }
                 #[allow(unreachable_patterns)]
                 _ => {
@@ -299,7 +316,7 @@ impl<'a> VM<'a> {
         Ok(Rc::new(Null {}))
     }
 
-    fn push_closure(&self, const_index: usize) -> Result<(), String> {
+    fn push_closure(&self, const_index: usize, num_free: usize) -> Result<(), String> {
         let c = self
             .constants
             .borrow()
@@ -310,12 +327,12 @@ impl<'a> VM<'a> {
             .as_any()
             .downcast_ref::<CompiledFunction>()
             .ok_or("convert callee to closure fail!".to_string())?;
-        let free = vec![];
-        // let free = self.stack.borrow()[self.sp.get() - num_free..self.sp.get()]
-        //     .iter()
-        //     .map(|v| v.clone())
-        //     .collect();
-        // self.sp.set(self.sp.get() - num_free);
+        // let free = vec![];
+        let free = self.stack.borrow()[self.sp.get() - num_free..self.sp.get()]
+            .iter()
+            .map(|v| v.clone())
+            .collect();
+        self.sp.set(self.sp.get() - num_free);
         let closure = Rc::new(ClosureObject {
             func: Rc::new(c.clone()),
             free: Rc::new(RefCell::new(free)),

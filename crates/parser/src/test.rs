@@ -852,4 +852,43 @@ let mf = fn(x, y) { return x + y; };"#;
             dbg!(pr.unwrap());
         });
     }
+
+    #[test]
+    fn test_function_literal_with_name() {
+        let input = r#"let myF = fn (x, y) { return x + y; };"#;
+        let l = Lexer::new(input);
+        let p = Parser::new(l);
+        let pr = p.parse_program();
+        test_parser_errors(&p, None);
+
+        assert!(pr.is_some());
+        let pr = pr.unwrap();
+
+        // assert_eq!(pr.statement.len(), input.lines().count());
+        println!("pr: {:?}", pr);
+        println!("pr: {}", pr);
+
+        let func = pr.statement[0].as_ref();
+        match func {
+            AstExpression::LetStatement(LetStatement {
+                name,
+                value: Some(value),
+                ..
+            }) => match value.as_ref() {
+                AstExpression::ExpressionStatement(ExpressionStatement {
+                    expression: Some(expression),
+                    ..
+                }) => match expression.as_ref() {
+                    AstExpression::FunctionLiteral(FunctionLiteral { name, .. }) => {
+                        assert!(name.is_some(), "compile function name empty");
+                        dbg!(&name);
+                    }
+                    _ => assert!(false),
+                },
+                _ => assert!(false),
+            },
+            _ => assert!(false),
+        }
+        // dbg!(&func);
+    }
 }

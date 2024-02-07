@@ -13,7 +13,7 @@ use ::object::*;
 use byteorder::{BigEndian, ByteOrder};
 use code::OpCode::OpPop;
 use code::{self, *};
-use std::cell::{Cell, RefCell};
+use std::cell::{Cell, Ref, RefCell};
 use std::rc::Rc;
 use token::*;
 
@@ -23,7 +23,7 @@ pub struct Compiler<'a> {
     external_constants: RefCell<Option<&'a mut Vec<Rc<dyn Object>>>>,
 
     symbol_table: RefCell<Rc<SymbolTable>>,
-    external_symbol_table: RefCell<Option<&'a mut SymbolTable>>,
+    external_symbol_table: RefCell<Option<&'a SymbolTable>>,
 
     scopes: RefCell<Vec<Rc<CompilationScope>>>,
     scope_index: Cell<usize>,
@@ -262,12 +262,12 @@ impl<'a> Compiler<'a> {
         }
         if n.is::<LetStatement>() {
             let i = n.downcast_ref::<LetStatement>().unwrap();
+            let symbol = self.define_symbol(i.name.clone());
             self.compile(i.value.as_ref().unwrap().get_expression().upcast())?;
             // 这里和书不一样
             if self.last_instruction_is(OpPop) {
                 self.remove_last_pop();
             }
-            let symbol = self.define_symbol(i.name.clone());
             let op = match symbol.scope {
                 GLOBAL_SCOPE => OpCode::OpSetGlobal,
                 LOCAL_SCOPE => OpCode::OpSetLocal,
@@ -319,6 +319,9 @@ impl<'a> Compiler<'a> {
         if n.is::<FunctionLiteral>() {
             let i = n.downcast_ref::<FunctionLiteral>().unwrap();
             self.enter_scope();
+            if i.name.is_some() {
+                self.define_function_name(i.name.as_ref().unwrap().clone());
+            }
             if let Some(params) = i.parameters.as_ref() {
                 for p in params.iter() {
                     self.define_symbol(p.clone());
@@ -442,17 +445,20 @@ impl<'a> Compiler<'a> {
         }
     }
 
+    // FIXME: here 抽象不正确
     fn load_symbol(&self, symbol: Rc<Symbol>) -> Result<usize, String> {
-        let op = match symbol.scope {
-            GLOBAL_SCOPE => OpCode::OpGetGlobal,
-            LOCAL_SCOPE => OpCode::OpGetLocal,
-            BUILTIN_SCOPE => OpCode::OpGetBuiltin,
-            FREE_SCOPE => OpCode::OpGetFree,
+        match symbol.scope {
+            GLOBAL_SCOPE => Ok(self.emit(OpCode::OpGetGlobal, &vec![symbol.index as u16])),
+            LOCAL_SCOPE => Ok(self.emit(OpCode::OpGetLocal, &vec![symbol.index as u16])),
+            BUILTIN_SCOPE => Ok(self.emit(OpCode::OpGetBuiltin, &vec![symbol.index as u16])),
+            FREE_SCOPE => Ok(self.emit(OpCode::OpGetFree, &vec![symbol.index as u16])),
+            FUNCTION_SCOPE => Ok(EMPTY_V16.with(|r| self.emit(OpCode::OpCurrentClosure, r))),
             _ => return Err("unsupported SCOPE".to_string()),
-        };
-        Ok(self.emit(op, &vec![symbol.index as u16]))
+        }
+        // Ok(self.emit(op, &vec![symbol.index as u16]))
     }
 
+    /// PROXY FUNCTION
     fn define_symbol(&self, i: Rc<Identifier>) -> Rc<Symbol> {
         let has_external = self.external_symbol_table.borrow().is_some();
         if has_external {
@@ -465,6 +471,8 @@ impl<'a> Compiler<'a> {
             self.symbol_table.borrow().define(i)
         }
     }
+
+    /// PROXY FUNCTION
     fn resolve_symbol(&self, i: Rc<Identifier>) -> Result<Rc<Symbol>, String> {
         let has_external = self.external_symbol_table.borrow().is_some();
         if has_external {
@@ -475,6 +483,20 @@ impl<'a> Compiler<'a> {
                 .resolve(i)
         } else {
             self.symbol_table.borrow().resolve(i)
+        }
+    }
+
+    /// PROXY FUNCTION
+    fn define_function_name(&self, i: Rc<Identifier>) -> Rc<Symbol> {
+        let has_external = self.external_symbol_table.borrow().is_some();
+        if has_external {
+            self.external_symbol_table
+                .borrow()
+                .as_ref()
+                .unwrap()
+                .define_function_name(i)
+        } else {
+            self.symbol_table.borrow().define_function_name(i)
         }
     }
 

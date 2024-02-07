@@ -490,4 +490,13 @@ mod eval_test {
             });
         });
     }
+
+    #[test]
+    fn test_recursive() {
+        testing::cases::RECUSIVE_CASE.with(|cases| {
+            cases.iter().for_each(|(case, out)| {
+                handle_test_case(case, out);
+            });
+        });
+    }
 }

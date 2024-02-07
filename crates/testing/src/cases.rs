@@ -48,10 +48,50 @@ thread_local! {
 
 thread_local! {
     pub static CLOSURE_CASE: Vec<(&'static str, TestingResult)> = vec![
-        (r#"let newClosure = fn(a) { fn() { a } };
+        (r#"
+let newClosure = fn(a) { fn() { a } };
 let closure = newClosure(99);
 closure()"#, testing_result!(Int, 99)),
-        (r#""foobar""#, testing_result!(String, "foobar")),
+        (r#"
+let newAddr = fn(a,b) { fn(c) { a + b + c }};
+let addr = newAddr(1,2);
+addr(8)"#, testing_result!(Int, 11)),
+        (r#"
+let newAddr = fn(a,b) {
+  let c = a + b;
+  fn(d) { c + d }};
+let addr = newAddr(1,2);
+addr(8)"#, testing_result!(Int, 11)),
+        (r#"
+let newAdderOuter = fn(a, b) {
+    let c = a + b;
+    fn(d) {
+        let e = d + c;
+        fn(f) { e + f; };
+    }
+};
+let newAdderInner = newAdderOuter(1, 2);
+let adder = newAdderInner(3);
+adder(8);
+"#, testing_result!(Int, 14)),
+    (r#"
+let a = 1;
+let newAdderOuter = fn(b) {
+     fn(c) {
+         fn(d) { a + b + c + d };
+}; };
+let newAdderInner = newAdderOuter(2);
+let adder = newAdderInner(3);
+adder(8);
+"#, testing_result!(Int, 14)),
+    (r#"
+let newClosure = fn(a, b) {
+    let one = fn() { a; };
+    let two = fn() { b; };
+    fn() { one() + two(); };
+};
+let closure = newClosure(9, 90);
+closure();"#, testing_result!(Int, 99)),
     ];
 }
 
@@ -289,5 +329,37 @@ thread_local! {
             "let b = 5; let a = fn() { b }; [1,a(),3];",
             testing_result!(Vec, vec![1, 5, 3]),
         ),
+    ];
+}
+
+thread_local! {
+    pub static RECUSIVE_CASE: Vec<(&'static str, TestingResult)> = vec![
+        (r#"
+let countDown = fn(x) {
+    if (x == 0) { return 0; }
+    else { countDown(x - 1) }
+};
+countDown(1);
+"#, testing_result!(Int, 0)),
+        (r#"
+let countDown = fn(x) {
+    if (x == 0) { return 0; }
+    else { countDown(x - 1) }
+};
+let wrapper = fn() {
+    countDown(1);
+};
+wrapper();
+"#, testing_result!(Int, 0)),
+        (r#"
+let wrapper = fn() {
+    let countDown = fn(x) {
+        if (x == 0) { return 0; }
+        else { countDown(x - 1) }
+    };
+    countDown(1)
+};
+wrapper();
+"#, testing_result!(Int, 0)),
     ];
 }

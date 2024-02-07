@@ -1284,6 +1284,78 @@ fn () {
                     make(&OpCode::OpPop, &v[0..0]),
                 ],
             },
+            CompileTestCase {
+                input: r#"let countDown = fn(x) { countDown(x - 1) };
+countDown(1)
+"#,
+                expected_constants: vec![
+                    testing_result!(Int, 1),
+                    testing_result!(
+                        CompiledFunction,
+                        vec![
+                            make(&OpCode::OpCurrentClosure, &v[3..3]),
+                            make(&OpCode::OpGetLocal, &v[0..1]), // c = 88
+                            make(&OpCode::OpConstant, &v[0..1]), // global
+                            make(&OpCode::OpSub, &v[0..0]),      // a
+                            make(&OpCode::OpCall, &v[1..2]),     // global + a -> stack_top
+                            make(&OpCode::OpReturnValue, &v[0..0]), // return stack_top
+                        ]
+                    ),
+                    testing_result!(Int, 1),
+                ],
+                expected_instruction: vec![
+                    make(&OpCode::OpClosure, &vec![1, 0]), // 55
+                    make(&OpCode::OpSetGlobal, &v[0..1]),  // var global = 66
+                    make(&OpCode::OpGetGlobal, &v[0..1]),  // var global = 66
+                    make(&OpCode::OpConstant, &v[2..3]),   // global
+                    // 表示的是变量的 index
+                    make(&OpCode::OpCall, &vec![1]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
+            CompileTestCase {
+                input: r#"
+let wrapper = fn () {
+    let countDown = fn(x) { countDown(x - 1) };
+    countDown(1)
+};
+wrapper();
+"#,
+                expected_constants: vec![
+                    testing_result!(Int, 1),
+                    testing_result!(
+                        CompiledFunction,
+                        vec![
+                            make(&OpCode::OpCurrentClosure, &v[3..3]),
+                            make(&OpCode::OpGetLocal, &v[0..1]), // c = 88
+                            make(&OpCode::OpConstant, &v[0..1]), // global
+                            make(&OpCode::OpSub, &v[0..0]),      // a
+                            make(&OpCode::OpCall, &v[1..2]),     // global + a -> stack_top
+                            make(&OpCode::OpReturnValue, &v[0..0]), // return stack_top
+                        ]
+                    ),
+                    testing_result!(Int, 1),
+                    testing_result!(
+                        CompiledFunction,
+                        vec![
+                            make(&OpCode::OpClosure, &vec![1, 0]),
+                            make(&OpCode::OpSetLocal, &v[0..1]), // c = 88
+                            make(&OpCode::OpGetLocal, &v[0..1]), // global
+                            make(&OpCode::OpConstant, &v[2..3]), // a
+                            make(&OpCode::OpCall, &v[1..2]),     // global + a -> stack_top
+                            make(&OpCode::OpReturnValue, &v[0..0]), // return stack_top
+                        ]
+                    ),
+                ],
+                expected_instruction: vec![
+                    make(&OpCode::OpClosure, &vec![3, 0]), // 55
+                    make(&OpCode::OpSetGlobal, &v[0..1]),  // var global = 66
+                    make(&OpCode::OpGetGlobal, &v[0..1]),  // var global = 66
+                    // 表示的是变量的 index
+                    make(&OpCode::OpCall, &vec![0]),
+                    make(&OpCode::OpPop, &v[0..0]),
+                ],
+            },
         ];
         run_compile_test(cases);
     }
@@ -1292,7 +1364,9 @@ fn () {
 #[cfg(test)]
 mod symbol_table_test {
 
-    use crate::{Symbol, SymbolTable, BUILTIN_SCOPE, FREE_SCOPE, GLOBAL_SCOPE, LOCAL_SCOPE};
+    use crate::{
+        Symbol, SymbolTable, BUILTIN_SCOPE, FREE_SCOPE, FUNCTION_SCOPE, GLOBAL_SCOPE, LOCAL_SCOPE,
+    };
     use ::ast::*;
     use std::rc::Rc;
 
@@ -1731,5 +1805,50 @@ mod symbol_table_test {
                 );
             });
         });
+    }
+
+    #[test]
+    fn test_define_and_resolve_function_name() {
+        let global = SymbolTable::new();
+        let a = Rc::new(Identifier::from("a".to_string()));
+
+        let fa = Rc::new(Symbol {
+            name: a.clone(),
+            scope: FUNCTION_SCOPE,
+            index: 0,
+        });
+
+        global.define_function_name(a.clone());
+        //
+        let r = global.resolve(a.clone());
+        assert!(
+            r.is_ok(),
+            "function name {} not resolvable",
+            a.token.literal
+        );
+        let r = r.unwrap();
+        assert_eq!(r, fa, "expect to resolve {:?}, got={:?}", fa, r);
+    }
+
+    #[test]
+    fn test_define_shadowing_function_name() {
+        let global = SymbolTable::new();
+        let a = Rc::new(Identifier::from("a".to_string()));
+
+        let fa = Rc::new(Symbol {
+            name: a.clone(),
+            scope: FUNCTION_SCOPE,
+            index: 0,
+        });
+
+        global.define_function_name(a.clone());
+        global.define(a.clone());
+        //
+        let r = global.resolve(a.clone());
+        assert!(
+            r.is_ok(),
+            "function name {} not resolvable",
+            a.token.literal
+        );
     }
 }

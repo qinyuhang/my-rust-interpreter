@@ -261,10 +261,10 @@ impl Parser {
             return None;
         }
         let ct = (*self.cur_token.borrow()).clone();
-        let name = Identifier {
+        let name = Rc::new(Identifier {
             token: ct.clone(),
             value: ct.literal.clone(),
-        };
+        });
         // println!("\nParser::parse_let_statement2 {:?} {:?} {:?}\n", cur_token, self.peek_token, name);
         if !self.expect_peek(ASSIGN) {
             return None;
@@ -283,12 +283,20 @@ impl Parser {
             self.next_token();
         }
 
+        if let Some(ref ex) = expression {
+            if let AstExpression::FunctionLiteral(f) = ex.as_ref() {
+                let mut f = f.clone();
+                f.name = Some(name.clone());
+                expression = Some(Rc::new(AstExpression::FunctionLiteral(f)));
+            }
+        }
+
         // println!("\nParser::parse_let_statement3 {:?} {:?} {:?}\n", cur_token, self.peek_token, name);
         // println!("parse_let_statement return: {:?} {:?}", cur_token, name);
 
         Some(Rc::new(AstExpression::LetStatement(LetStatement {
             token: cur_token.clone(),
-            name: Rc::new(name),
+            name: name.clone(),
 
             // FIXME: make it clone
             value: Some(Rc::new(AstExpression::ExpressionStatement(

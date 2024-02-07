@@ -10,6 +10,7 @@ pub const GLOBAL_SCOPE: SymbolScope = "GLOBAL";
 pub const LOCAL_SCOPE: SymbolScope = "LOCAL";
 pub const BUILTIN_SCOPE: SymbolScope = "BUILTIN";
 pub const FREE_SCOPE: SymbolScope = "FREE";
+pub const FUNCTION_SCOPE: SymbolScope = "FUNCTION";
 
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
 pub struct Symbol {
@@ -98,6 +99,16 @@ impl SymbolTable {
             name: name.clone(),
             index,
             scope: BUILTIN_SCOPE,
+        });
+        self.store.borrow_mut().insert(name, symbol.clone());
+        symbol
+    }
+
+    pub fn define_function_name(&self, name: Rc<Identifier>) -> Rc<Symbol> {
+        let symbol = Rc::new(Symbol {
+            name: name.clone(),
+            index: 0,
+            scope: FUNCTION_SCOPE,
         });
         self.store.borrow_mut().insert(name, symbol.clone());
         symbol

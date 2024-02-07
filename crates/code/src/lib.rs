@@ -81,24 +81,25 @@ pub enum OpCode {
     OpHash,
     OpIndex, // 20
     ///
-    OpCall,
-    OpReturnValue, // 21 with return value; etc: fn() { return 1 } or fn() { 1 }
-    OpReturn,      // 22; without return value; etc: fn() {}
+    OpCall, // 21
+    OpReturnValue, // 22 with return value; etc: fn() { return 1 } or fn() { 1 }
+    OpReturn, // 23; without return value; etc: fn() {}
 
     /// [the index of local constants]
-    OpSetLocal, // 23
+    OpSetLocal, // 24
     /// [the index of local constants]
-    OpGetLocal, // 24
+    OpGetLocal, // 25
 
     /// [the index of builtin fn]
-    OpGetBuiltin, // 25
+    OpGetBuiltin, // 26
     /// [
     ///  index of constants,
     ///  number of `free` constants/variable
     /// ]
-    OpClosure, // 26
+    OpClosure, // 27
     /// [count of `free` variable for closure]
-    OpGetFree, // 27 get free variable for closure which was captured/referenced by the closure
+    OpGetFree, // 28 get free variable for closure which was captured/referenced by the closure
+    OpCurrentClosure, // 29
 }
 
 impl std::fmt::Display for OpCode {
@@ -230,6 +231,10 @@ thread_local! {
         Rc::new(Definition {
             name: "OpGetFree".into(),
             operand_widths: vec![/* 自由变量个数 */1],
+        }),
+        Rc::new(Definition {
+            name: "OpCurrentClosure".into(),
+            operand_widths: vec![],
         }),
     ];
 }

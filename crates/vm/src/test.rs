@@ -497,4 +497,18 @@ outer() + globalNum"#,
             run_vm_test(&cases);
         });
     }
+
+    #[test]
+    fn test_closure() {
+        testing::cases::CLOSURE_CASE.with(|cases| {
+            run_vm_test(&cases);
+        });
+    }
+
+    #[test]
+    fn test_recursive() {
+        testing::cases::RECUSIVE_CASE.with(|cases| {
+            run_vm_test(&cases);
+        });
+    }
 }
