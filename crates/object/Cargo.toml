@@ -1,0 +1,16 @@
+[package]
+name = "object"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+"ast" = { path = "../ast" }
+"ast_macro" = { path = "../ast_macro" }
+"parser" = { path = "../parser" }
+"lexer" = { path = "../lexer" }
+"token" = { path = "../token" }
+"testing" = { path = "../testing" }
+"code" = { path = "../code" }
+"bumpalo" = { version = "3.14.0" , features = [ "boxed", "collections", "default", "std" ] }

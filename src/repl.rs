@@ -1,33 +1,26 @@
-use crate::evaluator::*;
+use ::interpreter::eval;
+use ::lexer::*;
+use ::object::*;
+use ::parser::*;
 
+use compiler::{Compiler, SymbolTable};
 use std::cell::RefCell;
 use std::io;
 use std::io::Write;
 use std::rc::Rc;
+use bumpalo::Bump;
+use vm::VM;
 
 thread_local! {
     static HISTORY: Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(vec![]))
 }
 
 pub const PROMPT: &'static str = ">> ";
-pub const SYMBOL: &'static str = r#"
- xxxxxxxxxxxx
-  xx       xxx
-  xx        xxx
-  xx        xxx
-  xx       xxx
-  xxxxxxxxxxx
-  xxxx
-  xxxxxx
-  xx   xxx
-  xx    xxxx
-  xx      xxxx
-  xx        xxxx
-  xx          xxxx  #
-######       ########"#;
+pub const SYMBOL: &'static str = r#">> Monkey Lang 0.1.0 | (Rust BackEnd)"#;
 
 pub fn start() {
-    println!("{}", SYMBOL);
+    let bump = Bump::new();
+    println!("{} | engine eval", SYMBOL);
     // readline in
     let stdin = io::stdin();
     let mut input = String::new();
@@ -48,53 +41,129 @@ pub fn start() {
         let pr = p.parse_program();
         assert!(pr.is_some());
         if p.errors().borrow().len() != 0 {
-            println!("{}\n", SYMBOL);
             print_parser_errors(p.errors().borrow().as_ref());
             input.clear();
             continue;
         }
         let pr = pr.unwrap();
-        println!("{}", &pr);
-        if let Some(r) = eval(&pr, context.clone()).as_ref() {
+        // println!("{}", &pr);
+        if let Some(r) = eval(&pr, context.clone(), &bump).as_ref() {
             println!("{}", r);
         }
-        // eval(&pr);
-        // loop {
-        //     #[allow(unused_mut)]
-        //     let mut tok = lex.next_token();
-        //     println!("tok: {:?}", tok);
-        //     if tok.token_type == EOF {
-        //         break;
-        //     }
-        // }
-        // println!("{input}");
         input.clear();
-        // print!("\r{PROMPT}");
-        // dbg!(&context);
+    }
+}
+
+pub fn start_with_vm() {
+    println!("{} | engine vm", SYMBOL);
+    // readline in
+    let stdin = io::stdin();
+    let mut input = String::new();
+
+    let mut external_constants: Vec<Rc<dyn Object>> = Compiler::create_constants();
+    let mut external_symbol_table: SymbolTable = Compiler::create_symbol_table();
+    let mut external_globals: Vec<Rc<dyn Object>> = VM::create_globals();
+
+    loop {
+        print!("{PROMPT}");
+        std::io::stdout().flush().unwrap();
+        stdin.read_line(&mut input).unwrap();
+        // println!("read key: {:?}", input);
+        if input == "" {
+            continue;
+        }
+        HISTORY.with(|history| {
+            history.borrow_mut().push(input.clone());
+        });
+        let lex = Lexer::new(input.clone());
+        let p = Parser::new(lex.clone());
+        let pr = p.parse_program();
+        assert!(pr.is_some());
+        if p.errors().borrow().len() != 0 {
+            print_parser_errors(p.errors().borrow().as_ref());
+            input.clear();
+            continue;
+        }
+
+        let pr = pr.unwrap();
+        let compi = Compiler::new();
+        compi
+            .load_external_constants(&mut external_constants)
+            .expect("failed to load external constants");
+        compi
+            .load_external_symbol_table(&mut external_symbol_table)
+            .expect("failed to load external symbol table");
+        if let Err(e) = compi.compile(&pr) {
+            eprintln!("Compile failed {}", e);
+            continue;
+        }
+
+        let bump = Bump::new();
+        let vm = VM::new(compi.bytecode(), &bump);
+        vm.load_external_globals(&mut external_globals)
+            .expect("failed to load external globals");
+        if let Err(e) = vm.run() {
+            eprintln!("VM run failed {}", e);
+            continue;
+        }
+
+        let stack_top = vm.last_popped_stack_el().expect("get stack top failed");
+        println!("{}", stack_top);
+
+        input.clear();
+    }
+}
+
+pub fn run_with_vm(program: String) {
+    println!("{} | engine vm", SYMBOL);
+    let mut input = program.clone();
+    let lex = Lexer::new(input.clone());
+    let p = Parser::new(lex.clone());
+    let pr = p.parse_program();
+    assert!(pr.is_some());
+    if p.errors().borrow().len() != 0 {
+        print_parser_errors(p.errors().borrow().as_ref());
+        input.clear();
+        return;
+    }
+    let pr = pr.unwrap();
+    let compi = Compiler::new();
+    if let Err(e) = compi.compile(&pr) {
+        eprintln!("Compile failed {}", e);
+    }
+    let bump = Bump::new();
+    let vm = VM::new(compi.bytecode(), &bump);
+    if let Err(e) = vm.run() {
+        eprintln!("VM run failed {}", e);
     }
 
-    // for line in stdin.lock().lines() {
-    //     let line = line.unwrap();
-    //     if line == "" {
-    //         continue;
-    //     }
-    //     print!("{PROMPT}");
-    //     let lex = Lexer::new(line);
+    let stack_top = vm.last_popped_stack_el().expect("get stack top failed");
+    println!("{}", stack_top);
+}
 
-    //     loop {
-    //         let mut tok = lex.next_token();
-    //         println!("{:?}", tok);
-    //         if tok.Type == EOF {
-    //             break;
-    //         }
-
-    //         tok = lex.next_token();
-    //     }
-    // }
+pub fn run(program: String) {
+    let bump = Bump::new();
+    println!("{} | engine eval", SYMBOL);
+    let mut input = program.clone();
+    let context = Rc::new(Context::new());
+    let lex = Lexer::new(input.clone());
+    let p = Parser::new(lex.clone());
+    let pr = p.parse_program();
+    assert!(pr.is_some());
+    if p.errors().borrow().len() != 0 {
+        print_parser_errors(p.errors().borrow().as_ref());
+        input.clear();
+        return;
+    }
+    let pr = pr.unwrap();
+    // dbg!("{}", &pr);
+    if let Some(r) = eval(&pr, context.clone(), &bump).as_ref() {
+        println!("{}", r);
+    }
 }
 
 pub fn print_parser_errors(errors: &Vec<String>) {
     errors.iter().for_each(|err| {
-        println!("\t{}", err);
+        eprintln!("\t{}", err);
     });
 }

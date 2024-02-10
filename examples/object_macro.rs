@@ -1,9 +1,19 @@
-use ast_macro::object;
-use my_rust_interpreter::*;
-use std::any::Any;
+use ::object::ObjectInspect;
+use std::rc::Rc;
+// #[object(BOOLEAN_OBJECT)]
+#[derive(Hash, Debug)]
+struct A {
+    pub a: Vec<Rc<String>>,
+}
 
-#[object(BOOLEAN_OBJECT)]
-struct A {}
+pub trait AA {}
+impl AA for A {}
+
+impl A {
+    pub fn default() -> Self {
+        Self { a: vec![] }
+    }
+}
 
 impl ObjectInspect for A {
     fn _inspect(&self) -> String {
@@ -12,6 +22,6 @@ impl ObjectInspect for A {
 }
 
 fn main() {
-    let a = A {};
+    let a = A::default();
     dbg!(a);
 }
