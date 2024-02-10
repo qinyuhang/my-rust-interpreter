@@ -8,6 +8,7 @@ use std::cell::RefCell;
 use std::io;
 use std::io::Write;
 use std::rc::Rc;
+use bumpalo::Bump;
 use vm::VM;
 
 thread_local! {
@@ -96,7 +97,8 @@ pub fn start_with_vm() {
             continue;
         }
 
-        let vm = VM::new(compi.bytecode());
+        let bump = Bump::new();
+        let vm = VM::new(compi.bytecode(), &bump);
         vm.load_external_globals(&mut external_globals)
             .expect("failed to load external globals");
         if let Err(e) = vm.run() {
@@ -128,8 +130,8 @@ pub fn run_with_vm(program: String) {
     if let Err(e) = compi.compile(&pr) {
         eprintln!("Compile failed {}", e);
     }
-
-    let vm = VM::new(compi.bytecode());
+    let bump = Bump::new();
+    let vm = VM::new(compi.bytecode(), &bump);
     if let Err(e) = vm.run() {
         eprintln!("VM run failed {}", e);
     }

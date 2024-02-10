@@ -5,6 +5,7 @@ mod eval_test {
     use ::object::*;
     use ::testing::{testing_result, TestingResult};
     use std::collections::HashMap;
+    use bumpalo::Bump;
     use testing_object::*;
 
     #[test]
@@ -262,8 +263,9 @@ mod eval_test {
 
     #[test]
     fn test_string_literal() {
+        let bump = Bump::new();
         let input = r#""hello world""#;
-        let evaluated = test_eval(input);
+        let evaluated = test_eval(input, &bump);
         assert!(evaluated.is_some());
         let evaluated = evaluated.unwrap();
         let x = evaluated.as_any();
@@ -272,15 +274,16 @@ mod eval_test {
 
     #[test]
     fn test_string_opr() {
+        let bump = Bump::new();
         let input = r#""hello" + "world""#;
-        let evaluated = test_eval(input);
+        let evaluated = test_eval(input, &bump);
         assert!(evaluated.is_some());
         let evaluated = evaluated.unwrap();
         let x = evaluated.as_any();
         assert!(x.is::<StringObject>());
 
         let input = r#""hello" == "world""#;
-        let evaluated = test_eval(input);
+        let evaluated = test_eval(input, &bump);
         assert!(evaluated.is_some());
         let evaluated = evaluated.unwrap();
         let x = evaluated.as_any();
@@ -288,7 +291,7 @@ mod eval_test {
         assert!(!x.downcast_ref::<Boolean>().unwrap().value);
 
         let input = r#""hello" != "world""#;
-        let evaluated = test_eval(input);
+        let evaluated = test_eval(input, &bump);
         assert!(evaluated.is_some());
         let evaluated = evaluated.unwrap();
         let x = evaluated.as_any();
@@ -296,7 +299,7 @@ mod eval_test {
         assert!(x.downcast_ref::<Boolean>().unwrap().value);
 
         let input = r#""hello" - "world""#;
-        let evaluated = test_eval(input);
+        let evaluated = test_eval(input, &bump);
         assert!(evaluated.is_some());
         let evaluated = evaluated.unwrap();
         let x = evaluated.as_any();

@@ -15,3 +15,4 @@ edition = "2021"
 "token" = { path = "../token" }
 "testing" = { path = "../testing" }
 "code" = { path = "../code" }
+"bumpalo" = { version = "3.14.0" , features = ["boxed", "collections", "default", "std"] }

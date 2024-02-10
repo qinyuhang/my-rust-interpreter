@@ -11,6 +11,7 @@ mod vm_test {
     use std::collections::HashMap;
     use std::panic::{self, AssertUnwindSafe};
     use std::rc::Rc;
+    use bumpalo::Bump;
 
     fn parse(input: &str) -> Option<Program> {
         let l = Lexer::new(input);
@@ -34,7 +35,9 @@ mod vm_test {
                     input
                 );
 
-                let vm = VM::new(comp.bytecode());
+                let bump = Bump::new();
+
+                let vm = VM::new(comp.bytecode(), &bump);
 
                 let r = vm.run();
                 if let TestingResult::Throw(str) = expected {

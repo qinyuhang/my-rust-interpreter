@@ -3,10 +3,11 @@ use ::object::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::vec::Vec;
+use bumpalo::{Bump, boxed::Box as BumpBox, collections::Vec as BumpVec};
 
 mod test;
 
-pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
+pub fn eval(node: &dyn Node, context: Rc<Context>, bump: &Bump) -> Option<Rc<dyn Object>> {
     let n = node.as_any();
     // println!("eval: {:?}", node);
     // Program
@@ -15,13 +16,13 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
     // println!("eval: {}", node);
     if n.is::<Program>() {
         if let Some(n) = n.downcast_ref::<Program>() {
-            return eval_program(n.statement.clone(), Some(context.clone()));
+            return eval_program(n.statement.clone(), Some(context.clone()), bump);
         }
     }
     if n.is::<ExpressionStatement>() {
         if let Some(n) = n.downcast_ref::<ExpressionStatement>() {
             // println!("ExpressionStatement {:?}", n);
-            return eval(n.expression.as_ref().unwrap().upcast(), context.clone());
+            return eval(n.expression.as_ref().unwrap().upcast(), context.clone(), &bump);
         }
     }
     if n.is::<IntegerLiteral>() {
@@ -46,7 +47,7 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
     if n.is::<IfExpression>() {
         if let Some(n) = n.downcast_ref::<IfExpression>() {
             // println!("IfExpression {:?}", n);
-            return eval_if_expression(n, context.clone());
+            return eval_if_expression(n, context.clone(), bump);
             // return Some(Rc::new(If));
         }
     }
@@ -76,7 +77,7 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
     if n.is::<LetStatement>() {
         if let Some(n) = n.downcast_ref::<LetStatement>() {
             if let Some(val) = n.value.as_ref() {
-                let result = eval(val.upcast(), context.clone());
+                let result = eval(val.upcast(), context.clone(), &bump);
                 if let Some(r) = result.as_ref() {
                     if r.as_any().is::<ErrorObject>() {
                         return result;
@@ -90,28 +91,28 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
     }
     if n.is::<PrefixExpression>() {
         if let Some(n) = n.downcast_ref::<PrefixExpression>() {
-            let right = eval(n.right.as_ref().unwrap().upcast(), context.clone());
+            let right = eval(n.right.as_ref().unwrap().upcast(), context.clone(), &bump);
             return eval_prefix_expression(&n.operator, right);
         }
     }
     if n.is::<InfixExpression>() {
         if let Some(n) = n.downcast_ref::<InfixExpression>() {
-            let left = eval(n.left.as_ref().unwrap().upcast(), context.clone());
-            let right = eval(n.right.as_ref().unwrap().upcast(), context.clone());
+            let left = eval(n.left.as_ref().unwrap().upcast(), context.clone(), &bump);
+            let right = eval(n.right.as_ref().unwrap().upcast(), context.clone(), &bump);
             return eval_infix_expression(&n.operator, left, right);
         }
     }
     if n.is::<BlockStatement>() {
         // println!("eval block Statement");
         if let Some(n) = n.downcast_ref::<BlockStatement>() {
-            return eval_block_statement(n.clone(), context.clone());
+            return eval_block_statement(n.clone(), context.clone(), bump);
         }
     }
     if n.is::<ReturnStatement>() {
         if let Some(n) = n.downcast_ref::<ReturnStatement>() {
             if n.return_value.is_some() {
                 if let Some(value) =
-                    eval(n.return_value.as_ref().unwrap().upcast(), context.clone())
+                    eval(n.return_value.as_ref().unwrap().upcast(), context.clone(), &bump)
                 {
                     return Some(Rc::new(ReturnValue { value }));
                 }
@@ -135,15 +136,16 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
         if let Some(n) = n.downcast_ref::<CallExpression>() {
             if let Some(ref f) = n.function {
                 // get the function from context;
-                if let Some(r) = eval(f.as_ref().upcast(), context.clone()) {
+                if let Some(r) = eval(f.as_ref().upcast(), context.clone(), &bump) {
                     if r.as_any().is::<ErrorObject>() {
                         return Some(r);
                     }
                     return match eval_expressions(
                         n.arguments.as_ref().unwrap_or(&vec![]),
                         context.clone(),
+                        bump,
                     ) {
-                        Ok(args) => apply_function(r, Rc::new(args)),
+                        Ok(args) => apply_function(r, Rc::new(args), bump),
                         Err(id) => Some(Rc::new(ErrorObject {
                             message: format!("Cannot eval arguments at position: {}", id),
                         })),
@@ -161,7 +163,7 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
     }
     if n.is::<ArrayLiteral>() {
         if let Some(arr) = n.downcast_ref::<ArrayLiteral>() {
-            return match eval_expressions(&arr.elements.clone(), context.clone()) {
+            return match eval_expressions(&arr.elements.clone(), context.clone(), bump) {
                 Ok(elements) => Some(Rc::new(ArrayObject {
                     elements: elements.into(),
                 })),
@@ -173,9 +175,9 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
     }
     if n.is::<IndexExpression>() {
         if let Some(exp) = n.downcast_ref::<IndexExpression>() {
-            let left = eval(exp.left.as_ref().upcast(), context.clone());
+            let left = eval(exp.left.as_ref().upcast(), context.clone(), &bump);
             // if is error left return ErrorObject
-            let index = eval(exp.index.as_ref().upcast(), context.clone());
+            let index = eval(exp.index.as_ref().upcast(), context.clone(), &bump);
             // if is error index
             return match (left, index) {
                 (Some(left), Some(index)) if !is_error(&left) && !is_error(&index) => {
@@ -201,10 +203,10 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
                             (
                                 // FIXME: error Object handling
                                 Rc::new(
-                                    HashKey::try_from(eval(k.upcast(), context.clone()).unwrap())
+                                    HashKey::try_from(eval(k.upcast(), context.clone(), bump).unwrap())
                                         .unwrap(),
                                 ),
-                                eval(v.upcast(), context.clone()).unwrap(),
+                                eval(v.upcast(), context.clone(), &bump).unwrap(),
                             )
                         })
                         .collect(),
@@ -214,17 +216,17 @@ pub fn eval(node: &dyn Node, context: Rc<Context>) -> Option<Rc<dyn Object>> {
     }
     if n.is::<WhileLoopLiteral>() {
         if let Some(w) = n.downcast_ref::<WhileLoopLiteral>() {
-            return eval_while_loop(w, context.clone());
+            return eval_while_loop(w, context.clone(), bump);
         }
     }
     if n.is::<UpdateExpression>() {
         if let Some(u) = n.downcast_ref::<UpdateExpression>() {
-            return eval_update_expression(u, context.clone());
+            return eval_update_expression(u, context.clone(), bump);
         }
     }
     if n.is::<AssignExpression>() {
         if let Some(w) = n.downcast_ref::<AssignExpression>() {
-            return eval_assign_expression(w, context.clone());
+            return eval_assign_expression(w, context.clone(), bump);
         }
     }
     None
@@ -237,16 +239,17 @@ pub fn is_error(object: &Rc<dyn Object>) -> bool {
 pub fn apply_function(
     func: Rc<dyn Object>,
     args: Rc<Vec<Rc<dyn Object>>>,
+    bump: &Bump,
 ) -> Option<Rc<dyn Object>> {
     if let Some(f) = func.as_any().downcast_ref::<FunctionObject>() {
         let extended_context = extend_function_context(f, &args);
         if let Some(ref body) = f.body {
-            let evaluated = eval(body.as_ref().upcast(), extended_context);
+            let evaluated = eval(body.as_ref().upcast(), extended_context, &bump);
             return evaluated;
         }
     }
     if let Some(f) = func.as_any().downcast_ref::<BuiltinObject>() {
-        return (f.func)(args.clone());
+        return (f.func)(args);
     }
     None
 }
@@ -326,10 +329,11 @@ pub fn extend_function_context(func: &FunctionObject, args: &Vec<Rc<dyn Object>>
 pub fn eval_expressions(
     exps: &Vec<Rc<AstExpression>>,
     context: Rc<Context>,
+    bump: &Bump,
 ) -> Result<Vec<Rc<dyn Object>>, usize> {
     let exps: Vec<_> = exps
         .iter()
-        .map(|exp| eval(exp.upcast(), context.clone()))
+        .map(|exp| eval(exp.upcast(), context.clone(), bump))
         .collect();
     if let Some((id, _)) = exps.iter().enumerate().find(|(_idx, item)| item.is_none()) {
         return Err(id);
@@ -337,19 +341,19 @@ pub fn eval_expressions(
     return Ok(exps.iter().map(|item| item.clone().unwrap()).collect());
 }
 
-pub fn eval_if_expression(ex: &IfExpression, context: Rc<Context>) -> Option<Rc<dyn Object>> {
-    if is_truthy(eval(ex.condition.upcast(), context.clone())) {
-        return eval(ex.consequence.as_ref().unwrap().upcast(), context.clone());
+pub fn eval_if_expression(ex: &IfExpression, context: Rc<Context>, bump: &Bump) -> Option<Rc<dyn Object>> {
+    if is_truthy(eval(ex.condition.upcast(), context.clone(), bump)) {
+        return eval(ex.consequence.as_ref().unwrap().upcast(), context.clone(), bump);
     } else if ex.alternative.is_some() {
-        return eval(ex.alternative.as_ref().unwrap().upcast(), context.clone());
+        return eval(ex.alternative.as_ref().unwrap().upcast(), context.clone(), bump);
     } else {
         return Some(NULLOBJ.with(|val| val.clone()));
     }
 }
 
-pub fn eval_while_loop(ex: &WhileLoopLiteral, context: Rc<Context>) -> Option<Rc<dyn Object>> {
+pub fn eval_while_loop(ex: &WhileLoopLiteral, context: Rc<Context>, bump: &Bump) -> Option<Rc<dyn Object>> {
     let mut r = None;
-    'outer: while is_truthy(eval(ex.condition.upcast(), context.clone())) {
+    'outer: while is_truthy(eval(ex.condition.upcast(), context.clone(), bump)) {
         if let Some(body) = &ex.body {
             // dbg!(&body);
             match body.clone().as_ref() {
@@ -361,7 +365,7 @@ pub fn eval_while_loop(ex: &WhileLoopLiteral, context: Rc<Context>) -> Option<Rc
                                 // dbg!(&st);
                                 break 'outer;
                             }
-                            other => r = eval(other.get_expression().upcast(), context.clone()),
+                            other => r = eval(other.get_expression().upcast(), context.clone(), bump),
                         }
                     }
                     // break 'outer;
@@ -376,6 +380,7 @@ pub fn eval_while_loop(ex: &WhileLoopLiteral, context: Rc<Context>) -> Option<Rc
 pub fn eval_update_expression(
     ex: &UpdateExpression,
     context: Rc<Context>,
+    bump: &Bump,
 ) -> Option<Rc<dyn Object>> {
     if let UpdateExpression {
         name: Some(name),
@@ -391,8 +396,8 @@ pub fn eval_update_expression(
             "/=" => "/",
             &_ => operator,
         };
-        let origin = eval(name.upcast(), context.clone());
-        let right = eval(right.upcast(), context.clone());
+        let origin = eval(name.upcast(), context.clone(), bump);
+        let right = eval(right.upcast(), context.clone(), bump);
         if let Some(after) = eval_infix_expression(op, origin, right) {
             context.clone().update(name.clone(), after);
         }
@@ -403,6 +408,7 @@ pub fn eval_update_expression(
 pub fn eval_assign_expression(
     ex: &AssignExpression,
     context: Rc<Context>,
+    bump: &Bump,
 ) -> Option<Rc<dyn Object>> {
     if let AssignExpression {
         name: Some(name),
@@ -410,7 +416,7 @@ pub fn eval_assign_expression(
         ..
     } = ex
     {
-        if let Some(r) = eval(right.upcast(), context.clone()) {
+        if let Some(r) = eval(right.upcast(), context.clone(), bump) {
             context.update(name.clone(), r);
         }
     };
@@ -687,6 +693,7 @@ pub fn eval_minus_prefix_operator_expression(
 pub fn eval_program(
     stmts: Vec<Rc<AstExpression>>,
     context: Option<Rc<Context>>,
+    bump: &Bump,
 ) -> Option<Rc<dyn Object>> {
     let mut result = None;
     let context = context.unwrap_or(Rc::new(Context::new()));
@@ -696,7 +703,7 @@ pub fn eval_program(
         // rust not support convert sub-trait-object to parent-trait-object
         // so here using a upcast function to convert Statement/Expression to Node trait
         // println!("try eval st: {:?}", st);
-        result = eval(st.upcast(), context.clone());
+        result = eval(st.upcast(), context.clone(), bump);
         // if
         if let Some(r) = result.as_ref() {
             if r.as_any().is::<ErrorObject>() {
@@ -716,10 +723,10 @@ pub fn eval_program(
     result
 }
 
-pub fn eval_block_statement(blk: BlockStatement, context: Rc<Context>) -> Option<Rc<dyn Object>> {
+pub fn eval_block_statement(blk: BlockStatement, context: Rc<Context>, bump: &Bump) -> Option<Rc<dyn Object>> {
     let mut result = None;
     for st in blk.statement.iter() {
-        result = eval(st.upcast(), context.clone());
+        result = eval(st.upcast(), context.clone(), bump);
         if result.is_some() {
             let r = result.as_ref().unwrap();
             if r.object_type() == ERROR_OBJECT {

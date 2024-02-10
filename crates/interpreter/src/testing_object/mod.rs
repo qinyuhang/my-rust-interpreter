@@ -6,6 +6,7 @@ use lexer::Lexer;
 use object::*;
 use parser::Parser;
 use std::rc::Rc;
+use bumpalo::{Bump, boxed::Box as BumpBox, collections::Vec as BumpVec};
 
 pub fn test_string_object(obj: Option<Rc<dyn Object>>, expected: String) -> bool {
     let i = StringObject::try_from(obj.unwrap());
@@ -72,19 +73,20 @@ pub fn test_parse(input: &str) -> Option<Program> {
     return pr;
 }
 
-pub fn test_eval(input: &str) -> Option<Rc<dyn Object>> {
+pub fn test_eval(input: &str, bump: &Bump) -> Option<Rc<dyn Object>> {
     let l = Lexer::new(input);
     let p = Parser::new(l);
     let pr = p.parse_program();
     assert!(pr.is_some());
     let pr = pr.unwrap();
     let context = Context::new();
-    return eval(&pr, Rc::new(context));
+    return eval(&pr, Rc::new(context), &bump);
 }
 
 pub fn handle_test_case(case: &str, out: &TestingResult) {
+    let bump = Bump::new();
     let input = case;
-    let evaluated = test_eval(input);
+    let evaluated = test_eval(input, &bump);
     assert!(
         evaluated.is_some(),
         "expect=Some, got=None, input={}",
