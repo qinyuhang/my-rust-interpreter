@@ -141,11 +141,11 @@ pub fn eval(node: &dyn Node, context: Rc<Context>, bump: &Bump) -> Option<Rc<dyn
                         return Some(r);
                     }
                     return match eval_expressions(
-                        n.arguments.as_ref().unwrap_or(&vec![]),
+                        &n.arguments.as_ref().unwrap_or(&vec![])[..],
                         context.clone(),
                         bump,
                     ) {
-                        Ok(args) => apply_function(r, Rc::new(args), bump),
+                        Ok(args) => apply_function(r, &args[..], bump),
                         Err(id) => Some(Rc::new(ErrorObject {
                             message: format!("Cannot eval arguments at position: {}", id),
                         })),
@@ -163,7 +163,7 @@ pub fn eval(node: &dyn Node, context: Rc<Context>, bump: &Bump) -> Option<Rc<dyn
     }
     if n.is::<ArrayLiteral>() {
         if let Some(arr) = n.downcast_ref::<ArrayLiteral>() {
-            return match eval_expressions(&arr.elements.clone(), context.clone(), bump) {
+            return match eval_expressions(&arr.elements[..], context.clone(), bump) {
                 Ok(elements) => Some(Rc::new(ArrayObject {
                     elements: elements.into(),
                 })),
@@ -238,7 +238,7 @@ pub fn is_error(object: &Rc<dyn Object>) -> bool {
 
 pub fn apply_function(
     func: Rc<dyn Object>,
-    args: Rc<Vec<Rc<dyn Object>>>,
+    args: &[Rc<dyn Object>],
     bump: &Bump,
 ) -> Option<Rc<dyn Object>> {
     if let Some(f) = func.as_any().downcast_ref::<FunctionObject>() {
@@ -249,7 +249,7 @@ pub fn apply_function(
         }
     }
     if let Some(f) = func.as_any().downcast_ref::<BuiltinObject>() {
-        return (f.func)(args);
+        return (f.func)(&args);
     }
     None
 }
@@ -315,7 +315,7 @@ pub fn eval_array_index_expression(
 }
 
 //
-pub fn extend_function_context(func: &FunctionObject, args: &Vec<Rc<dyn Object>>) -> Rc<Context> {
+pub fn extend_function_context(func: &FunctionObject, args: &[Rc<dyn Object>]) -> Rc<Context> {
     let context = Context::extend(func.context.clone());
     // func.parameters
     if let Some(ref pr) = func.parameters {
@@ -327,7 +327,7 @@ pub fn extend_function_context(func: &FunctionObject, args: &Vec<Rc<dyn Object>>
 }
 
 pub fn eval_expressions(
-    exps: &Vec<Rc<AstExpression>>,
+    exps: &[Rc<AstExpression>],
     context: Rc<Context>,
     bump: &Bump,
 ) -> Result<Vec<Rc<dyn Object>>, usize> {

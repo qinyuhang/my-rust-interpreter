@@ -19,6 +19,7 @@ pub const PROMPT: &'static str = ">> ";
 pub const SYMBOL: &'static str = r#">> Monkey Lang 0.1.0 | (Rust BackEnd)"#;
 
 pub fn start() {
+    let bump = Bump::new();
     println!("{} | engine eval", SYMBOL);
     // readline in
     let stdin = io::stdin();
@@ -46,7 +47,7 @@ pub fn start() {
         }
         let pr = pr.unwrap();
         // println!("{}", &pr);
-        if let Some(r) = eval(&pr, context.clone()).as_ref() {
+        if let Some(r) = eval(&pr, context.clone(), &bump).as_ref() {
             println!("{}", r);
         }
         input.clear();
@@ -141,6 +142,7 @@ pub fn run_with_vm(program: String) {
 }
 
 pub fn run(program: String) {
+    let bump = Bump::new();
     println!("{} | engine eval", SYMBOL);
     let mut input = program.clone();
     let context = Rc::new(Context::new());
@@ -155,7 +157,7 @@ pub fn run(program: String) {
     }
     let pr = pr.unwrap();
     // dbg!("{}", &pr);
-    if let Some(r) = eval(&pr, context.clone()).as_ref() {
+    if let Some(r) = eval(&pr, context.clone(), &bump).as_ref() {
         println!("{}", r);
     }
 }

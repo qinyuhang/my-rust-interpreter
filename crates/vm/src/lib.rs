@@ -106,7 +106,7 @@ impl<'a> VM<'a> {
         return self.globals.borrow()[index].clone();
     }
 
-    pub fn run(&self) -> Result<BumpBox<&mut dyn Object>, String> {
+    pub fn run(&self) -> Result<(), String> {
         // ip 表示 [(操作符, 操作数), (操作符, 操作数)] 的一个 范围切片的位置
         // pos 表示[u8, u8] 的位置
         // 虽然都是 [u8] 但是看的颗粒度不一样
@@ -319,7 +319,7 @@ impl<'a> VM<'a> {
 
             self.current_frame().bump_ip_by(1);
         }
-        Ok(Rc::new(Null {}))
+        Ok(())
     }
 
     fn push_closure(&self, const_index: usize, num_free: usize) -> Result<(), String> {
@@ -605,7 +605,7 @@ impl<'a> VM<'a> {
 
     fn exec_call(&self, num_args: usize) -> Result<(), String> {
         enum TMP {
-            OBJ(&'a mut dyn Object),
+            OBJ(Rc<dyn Object>),
             EMPTY(()),
             Err(String),
         }
@@ -622,11 +622,11 @@ impl<'a> VM<'a> {
                 ))?;
             match callee.object_type() {
                 BUILTIN_OBJECT => {
-                    let r = TMP::OBJ(self.call_builtin(&callee, num_args)?);
+                    let r = TMP::OBJ(self.call_builtin(callee, num_args)?);
                     self.current_frame().bump_ip_by(1);
                     r
                 }
-                CLOSURE_OBJECT => TMP::EMPTY(self.call_closure(&callee, num_args)?),
+                CLOSURE_OBJECT => TMP::EMPTY(self.call_closure(callee, num_args)?),
                 &_ => TMP::Err("calling non-closure and no-builtin".into()),
             }
         };
@@ -640,9 +640,9 @@ impl<'a> VM<'a> {
 
     fn call_builtin(
         &self,
-        func: &dyn Object,
+        func: Rc<dyn Object>,
         num_args: usize,
-    ) -> Result<&'a mut dyn Object, String> {
+    ) -> Result<Rc<dyn Object>, String> {
         let args = &self.stack.borrow()[self.sp.get() - num_args..self.sp.get()];
         let func = func
             .as_any()
@@ -650,12 +650,14 @@ impl<'a> VM<'a> {
             .ok_or("fail to convert to built-in object")?;
         self.sp.replace(self.sp.get() - num_args - 1);
         match (func.func)(&args[..]) {
-            Some(r) => Ok(self.bump.alloc((*r).clone())),
-            _ => Ok(self.bump.alloc(Null {})),
+            // Some(r) => Ok(self.bump.alloc((*r).clone())),
+            Some(r) => Ok(r),
+            // _ => Ok(self.bump.alloc(Null {})),
+            _ => Ok(NULL.with(|v| v.clone())),
         }
     }
 
-    fn call_closure(&self, func: &dyn Object, num_args: usize) -> Result<(), String> {
+    fn call_closure(&self, func: Rc<dyn Object>, num_args: usize) -> Result<(), String> {
         if !func.as_any().is::<ClosureObject>() {
             return Err("calling non-closure".into());
         }

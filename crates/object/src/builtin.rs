@@ -4,7 +4,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 // maybe Rc<Vec<Rc<dyn Object>>> is better
-pub type BuiltinFunction = fn(args: Rc<Vec<Rc<dyn Object>>>) -> Option<Rc<dyn Object>>;
+pub type BuiltinFunction = fn(args: &[Rc<dyn Object>]) -> Option<Rc<dyn Object>>;
 #[object(BUILTIN_OBJECT)]
 pub struct BuiltinObject {
     // function
@@ -25,8 +25,8 @@ thread_local! {
     pub static BUILTINS:Rc<Vec<(&'static str, Rc<dyn Object>)>> = Rc::new(vec![
         (
             "len",
-            Rc::new(BuiltinObject { func: Rc::new(|args: Rc<Vec<Rc<dyn Object>>>| {
-                match args.as_slice() {
+            Rc::new(BuiltinObject { func: Rc::new(|args:  &[Rc<dyn Object>]| {
+                match args {
                     &[]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
                     [_, _, ..]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
                     [a] if a.as_ref().as_any().is::<StringObject>() => {
@@ -45,7 +45,7 @@ thread_local! {
         ),
         (
             "puts",
-            Rc::new(BuiltinObject { func: Rc::new(|args: Rc<Vec<Rc<dyn Object>>>| {
+            Rc::new(BuiltinObject { func: Rc::new(|args:  &[Rc<dyn Object>]| {
                 for arg in args.iter() {
                     println!("{}", arg.inspect());
                 }
@@ -54,8 +54,8 @@ thread_local! {
         ),
         (
             "first",
-            Rc::new(BuiltinObject { func: Rc::new(|args: Rc<Vec<Rc<dyn Object>>>| {
-                match args.as_slice() {
+            Rc::new(BuiltinObject { func: Rc::new(|args:  &[Rc<dyn Object>]| {
+                match args {
                     &[]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
                     [_, _, ..]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
                     [a] if a.as_ref().as_any().is::<ArrayObject>() => {
@@ -68,8 +68,8 @@ thread_local! {
         ),
         (
             "last",
-            Rc::new(BuiltinObject { func: Rc::new(|args: Rc<Vec<Rc<dyn Object>>>| {
-                match args.as_slice() {
+            Rc::new(BuiltinObject { func: Rc::new(|args:  &[Rc<dyn Object>]| {
+                match args {
                     &[]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
                     [_, _, ..]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
                     [a] if a.as_ref().as_any().is::<ArrayObject>()  => {
@@ -84,8 +84,8 @@ thread_local! {
             // returns the other data in a new Array
             // etc: rest([1,2,3]) -> [2,3]
             "rest",
-            Rc::new(BuiltinObject { func: Rc::new(|args: Rc<Vec<Rc<dyn Object>>>| {
-                match args.as_slice() {
+            Rc::new(BuiltinObject { func: Rc::new(|args:  &[Rc<dyn Object>]| {
+                match args {
                     &[]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
                     [_, _, ..]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=1", args.len()) })),
                     [a] if a.as_ref().as_any().is::<ArrayObject>()  => {
@@ -116,8 +116,8 @@ thread_local! {
             // push(a, 4);
             // a // -> [1,2,3,4]
             "push",
-            Rc::new(BuiltinObject { func: Rc::new(|args: Rc<Vec<Rc<dyn Object>>>| {
-                match args.as_slice() {
+            Rc::new(BuiltinObject { func: Rc::new(|args:  &[Rc<dyn Object>]| {
+                match args {
                     &[_] | &[]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=2", args.len()) })),
                     [_, _, _, ..]=> Some(Rc::new(ErrorObject { message: format!("wrong number of arguments. got={}, want=2", args.len()) })),
                     [a, target] if a.as_ref().as_any().is::<ArrayObject>()  => {
